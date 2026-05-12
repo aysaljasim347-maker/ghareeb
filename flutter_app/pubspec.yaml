@@ -1,0 +1,71 @@
+name: disasteraid_app
+description: DisasterAid.pk V2.1 — Humanitarian platform for disaster relief
+publish_to: "none"
+version: 2.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Networking
+  dio: ^5.7.0
+
+  # Secure Storage
+  flutter_secure_storage: ^9.2.2
+
+  # Routing
+  go_router: ^14.3.0
+
+  # Maps
+  google_maps_flutter: ^2.9.0
+
+  # UI
+  cupertino_icons: ^1.0.8
+  cached_network_image: ^3.4.1
+  shimmer: ^3.0.0
+  flutter_svg: ^2.0.10+1
+  intl: ^0.20.2
+
+  # Utilities
+  json_annotation: ^4.9.0
+  freezed_annotation: ^2.4.4
+  equatable: ^2.0.5
+  socket_io_client: ^2.0.3+1
+  image_picker: ^1.1.2
+  geolocator: ^13.0.1
+  url_launcher: ^6.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.12
+  json_serializable: ^6.8.0
+  freezed: ^2.5.7
+  riverpod_generator: ^2.4.3
+  mockito: ^5.4.4
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700

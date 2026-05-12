@@ -1,0 +1,65 @@
+version: '3.9'
+
+services:
+  # ── PostgreSQL 16 + PostGIS 3 ──
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: disasteraid-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-disasteraid}
+      POSTGRES_USER: ${POSTGRES_USER:-disasteraid_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-disasteraid_user} -d ${POSTGRES_DB:-disasteraid}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Node.js Backend ──
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: disasteraid-api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      NODE_ENV: ${NODE_ENV:-development}
+    ports:
+      - '${PORT:-3000}:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/src:/app/src  # Hot reload in dev
+    command: npm run dev
+
+  # ── Flutter Web (Optional) ──
+  flutter-web:
+    build:
+      context: ./flutter_app
+      dockerfile: Dockerfile.web
+    container_name: disasteraid-web
+    restart: unless-stopped
+    ports:
+      - '8080:80'
+    depends_on:
+      - backend
+    profiles:
+      - web  # Only starts with: docker-compose --profile web up
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  default:
+    name: disasteraid-network
