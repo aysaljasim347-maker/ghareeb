@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   # ── PostgreSQL 16 + PostGIS 3 ──
   postgres:
@@ -29,18 +27,14 @@ services:
     container_name: disasteraid-api
     restart: unless-stopped
     env_file: .env
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      NODE_ENV: ${NODE_ENV:-development}
     ports:
       - '${PORT:-3000}:3000'
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
-      - ./backend/src:/app/src  # Hot reload in dev
-    command: npm run dev
+      - ./backend/src:/app/src  # Hot reload in dev (if using dev command)
+    # CMD from Dockerfile will be used: ["npm", "start"]
 
   # ── Flutter Web (Optional) ──
   flutter-web:
@@ -54,7 +48,7 @@ services:
     depends_on:
       - backend
     profiles:
-      - web  # Only starts with: docker-compose --profile web up
+      - web
 
 volumes:
   pgdata:

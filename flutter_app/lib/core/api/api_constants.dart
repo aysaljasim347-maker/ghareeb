@@ -4,10 +4,10 @@ class ApiConstants {
 
   /// Base URL for the backend API.
   /// Change this for production deployment.
-  static const String baseUrl = 'http://10.0.2.2:3000/api';
+  // static const String baseUrl = 'http://10.0.2.2:3000/api';
 
   /// Web base URL (same backend, accessed from browser).
-  static const String webBaseUrl = 'http://localhost:3000/api';
+  static const String baseUrl = 'http://localhost:3000/api';
 
   // ── Auth ──
   static const String register = '/auth/register';
@@ -39,6 +39,13 @@ class ApiConstants {
   // ── Chat ──
   static const String chatRooms = '/chat/rooms';
   static String roomMessages(int roomId) => '/chat/rooms/$roomId/messages';
+
+  // ── My Tasks (beneficiary filter on available) ──
+  static const String myTasks = '/tasks/available';
+
+  // ── Task Actions ──
+  static String unclaimTask(int id) => '/tasks/$id/unclaim';
+  static String startTask(int id) => '/tasks/$id/start';
 
   // ── Health ──
   static const String health = '/health';

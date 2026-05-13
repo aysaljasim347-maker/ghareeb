@@ -3,6 +3,14 @@ import { createError } from '../../middleware/errorHandler.js';
 import { CreateCampaignInput, UpdateCampaignInput } from './campaigns.schema.js';
 
 export class CampaignsService {
+  /**
+   * Helper to get NGO profile ID for a user.
+   */
+  async getNgoIdByUserId(userId: number): Promise<number | null> {
+    const result = await pool.query('SELECT id FROM ngo_profiles WHERE user_id = $1', [userId]);
+    return result.rows[0]?.id || null;
+  }
+
   async create(input: CreateCampaignInput, createdBy: number, ngoId?: number) {
     // const locationClause = input.latitude && input.longitude
     //   ? `ST_SetSRID(ST_MakePoint($5, $6), 4326)::geography`

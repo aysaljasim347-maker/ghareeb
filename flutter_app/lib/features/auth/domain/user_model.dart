@@ -1,10 +1,30 @@
+enum UserRole {
+  donor('DONOR'),
+  beneficiary('BENEFICIARY'),
+  volunteer('VOLUNTEER'),
+  ngo('NGO'),
+  coordinator('COORDINATOR'),
+  admin('ADMIN'),
+  unknown('UNKNOWN');
+
+  final String value;
+  const UserRole(this.value);
+
+  static UserRole fromString(String? value) {
+    return UserRole.values.firstWhere(
+      (e) => e.value == value?.toUpperCase(),
+      orElse: () => UserRole.unknown,
+    );
+  }
+}
+
 /// User model representing the authenticated user.
 class UserModel {
   final int id;
   final String? email;
   final String? phone;
   final String name;
-  final String role;
+  final UserRole role;
   final String? cnic;
   final String? locale;
   final String? createdAt;
@@ -22,11 +42,11 @@ class UserModel {
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'] as int,
+      id: json['id'] as int? ?? 0,
       email: json['email'] as String?,
       phone: json['phone'] as String?,
-      name: json['name'] as String,
-      role: json['role'] as String,
+      name: json['name'] as String? ?? 'Unknown',
+      role: UserRole.fromString(json['role'] as String?),
       cnic: json['cnic'] as String?,
       locale: json['locale'] as String?,
       createdAt: json['created_at'] as String?,
@@ -39,17 +59,17 @@ class UserModel {
       'email': email,
       'phone': phone,
       'name': name,
-      'role': role,
+      'role': role.value,
       'cnic': cnic,
       'locale': locale,
       'created_at': createdAt,
     };
   }
 
-  bool get isAdmin => role == 'ADMIN';
-  bool get isNgo => role == 'NGO';
-  bool get isVolunteer => role == 'VOLUNTEER';
-  bool get isDonor => role == 'DONOR';
-  bool get isBeneficiary => role == 'BENEFICIARY';
-  bool get isCoordinator => role == 'COORDINATOR';
+  bool get isAdmin => role == UserRole.admin;
+  bool get isNgo => role == UserRole.ngo;
+  bool get isVolunteer => role == UserRole.volunteer;
+  bool get isDonor => role == UserRole.donor;
+  bool get isBeneficiary => role == UserRole.beneficiary;
+  bool get isCoordinator => role == UserRole.coordinator;
 }

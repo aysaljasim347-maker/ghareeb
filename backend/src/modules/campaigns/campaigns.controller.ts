@@ -2,7 +2,6 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../../middleware/auth.js';
 import { campaignsService } from './campaigns.service.js';
 import { CreateCampaignInput, UpdateCampaignInput } from './campaigns.schema.js';
-import { pool } from '../../config/database.js';
 
 
 
@@ -14,11 +13,8 @@ export class CampaignsController {
       // Get NGO profile if user is NGO
       let ngoId: number | undefined;
       if (req.user.role === 'NGO') {
-        const ngo = await pool.query(
-          'SELECT id FROM ngo_profiles WHERE user_id = $1',
-          [req.user.id]
-        );
-        ngoId = ngo.rows[0]?.id;
+        const id = await campaignsService.getNgoIdByUserId(req.user.id);
+        ngoId = id || undefined;
       }
 
       const campaign = await campaignsService.create(

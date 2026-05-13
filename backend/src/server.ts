@@ -22,24 +22,37 @@ import deliveriesRoutes from './modules/deliveries/deliveries.routes.js';
 const app = express();
 const httpServer = createServer(app);
 
+app.set('trust proxy', 1);
+
 // ── Security Middleware ─────────────────────────────────────
 app.use(helmet());
 
 // CORS whitelist — only allow specified origins
 const allowedOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim());
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, etc.)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS: Origin ${origin} not allowed`));
-      }
-    },
-    credentials: true,
-  })
-);
+console.log(`[INIT] CORS Allowed Origins: ${allowedOrigins.join(', ')}`);
+
+const corsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) {
+      return callback(null, true);
+    }
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    console.warn(`[CORS] Rejected origin: ${origin}`);
+    callback(new Error(`CORS: Origin ${origin} not allowed`));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+
+// Pre-flight for all routes
+app.options('*', cors(corsOptions));
 
 // Rate limiting — 100 requests per 15 minutes per IP
 app.use(rateLimiter);
@@ -48,25 +61,14 @@ app.use(rateLimiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// // ── Health Check ────────────────────────────────────────────
-// app.get('/api/health', async (_req, res) => {
-//   const dbHealthy = await checkDatabaseHealth();
-//   res.status(dbHealthy ? 200 : 503).json({
-//     status: dbHealthy ? 'healthy' : 'unhealthy',
-//     timestamp: new Date().toISOString(),
-//     version: '2.1.0',
-//     database: dbHealthy ? 'connected' : 'disconnected',
-//   });
-// });
-
 // ── Health Check ────────────────────────────────────────────
-app.get('/api/health', (_req, res) => {
-  console.log('Health endpoint hit');
-  res.status(200).json({
-    status: 'healthy',
+app.get('/api/health', async (_req, res) => {
+  const dbHealthy = await checkDatabaseHealth();
+  res.status(dbHealthy ? 200 : 503).json({
+    status: dbHealthy ? 'healthy' : 'unhealthy',
     timestamp: new Date().toISOString(),
-    version: '2.1.0'
-    // database: await checkDatabaseHealth() <-- Ye line hata de abhi
+    version: '2.1.0',
+    database: dbHealthy ? 'connected' : 'disconnected',
   });
 });
 
@@ -99,7 +101,7 @@ initializeChatGateway(io);
 // ── Server Start ────────────────────────────────────────────
 const PORT = env.PORT;
 
-httpServer.listen(PORT,'0.0.0.0', () => {
+httpServer.listen(PORT,'::', () => {
   console.log(`
 ╔══════════════════════════════════════════════╗
 ║      DisasterAid V2.1 — Server Running       ║
@@ -107,6 +109,7 @@ httpServer.listen(PORT,'0.0.0.0', () => {
 ║  Port:        ${String(PORT).padEnd(30)}║
 ║  Environment: ${env.NODE_ENV.padEnd(30)}║
 ║  Database:    ${env.POSTGRES_HOST}:${env.POSTGRES_PORT}${' '.repeat(Math.max(0, 22 - `${env.POSTGRES_HOST}:${env.POSTGRES_PORT}`.length))}║
+║  CORS:        ${env.CORS_ORIGINS.padEnd(30)}║
 ╚══════════════════════════════════════════════╝
   `);
 });

@@ -1,5 +1,6 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
+import { pool } from '../../config/database.js';
 import { env } from '../../config/env.js';
 import { chatService } from './chat.service.js';
 
@@ -31,9 +32,28 @@ export function initializeChatGateway(io: SocketIOServer): void {
     console.log(`Socket connected: user ${socket.userId}`);
 
     // Join a chat room
-    socket.on('join_room', (roomId: number) => {
-      socket.join(`room:${roomId}`);
-      console.log(`User ${socket.userId} joined room ${roomId}`);
+    socket.on('join_room', async (roomId: number) => {
+      if (!socket.userId) return;
+
+      try {
+        // SECURITY: Verify user has access to this room before allowing them to join the socket room
+        const accessCheck = await pool.query(
+          `SELECT 1 FROM chat_rooms cr
+           JOIN tasks t ON t.id = cr.task_id
+           WHERE cr.id = $1 AND (t.created_by = $2 OR t.claimed_by = $2 OR t.coordinator_id = $2 OR cr.created_by = $2)`,
+          [roomId, socket.userId]
+        );
+
+        if (accessCheck.rows.length === 0) {
+          socket.emit('error', { message: 'Access denied to room' });
+          return;
+        }
+
+        socket.join(`room:${roomId}`);
+        console.log(`User ${socket.userId} joined room ${roomId}`);
+      } catch {
+        socket.emit('error', { message: 'Internal error' });
+      }
     });
 
     // Leave a chat room
@@ -54,7 +74,7 @@ export function initializeChatGateway(io: SocketIOServer): void {
 
         // Broadcast to all users in the room
         io.to(`room:${data.roomId}`).emit('new_message', message);
-      } catch (err) {
+      } catch {
         socket.emit('error', { message: 'Failed to send message' });
       }
     });

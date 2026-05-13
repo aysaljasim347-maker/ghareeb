@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disasteraid_app/core/api/api_constants.dart';
+import 'package:disasteraid_app/config/env.dart';
 import 'package:disasteraid_app/core/api/api_interceptor.dart';
 import 'package:disasteraid_app/core/storage/secure_storage.dart';
 
@@ -18,7 +19,7 @@ class ApiClient {
   ApiClient({required this.storage}) {
     _dio = Dio(
       BaseOptions(
-        baseUrl: ApiConstants.baseUrl,
+        baseUrl: Env.apiUrl,
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
         sendTimeout: const Duration(seconds: 15),
@@ -31,9 +32,19 @@ class ApiClient {
 
     _dio.interceptors.add(AuthInterceptor(storage: storage));
     _dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-      logPrint: (obj) => print('[API] $obj'),
+      requestBody: kDebugMode,
+      responseBody: kDebugMode,
+      logPrint: (obj) {
+        if (kDebugMode) {
+          String log = obj.toString();
+          // SECURITY: Scrub passwords from logs
+          if (log.contains('password')) {
+            log = log.replaceAll(
+                RegExp(r'"password":\s*".*?"'), '"password": "***"');
+          }
+          debugPrint('[API] $log');
+        }
+      },
     ));
   }
 
@@ -44,26 +55,56 @@ class ApiClient {
   Future<Response> get(
     String path, {
     Map<String, dynamic>? queryParameters,
-  }) {
-    return _dio.get(path, queryParameters: queryParameters);
+  }) async {
+    try {
+      return await _dio.get(path, queryParameters: queryParameters);
+    } on DioException catch (e) {
+      _handleError(e);
+      rethrow;
+    }
   }
 
   Future<Response> post(
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
-  }) {
-    return _dio.post(path, data: data, queryParameters: queryParameters);
+  }) async {
+    try {
+      return await _dio.post(path, data: data, queryParameters: queryParameters);
+    } on DioException catch (e) {
+      _handleError(e);
+      rethrow;
+    }
   }
 
   Future<Response> patch(
     String path, {
     dynamic data,
-  }) {
-    return _dio.patch(path, data: data);
+  }) async {
+    try {
+      return await _dio.patch(path, data: data);
+    } on DioException catch (e) {
+      _handleError(e);
+      rethrow;
+    }
   }
 
-  Future<Response> delete(String path) {
-    return _dio.delete(path);
+  Future<Response> delete(String path) async {
+    try {
+      return await _dio.delete(path);
+    } on DioException catch (e) {
+      _handleError(e);
+      rethrow;
+    }
+  }
+
+  void _handleError(DioException e) {
+    if (e.type == DioExceptionType.connectionError) {
+      debugPrint('[CRITICAL] API Connection Error: Check CORS or Backend URL');
+    }
+    debugPrint('[API ERROR] ${e.message}');
+    if (e.response != null) {
+      debugPrint('[API ERROR DATA] ${e.response?.data}');
+    }
   }
 }

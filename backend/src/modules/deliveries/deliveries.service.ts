@@ -93,6 +93,22 @@ export class DeliveriesService {
 
       const delivery = deliveryResult.rows[0];
 
+      // SECURITY: If coordinator, verify jurisdiction (task must belong to them or their NGO)
+      // Note: Admins bypass this. 
+      // This is a simplified check assuming coordinator_id links to the user.
+      const verifierResult = await pool.query('SELECT name FROM roles WHERE id = (SELECT role_id FROM users WHERE id = $1)', [verifiedBy]);
+      const verifierRole = verifierResult.rows[0]?.name;
+
+      if (verifierRole === 'COORDINATOR') {
+        const jurisdictionCheck = await client.query(
+          `SELECT 1 FROM tasks WHERE id = $1 AND coordinator_id = $2`,
+          [delivery.task_id, verifiedBy]
+        );
+        if (jurisdictionCheck.rows.length === 0) {
+          throw createError('Jurisdiction error: You cannot verify this delivery', 403);
+        }
+      }
+
       // Mark delivery as verified
       await client.query(
         `UPDATE deliveries SET verified_by = $1, verified_at = NOW() WHERE id = $2`,

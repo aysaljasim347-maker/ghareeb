@@ -78,13 +78,13 @@ class _TaskCard extends StatelessWidget {
 
   Color _urgencyColor() {
     switch (task.urgency) {
-      case 'CRITICAL':
+      case TaskUrgency.critical:
         return AppTheme.urgencyCritical;
-      case 'HIGH':
+      case TaskUrgency.high:
         return AppTheme.urgencyHigh;
-      case 'MEDIUM':
+      case TaskUrgency.medium:
         return AppTheme.urgencyMedium;
-      case 'LOW':
+      case TaskUrgency.low:
         return AppTheme.urgencyLow;
       default:
         return Colors.grey;
@@ -115,7 +115,7 @@ class _TaskCard extends StatelessWidget {
                       border: Border.all(color: _urgencyColor(), width: 1),
                     ),
                     child: Text(
-                      task.urgency,
+                      task.urgency.value,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,

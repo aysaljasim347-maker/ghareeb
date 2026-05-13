@@ -201,18 +201,18 @@ class TaskDetailScreen extends ConsumerWidget {
 }
 
 class _UrgencyBadge extends StatelessWidget {
-  final String urgency;
+  final TaskUrgency urgency;
   const _UrgencyBadge({required this.urgency});
 
   Color get _color {
     switch (urgency) {
-      case 'CRITICAL':
+      case TaskUrgency.critical:
         return AppTheme.urgencyCritical;
-      case 'HIGH':
+      case TaskUrgency.high:
         return AppTheme.urgencyHigh;
-      case 'MEDIUM':
+      case TaskUrgency.medium:
         return AppTheme.urgencyMedium;
-      case 'LOW':
+      case TaskUrgency.low:
         return AppTheme.urgencyLow;
       default:
         return Colors.grey;
@@ -229,7 +229,7 @@ class _UrgencyBadge extends StatelessWidget {
         border: Border.all(color: _color),
       ),
       child: Text(
-        urgency,
+        urgency.value,
         style:
             TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _color),
       ),
@@ -238,7 +238,7 @@ class _UrgencyBadge extends StatelessWidget {
 }
 
 class _StatusBadge extends StatelessWidget {
-  final String status;
+  final TaskStatus status;
   const _StatusBadge({required this.status});
 
   @override
@@ -250,7 +250,7 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        status.replaceAll('_', ' '),
+        status.value.replaceAll('_', ' '),
         style: const TextStyle(
             fontSize: 12, fontWeight: FontWeight.w600, color: Colors.blue),
       ),

@@ -2,12 +2,41 @@ import { pool } from '../../config/database.js';
 import { createError } from '../../middleware/errorHandler.js';
 import { CreateTaskInput, UpdateTaskInput } from './tasks.schema.js';
 
+export interface TaskRow {
+  id: number;
+  campaign_id: number | null;
+  beneficiary_id: number | null;
+  created_by: number;
+  claimed_by: number | null;
+  coordinator_id: number | null;
+  source_type: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  family_size: number;
+  items_needed: any;
+  location: any;
+  latitude?: number;
+  longitude?: number;
+  location_text: string | null;
+  radius_km: number;
+  budget_pkr: number;
+  urgency: string;
+  status: string;
+  view_count: number;
+  created_at: string;
+  updated_at: string;
+  created_by_name?: string;
+  claimed_by_name?: string;
+  coordinator_name?: string;
+}
+
 export class TasksService {
   /**
    * Create a new task.
    */
-  async createTask(input: CreateTaskInput, createdBy: number) {
-    const result = await pool.query(
+  async createTask(input: CreateTaskInput, createdBy: number): Promise<TaskRow> {
+    const result = await pool.query<TaskRow>(
       `INSERT INTO tasks (
         campaign_id, beneficiary_id, created_by, source_type,
         title, description, category, family_size, items_needed,
@@ -51,8 +80,8 @@ export class TasksService {
   /**
    * Get ALL open tasks. No distance filter per requirements.
    */
-  async getAvailableTasks() {
-    const result = await pool.query(
+  async getAvailableTasks(): Promise<TaskRow[]> {
+    const result = await pool.query<TaskRow>(
       `SELECT t.*,
               ST_X(t.location::geometry) AS longitude,
               ST_Y(t.location::geometry) AS latitude,
@@ -75,8 +104,8 @@ export class TasksService {
   /**
    * Get task by ID with full details.
    */
-  async getTaskById(id: number) {
-    const result = await pool.query(
+  async getTaskById(id: number): Promise<TaskRow> {
+    const result = await pool.query<TaskRow>(
       `SELECT t.*,
               ST_X(t.location::geometry) AS longitude,
               ST_Y(t.location::geometry) AS latitude,

@@ -37,14 +37,16 @@ export class ChatService {
    * Send a message in a chat room.
    */
   async sendMessage(roomId: number, senderId: number, text: string) {
-    // Verify room exists
-    const room = await pool.query(
-      'SELECT id FROM chat_rooms WHERE id = $1',
-      [roomId]
+    // SECURITY: Verify room exists and user has access
+    const roomResult = await pool.query(
+      `SELECT cr.id FROM chat_rooms cr
+       JOIN tasks t ON t.id = cr.task_id
+       WHERE cr.id = $1 AND (t.created_by = $2 OR t.claimed_by = $2 OR t.coordinator_id = $2 OR cr.created_by = $2)`,
+      [roomId, senderId]
     );
 
-    if (room.rows.length === 0) {
-      throw createError('Chat room not found', 404);
+    if (roomResult.rows.length === 0) {
+      throw createError('Chat room not found or access denied', 403);
     }
 
     const result = await pool.query(
@@ -60,7 +62,19 @@ export class ChatService {
   /**
    * Get messages for a chat room.
    */
-  async getMessages(roomId: number, limit: number = 50, offset: number = 0) {
+  async getMessages(roomId: number, userId: number, limit: number = 50, offset: number = 0) {
+    // SECURITY: Verify user has access to this room
+    const accessCheck = await pool.query(
+      `SELECT 1 FROM chat_rooms cr
+       JOIN tasks t ON t.id = cr.task_id
+       WHERE cr.id = $1 AND (t.created_by = $2 OR t.claimed_by = $2 OR t.coordinator_id = $2 OR cr.created_by = $2)`,
+      [roomId, userId]
+    );
+
+    if (accessCheck.rows.length === 0) {
+      throw createError('Access denied to chat room', 403);
+    }
+
     const result = await pool.query(
       `SELECT cm.*, u.name AS sender_name
        FROM chat_messages cm

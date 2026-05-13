@@ -24,10 +24,11 @@ export class ChatController {
 
   async getMessages(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
+      if (!req.user) { res.status(401).json({ error: 'Auth required' }); return; }
       const roomId = parseInt(req.params.roomId as string, 10);
       const limit = parseInt(req.query.limit as string, 10) || 50;
       const offset = parseInt(req.query.offset as string, 10) || 0;
-      const messages = await chatService.getMessages(roomId, limit, offset);
+      const messages = await chatService.getMessages(roomId, req.user.id, limit, offset);
       res.json({ messages });
     } catch (err) { next(err); }
   }

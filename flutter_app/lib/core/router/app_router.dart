@@ -5,64 +5,154 @@ import 'package:disasteraid_app/features/auth/presentation/auth_provider.dart';
 import 'package:disasteraid_app/features/auth/presentation/login_screen.dart';
 import 'package:disasteraid_app/features/auth/presentation/register_screen.dart';
 import 'package:disasteraid_app/features/tasks/presentation/tasks_screen.dart';
-import 'package:disasteraid_app/features/tasks/presentation/task_detail_screen.dart';
 import 'package:disasteraid_app/core/shell/dashboard_shell.dart';
 
-/// GoRouter provider with auth-based redirects.
+// ── Beneficiary screens ──
+import 'package:disasteraid_app/screens/beneficiary/create_task_screen.dart';
+import 'package:disasteraid_app/screens/beneficiary/my_tasks_screen.dart';
+
+// ── Donor screens ──
+import 'package:disasteraid_app/screens/donor/campaigns_screen.dart';
+import 'package:disasteraid_app/screens/donor/donation_history_screen.dart';
+import 'package:disasteraid_app/screens/donor/payment_screen.dart';
+
+// ── Volunteer screens ──
+import 'package:disasteraid_app/screens/volunteer/task_detail_screen.dart';
+import 'package:disasteraid_app/screens/volunteer/proof_upload_screen.dart';
+
+// ── Shared screens ──
+import 'package:disasteraid_app/screens/shared/chat_screen.dart';
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
 
   return GoRouter(
     initialLocation: '/login',
-    debugLogDiagnostics: true,
+    debugLogDiagnostics: false,
     redirect: (context, state) {
       final isAuthenticated = authState.status == AuthStatus.authenticated;
-      final isAuthRoute = state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register';
+      final loc = state.matchedLocation;
+      final isAuthRoute = loc == '/login' || loc == '/register';
 
-      // Still loading auth — don't redirect yet
       if (authState.status == AuthStatus.initial) return null;
 
-      // Not authenticated and not on auth route → go to login
       if (!isAuthenticated && !isAuthRoute) return '/login';
-
-      // Authenticated and on auth route → go to dashboard
-      if (isAuthenticated && isAuthRoute) return '/dashboard';
+      if (isAuthenticated && isAuthRoute) {
+        return _roleHome(authState.user?.role);
+      }
 
       return null;
     },
     routes: [
-      // ── Auth Routes ──
+      // ── Auth ──
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginScreen(),
+        builder: (_, __) => const LoginScreen(),
       ),
       GoRoute(
         path: '/register',
-        builder: (context, state) => const RegisterScreen(),
+        builder: (_, __) => const RegisterScreen(),
       ),
 
-      // ── Dashboard Shell ──
+      // ── Beneficiary Shell ──
       ShellRoute(
-        builder: (context, state, child) => DashboardShell(child: child),
+        builder: (context, state, child) =>
+            DashboardShell(role: 'BENEFICIARY', child: child),
+        routes: [
+          GoRoute(
+            path: '/beneficiary/tasks',
+            builder: (_, __) => const MyTasksScreen(),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/beneficiary/create-task',
+        builder: (_, __) => const CreateTaskScreen(),
+      ),
+
+      // ── Donor Shell ──
+      ShellRoute(
+        builder: (context, state, child) =>
+            DashboardShell(role: 'DONOR', child: child),
+        routes: [
+          GoRoute(
+            path: '/donor/campaigns',
+            builder: (_, __) => const CampaignsScreen(),
+          ),
+          GoRoute(
+            path: '/donor/donations',
+            builder: (_, __) => const DonationHistoryScreen(),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/donor/payment/:campaignId',
+        builder: (_, state) => PaymentScreen(
+          campaignId: int.parse(state.pathParameters['campaignId']!),
+        ),
+      ),
+
+      // ── Volunteer Shell ──
+      ShellRoute(
+        builder: (context, state, child) =>
+            DashboardShell(role: 'VOLUNTEER', child: child),
+        routes: [
+          GoRoute(
+            path: '/volunteer/tasks',
+            builder: (_, __) => const TasksScreen(),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/volunteer/task/:id',
+        builder: (_, state) => VolunteerTaskDetailScreen(
+          taskId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/volunteer/proof/:taskId',
+        builder: (_, state) => ProofUploadScreen(
+          taskId: int.parse(state.pathParameters['taskId']!),
+        ),
+      ),
+
+      // ── Shared ──
+      GoRoute(
+        path: '/chat/:taskId',
+        builder: (_, state) => ChatScreen(
+          taskId: int.parse(state.pathParameters['taskId']!),
+          taskTitle: state.uri.queryParameters['title'],
+        ),
+      ),
+
+      // ── Legacy / generic task routes ──
+      ShellRoute(
+        builder: (context, state, child) =>
+            DashboardShell(role: null, child: child),
         routes: [
           GoRoute(
             path: '/dashboard',
-            builder: (context, state) => const TasksScreen(),
+            builder: (_, __) => const TasksScreen(),
           ),
           GoRoute(
             path: '/tasks',
-            builder: (context, state) => const TasksScreen(),
-          ),
-          GoRoute(
-            path: '/tasks/:id',
-            builder: (context, state) {
-              final id = int.parse(state.pathParameters['id']!);
-              return TaskDetailScreen(taskId: id);
-            },
+            builder: (_, __) => const TasksScreen(),
           ),
         ],
       ),
     ],
   );
 });
+
+String _roleHome(String? role) {
+  switch (role) {
+    case 'BENEFICIARY':
+      return '/beneficiary/tasks';
+    case 'DONOR':
+      return '/donor/campaigns';
+    case 'VOLUNTEER':
+      return '/volunteer/tasks';
+    default:
+      return '/dashboard';
+  }
+}
