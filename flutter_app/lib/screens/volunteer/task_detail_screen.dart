@@ -57,9 +57,10 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
       ),
       data: (task) {
         final isClaimedByMe = task.claimedBy == authUser?.id;
-        final isInProgress = task.status == 'IN_PROGRESS';
-        final isOpen = task.status == 'OPEN';
-        final isClaimed = task.status == 'CLAIMED' || task.status == 'ASSIGNED';
+        final isInProgress = task.status == TaskStatus.inProgress;
+        final isOpen = task.status == TaskStatus.open;
+        final isClaimed = task.status == TaskStatus.claimed ||
+            task.status == TaskStatus.assigned;
 
         return Scaffold(
           body: CustomScrollView(
@@ -71,7 +72,8 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
                 leading: IconButton(
                   icon: const CircleAvatar(
                     backgroundColor: Colors.black38,
-                    child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                    child:
+                        Icon(Icons.arrow_back, color: Colors.white, size: 20),
                   ),
                   onPressed: () => context.pop(),
                 ),
@@ -101,7 +103,7 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
                         const SizedBox(width: 8),
                         _UrgencyDot(urgency: task.urgency),
                         Text(
-                          ' ${task.urgency.toLowerCase().capitalize()} urgency',
+                          ' ${task.urgency.value.toLowerCase()} urgency',
                           style: TextStyle(
                               fontSize: 12,
                               color: Theme.of(context)
@@ -146,8 +148,7 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
                             _DetailRow(
                               icon: Icons.account_balance_wallet_outlined,
                               label: 'Budget',
-                              value:
-                                  'PKR ${task.budgetPkr.toStringAsFixed(0)}',
+                              value: 'PKR ${task.budgetPkr.toStringAsFixed(0)}',
                             ),
                           ],
                         ),
@@ -169,8 +170,8 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
                           height: 180,
                           child: FlutterMap(
                             options: MapOptions(
-                              initialCenter: LatLng(
-                                  task.latitude!, task.longitude!),
+                              initialCenter:
+                                  LatLng(task.latitude!, task.longitude!),
                               initialZoom: 13,
                               interactionOptions: const InteractionOptions(
                                 flags: InteractiveFlag.none,
@@ -185,8 +186,8 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
                               MarkerLayer(
                                 markers: [
                                   Marker(
-                                    point: LatLng(
-                                        task.latitude!, task.longitude!),
+                                    point:
+                                        LatLng(task.latitude!, task.longitude!),
                                     child: const Icon(
                                       Icons.location_pin,
                                       color: Colors.red,
@@ -203,8 +204,8 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
-                          onPressed: () => _launchMaps(
-                              task.latitude!, task.longitude!),
+                          onPressed: () =>
+                              _launchMaps(task.latitude!, task.longitude!),
                           icon: const Icon(Icons.navigation, size: 18),
                           label: Text(task.locationText ?? 'Navigate'),
                         ),
@@ -256,8 +257,7 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
               HapticFeedback.lightImpact();
               ref.read(claimTaskProvider.notifier).claim(taskId);
             },
-            onUploadProof: () =>
-                context.push('/volunteer/proof/$taskId'),
+            onUploadProof: () => context.push('/volunteer/proof/$taskId'),
             onChat: () => context.push('/chat/$taskId'),
           ),
         );
@@ -319,16 +319,16 @@ class _TaskHeroImage extends StatelessWidget {
 }
 
 class _UrgencyDot extends StatelessWidget {
-  final String urgency;
+  final TaskUrgency urgency;
   const _UrgencyDot({required this.urgency});
 
   Color get _color {
     switch (urgency) {
-      case 'CRITICAL':
+      case TaskUrgency.critical:
         return AppTheme.urgencyCritical;
-      case 'HIGH':
+      case TaskUrgency.high:
         return AppTheme.urgencyHigh;
-      case 'MEDIUM':
+      case TaskUrgency.medium:
         return AppTheme.urgencyMedium;
       default:
         return AppTheme.urgencyLow;
@@ -359,15 +359,14 @@ class _DetailRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
-          Icon(icon, size: 18,
-              color: Theme.of(context).colorScheme.onSurfaceVariant),
+          Icon(icon,
+              size: 18, color: Theme.of(context).colorScheme.onSurfaceVariant),
           const SizedBox(width: 12),
           Text(label,
               style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant)),
           const Spacer(),
-          Text(value,
-              style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -429,8 +428,7 @@ class _ActionBar extends StatelessWidget {
                             strokeWidth: 2, color: Colors.white),
                       )
                     : const Icon(Icons.handshake),
-                label: Text(
-                    isLoading ? 'Claiming...' : 'Claim This Task'),
+                label: Text(isLoading ? 'Claiming...' : 'Claim This Task'),
               ),
             ),
           if (isClaimed && isClaimedByMe)
@@ -482,9 +480,4 @@ class _ActionBar extends StatelessWidget {
       ),
     );
   }
-}
-
-extension _StringExt on String {
-  String capitalize() =>
-      isEmpty ? this : '${this[0].toUpperCase()}${substring(1)}';
 }

@@ -1,3 +1,4 @@
+import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -28,7 +29,8 @@ class DonationHistoryScreen extends ConsumerWidget {
             return const EmptyState(
               icon: Icons.volunteer_activism_outlined,
               title: 'No donations yet',
-              subtitle: 'Your donations will appear here once you contribute to a campaign.',
+              subtitle:
+                  'Your donations will appear here once you contribute to a campaign.',
             );
           }
           final summary = DonationSummary.fromDonations(donations);
@@ -69,9 +71,8 @@ class _SummaryCard extends StatelessWidget {
                 children: [
                   Text(
                     'Total Donated',
-                    style: TextStyle(
-                        color: cs.onPrimaryContainer,
-                        fontSize: 13),
+                    style:
+                        TextStyle(color: cs.onPrimaryContainer, fontSize: 13),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -95,8 +96,8 @@ class _SummaryCard extends StatelessWidget {
                 children: [
                   Text(
                     'Families Helped',
-                    style: TextStyle(
-                        color: cs.onPrimaryContainer, fontSize: 13),
+                    style:
+                        TextStyle(color: cs.onPrimaryContainer, fontSize: 13),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -144,9 +145,7 @@ class _DonationTile extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primaryContainer,
+                  color: Theme.of(context).colorScheme.primaryContainer,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -173,9 +172,8 @@ class _DonationTile extends StatelessWidget {
                       _formattedDate(),
                       style: TextStyle(
                           fontSize: 12,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant),
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -191,7 +189,9 @@ class _DonationTile extends StatelessWidget {
                         fontWeight: FontWeight.w700, fontSize: 15),
                   ),
                   const SizedBox(height: 4),
-                  StatusChip(status: donation.status, fontSize: 10),
+                  StatusChip(
+                      status: TaskStatus.fromString(donation.status),
+                      fontSize: 10),
                 ],
               ),
             ],
@@ -245,15 +245,14 @@ class _ReceiptSheet extends StatelessWidget {
                     ?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 20),
             _ReceiptRow('Campaign', donation.campaignTitle ?? 'N/A'),
-            _ReceiptRow(
-                'Amount',
+            _ReceiptRow('Amount',
                 '₹${NumberFormat('#,##0').format(donation.amountPkr)}'),
             _ReceiptRow('Status', donation.status),
             if (donation.createdAt != null)
               _ReceiptRow(
                 'Date',
-                DateFormat('dd MMM yyyy, hh:mm a').format(
-                    DateTime.parse(donation.createdAt!).toLocal()),
+                DateFormat('dd MMM yyyy, hh:mm a')
+                    .format(DateTime.parse(donation.createdAt!).toLocal()),
               ),
             if (donation.gatewayRef != null)
               _ReceiptRow('Reference', donation.gatewayRef!),
@@ -293,8 +292,7 @@ class _ReceiptRow extends StatelessWidget {
               style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurfaceVariant)),
           const Spacer(),
-          Text(value,
-              style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
     );

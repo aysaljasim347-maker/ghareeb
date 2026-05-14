@@ -75,13 +75,13 @@ void main() {
         id: 1,
         sourceType: 'ADMIN_CREATED',
         title: 'Test',
-        urgency: 'CRITICAL',
+        urgency: TaskUrgency.critical,
       );
       const low = TaskModel(
         id: 2,
         sourceType: 'ADMIN_CREATED',
         title: 'Test',
-        urgency: 'LOW',
+        urgency: TaskUrgency.low,
       );
 
       expect(critical.isCritical, true);
@@ -95,13 +95,13 @@ void main() {
         id: 1,
         sourceType: 'ADMIN_CREATED',
         title: 'Test',
-        status: 'OPEN',
+        status: TaskStatus.open,
       );
       const claimed = TaskModel(
         id: 2,
         sourceType: 'ADMIN_CREATED',
         title: 'Test',
-        status: 'CLAIMED',
+        status: TaskStatus.claimed,
       );
 
       expect(open.isOpen, true);

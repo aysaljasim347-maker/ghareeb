@@ -1,0 +1,6 @@
+See audits/fixes/frontend_testing_fixes.md for the full report of applied testing remediations.
+Summary:
+- Fixed AuthNotifier race condition.
+- Added Auth state unit tests.
+- Added Login widget tests (validation & navigation).
+- Verified model serialization.

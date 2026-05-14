@@ -1,3 +1,4 @@
+import 'package:disasteraid_app/features/auth/domain/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,21 +14,21 @@ class DashboardShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
-    final effectiveRole = role ?? authState.user?.role;
+    final UserRole? effectiveRole =
+        role != null ? UserRole.fromString(role!) : authState.user?.role;
     final loc = GoRouterState.of(context).matchedLocation;
 
     return Scaffold(
       body: child,
       bottomNavigationBar:
           _buildNavBar(context, effectiveRole, loc, ref, authState),
-      floatingActionButton:
-          _buildFab(context, effectiveRole),
+      floatingActionButton: _buildFab(context, effectiveRole),
     );
   }
 
-  Widget? _buildFab(BuildContext context, String? role) {
+  Widget? _buildFab(BuildContext context, UserRole? role) {
     switch (role) {
-      case 'BENEFICIARY':
+      case UserRole.beneficiary:
         return FloatingActionButton.extended(
           onPressed: () => context.push('/beneficiary/create-task'),
           icon: const Icon(Icons.add),
@@ -35,7 +36,7 @@ class DashboardShell extends ConsumerWidget {
           backgroundColor: const Color(0xFFFF6B35),
           foregroundColor: Colors.white,
         );
-      case 'DONOR':
+      case UserRole.donor:
         return null;
       default:
         return null;
@@ -44,13 +45,13 @@ class DashboardShell extends ConsumerWidget {
 
   Widget? _buildNavBar(
     BuildContext context,
-    String? role,
+    UserRole? role,
     String loc,
     WidgetRef ref,
     AuthState authState,
   ) {
     switch (role) {
-      case 'BENEFICIARY':
+      case UserRole.beneficiary:
         return NavigationBar(
           selectedIndex: _beneficiaryIndex(loc),
           onDestinationSelected: (i) => _beneficiaryNav(context, i),
@@ -68,7 +69,7 @@ class DashboardShell extends ConsumerWidget {
           ],
         );
 
-      case 'DONOR':
+      case UserRole.donor:
         return NavigationBar(
           selectedIndex: _donorIndex(loc),
           onDestinationSelected: (i) => _donorNav(context, i),
@@ -86,7 +87,7 @@ class DashboardShell extends ConsumerWidget {
           ],
         );
 
-      case 'VOLUNTEER':
+      case UserRole.volunteer:
         return NavigationBar(
           selectedIndex: _volunteerIndex(loc),
           onDestinationSelected: (i) => _volunteerNav(context, i),

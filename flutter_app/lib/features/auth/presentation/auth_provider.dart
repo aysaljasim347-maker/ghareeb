@@ -50,6 +50,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Check if user has a valid stored token.
   Future<void> _checkAuth() async {
     final token = await _storage.getToken();
+    
+    // SECURITY: Prevent overwriting state if a login/register flow already started
+    if (state.status != AuthStatus.initial) return;
+
     if (token != null) {
       try {
         final user = await _repository.getProfile();

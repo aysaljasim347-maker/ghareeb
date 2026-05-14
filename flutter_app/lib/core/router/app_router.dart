@@ -1,3 +1,4 @@
+import 'package:disasteraid_app/features/auth/domain/user_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -144,13 +145,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-String _roleHome(String? role) {
+String _roleHome(UserRole? role) {
   switch (role) {
-    case 'BENEFICIARY':
+    case UserRole.beneficiary:
       return '/beneficiary/tasks';
-    case 'DONOR':
+    case UserRole.donor:
       return '/donor/campaigns';
-    case 'VOLUNTEER':
+    case UserRole.volunteer:
       return '/volunteer/tasks';
     default:
       return '/dashboard';

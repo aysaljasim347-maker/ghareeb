@@ -1,5 +1,6 @@
 enum TaskStatus {
   open('OPEN'),
+  pending('PENDING'),
   assigned('ASSIGNED'),
   claimed('CLAIMED'),
   inProgress('IN_PROGRESS'),
@@ -8,6 +9,11 @@ enum TaskStatus {
   paid('PAID'),
   flagged('FLAGGED'),
   cancelled('CANCELLED'),
+  completed('COMPLETED'),
+  failed('FAILED'),
+  refunded('REFUNDED'),
+  active('ACTIVE'),
+  draft('DRAFT'),
   unknown('UNKNOWN');
 
   final String value;

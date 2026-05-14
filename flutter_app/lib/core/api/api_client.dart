@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disasteraid_app/config/env.dart';
 import 'package:disasteraid_app/core/api/api_interceptor.dart';
+import 'package:disasteraid_app/core/api/retry_interceptor.dart';
 import 'package:disasteraid_app/core/storage/secure_storage.dart';
 
 /// Provider for the Dio-based API client.
@@ -30,6 +31,7 @@ class ApiClient {
       ),
     );
 
+    _dio.interceptors.add(RetryInterceptor(dio: _dio));
     _dio.interceptors.add(AuthInterceptor(storage: storage));
     _dio.interceptors.add(LogInterceptor(
       requestBody: kDebugMode,

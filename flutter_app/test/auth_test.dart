@@ -31,7 +31,7 @@ void main() {
         id: 1,
         email: 'test@test.com',
         name: 'Test User',
-        role: 'VOLUNTEER',
+        role: UserRole.volunteer,
       );
 
       final json = user.toJson();
@@ -43,12 +43,14 @@ void main() {
     });
 
     test('role helpers should return correct values', () {
-      const admin = UserModel(id: 1, name: 'Admin', role: 'ADMIN');
-      const ngo = UserModel(id: 2, name: 'NGO', role: 'NGO');
-      const volunteer = UserModel(id: 3, name: 'Vol', role: 'VOLUNTEER');
-      const donor = UserModel(id: 4, name: 'Donor', role: 'DONOR');
-      const beneficiary = UserModel(id: 5, name: 'Ben', role: 'BENEFICIARY');
-      const coordinator = UserModel(id: 6, name: 'Coord', role: 'COORDINATOR');
+      const admin = UserModel(id: 1, name: 'Admin', role: UserRole.admin);
+      const ngo = UserModel(id: 2, name: 'NGO', role: UserRole.ngo);
+      const volunteer = UserModel(id: 3, name: 'Vol', role: UserRole.volunteer);
+      const donor = UserModel(id: 4, name: 'Donor', role: UserRole.donor);
+      const beneficiary =
+          UserModel(id: 5, name: 'Ben', role: UserRole.beneficiary);
+      const coordinator =
+          UserModel(id: 6, name: 'Coord', role: UserRole.coordinator);
 
       expect(admin.isAdmin, true);
       expect(admin.isNgo, false);

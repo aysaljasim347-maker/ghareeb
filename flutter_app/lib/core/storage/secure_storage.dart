@@ -1,3 +1,4 @@
+import 'package:disasteraid_app/features/auth/domain/user_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -33,8 +34,8 @@ class SecureStorageService {
 
   // ── User Role ──
 
-  Future<void> saveUserRole(String role) async {
-    await _storage.write(key: _userRoleKey, value: role);
+  Future<void> saveUserRole(UserRole role) async {
+    await _storage.write(key: _userRoleKey, value: role.value);
   }
 
   Future<String?> getUserRole() async {

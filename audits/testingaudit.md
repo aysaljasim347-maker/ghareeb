@@ -1,114 +1,95 @@
-# Backend Testing Audit - DisasterAid V2.1
+# Flutter Frontend Testing Audit - DisasterAid V2.1
 **Date:** 2026-05-12
-**Auditor:** Senior QA Engineer & Test Architect
-**Scope:** Node.js (Express), TypeScript, PostgreSQL/PostGIS
+**Auditor:** Senior QA Engineer & Flutter Testing Specialist
+**Scope:** Flutter (Dart), Riverpod, Dio
 
 ## 🔴 Critical Test Gaps
 
-### 1. Lack of Application-Layer Integration Tests (Supertest)
-**Issue:** Current tests in `backend/tests/` bypass the Express routes and Services entirely. They replicate SQL logic inside the test files to verify database behavior.
-**Why it matters:** This means the code in `controllers`, `middleware`, and `services` (the actual production code) is **untested**. A bug in the Zod validation or a typo in a Service method would not be caught by the current suite.
+### 1. Missing Auth State Transition Tests
+**Issue:** The `AuthNotifier` (Riverpod) handles complex logic: checking stored tokens, login/register API calls, and updating `AuthState`. There are ZERO tests for these transitions.
+**Why it matters:** If the logic to persist a token after login breaks, the user will be logged out on every app restart. This is a business-critical flow.
 **Suggested Test Case:**
-```typescript
-import request from 'supertest';
-import { app } from '../src/server';
-
-describe('POST /api/auth/register', () => {
-  it('should return 201 and user data on valid input', async () => {
-    const res = await request(app)
-      .post('/api/auth/register')
-      .send({
-        email: 'newuser@test.com',
-        password: 'securePassword123',
-        name: 'John Doe',
-        role: 'VOLUNTEER'
-      });
-    expect(res.status).toBe(201);
-    expect(res.body.token).toBeDefined();
-  });
+```dart
+test('login success updates state to authenticated and saves token', () async {
+  final container = createContainer(overrides: [
+    authRepositoryProvider.overrideWithValue(MockAuthRepository(success: true)),
+  ]);
+  
+  await container.read(authProvider.notifier).login(email: 't@t.com', password: '123');
+  
+  expect(container.read(authProvider).status, AuthStatus.authenticated);
+  verify(mockStorage.saveToken(any)).called(1);
 });
 ```
 
-### 2. Missing PostGIS Spatial Query Validation
-**Issue:** The `getAvailableTasks` and `createTask` methods use `ST_MakePoint` and `geography` types, but there are no tests verifying distance-based filtering or coordinate accuracy at the API level.
-**Why it matters:** Spatial logic is prone to error (lat/lng swap, SRID mismatches). Without tests, the "Nearby Tasks" feature in the app might show incorrect data.
+### 2. Missing Widget Tests for Critical Forms
+**Issue:** `LoginScreen` and `RegisterScreen` have validation logic and loading states. None of these are verified.
+**Why it matters:** A UI change could accidentally break the "Sign In" button (e.g., keeping it disabled) or stop showing validation errors, leading to a broken user experience that manual QA might miss.
 **Suggested Test Case:**
-*   Create a task at Point A.
-*   Query for tasks within 5km of Point B (where distance > 5km).
-*   Expect task to NOT be returned.
-*   Query within 10km of Point B (where distance < 10km).
-*   Expect task TO be returned.
-
-### 3. Middleware & Authorization Bypass Testing
-**Issue:** There are no tests verifying that `authenticate` and `authorize` middleware actually block requests.
-**Why it matters:** If a developer accidentally removes `authenticate` from a route, the current test suite won't fail.
-**Suggested Test Case:**
-```typescript
-it('should return 401 if Authorization header is missing', async () => {
-  const res = await request(app).get('/api/auth/me');
-  expect(res.status).toBe(401);
-});
-
-it('should return 403 if role is insufficient', async () => {
-  const volunteerToken = '...';
-  const res = await request(app)
-    .post('/api/campaigns') // NGO only
-    .set('Authorization', `Bearer ${volunteerToken}`);
-  expect(res.status).toBe(403);
+```dart
+testWidgets('Login button shows loading indicator during API call', (tester) async {
+  await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: LoginScreen())));
+  
+  await tester.enterText(find.byType(TextFormField).first, 'test@test.com');
+  await tester.enterText(find.byType(TextFormField).last, 'password123');
+  await tester.tap(find.text('Sign In'));
+  
+  await tester.pump();
+  expect(find.byType(CircularProgressIndicator), findsOneWidget);
 });
 ```
+
+### 3. Untested Side-Effects (Invalidation Logic)
+**Issue:** The `ClaimNotifier` in `tasks_provider.dart` invalidates the `availableTasksProvider` after a successful claim. This logic is not verified.
+**Why it matters:** If the invalidation logic fails, the "Available Tasks" list will show outdated information (tasks that are already claimed), leading to confusing UI and 409 errors from the backend.
 
 ---
 
 ## 🟠 Medium Test Gaps
 
-### 1. Error Handling & Edge Cases
-**Issue:** No tests for invalid Zod payloads, duplicate emails (as an API response), or non-existent IDs.
-**Suggested Improvement:** Add a `describe('Failure Scenarios')` block to every module test suite.
+### 1. API Error Handling in UI
+**Issue:** The app uses `ref.listen` in `LoginScreen` to show Snackbars on error. There are no tests verifying that the Snackbar actually appears when the API returns a 401 or 500.
+**Suggested Improvement:** Add widget tests that mock a failing repository and assert `find.byType(SnackBar)`.
 
-### 2. Database Transaction Consistency
-**Issue:** The race condition test is excellent, but it doesn't verify if partial failures in a transaction cause a full rollback (e.g., if a task event fails to record, is the task still claimed?).
-**Suggested Improvement:** Simulate a failure mid-transaction and verify the DB state remains unchanged.
+### 2. Deep Linking / Navigation Testing
+**Issue:** The app uses `go_router` for navigation (e.g., `/tasks/:id`). There are no tests verifying that the router correctly parses params and shows the `TaskDetailScreen`.
 
 ---
 
 ## 🟢 Minor Improvements
 
-1. **Test Environment Orchestration:** Use a `docker-compose.test.yml` to spin up a dedicated test database automatically before running Jest.
-2. **Logging in Tests:** Disable console logs during tests to keep the output clean, or use a specific logger that redirects to a file.
+1. **Theme Verification:** No tests ensure that `AppTheme` colors are correctly applied to widgets.
+2. **Model Serialization Edge Cases:** While model tests exist, they don't cover "extra" fields in JSON (which should be ignored) or malformed date strings.
 
 ---
 
 ## ⚠️ Testing Risks
 
-*   **Financial Integrity:** The `confirmDonation` logic is critical. If the logic for updating `campaign.raised_pkr` fails, the platform loses financial credibility.
-*   **Real-time Leaks:** Since the Chat IDOR was a critical security finding, it needs permanent regression tests to ensure authorization is never accidentally removed from the `join_room` or `sendMessage` flows.
+*   **Token Expiry Race Conditions:** If a JWT expires while the user is mid-action, the app relies on `AuthInterceptor` to clear state. Without tests, this logic might "flicker" or cause a crash during the transition.
+*   **PostGIS Data Precision:** The `TaskModel` casts coordinates to `double`. If the backend sends coordinates in an unexpected format, the app might crash in the `fromJson` factory.
 
 ---
 
 ## 🛠 Suggested Test Cases
 
-### 1. Validation Logic (Zod)
-```typescript
-test('should reject registration with password < 8 chars', async () => {
-  const res = await request(app)
-    .post('/api/auth/register')
-    .send({ email: 'a@b.com', password: '123', name: 'Test', role: 'DONOR' });
-  expect(res.status).toBe(400);
-  expect(res.body.error).toBe('Validation failed');
+### 1. Repository Mocking (Riverpod)
+```dart
+test('TasksRepository.getAvailableTasks handles API errors gracefully', () async {
+  final mockClient = MockApiClient();
+  when(mockClient.get(any)).thenThrow(DioException(...));
+  
+  final repo = TasksRepository(client: mockClient);
+  expect(() => repo.getAvailableTasks(), throwsA(isA<DioException>()));
 });
 ```
 
-### 2. Spatial Query (PostGIS)
-```typescript
-test('should only return tasks within specified radius', async () => {
-  // Task in Karachi
-  await createTestTask({ lat: 24.8, lng: 67.0 }); 
+### 2. Validation UI Test
+```dart
+testWidgets('Login shows validation error on empty email', (tester) async {
+  await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: LoginScreen())));
+  await tester.tap(find.text('Sign In'));
+  await tester.pump();
   
-  // Search from Lahore (1000km away) with 10km radius
-  const res = await request(app)
-    .get('/api/tasks/available?lat=31.5&lng=74.3&radius=10');
-  
-  expect(res.body.tasks.length).toBe(0);
+  expect(find.text('Email is required'), findsOneWidget);
 });
 ```

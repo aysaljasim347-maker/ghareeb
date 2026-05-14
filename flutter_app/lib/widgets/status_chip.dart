@@ -1,39 +1,40 @@
+import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
 import 'package:flutter/material.dart';
 
 class StatusChip extends StatelessWidget {
-  final String status;
+  final TaskStatus status;
   final double fontSize;
 
   const StatusChip({super.key, required this.status, this.fontSize = 11});
 
   Color get _color {
-    switch (status.toUpperCase()) {
-      case 'OPEN':
+    switch (status) {
+      case TaskStatus.open:
         return const Color(0xFFED8936);
-      case 'ASSIGNED':
-      case 'CLAIMED':
+      case TaskStatus.assigned:
+      case TaskStatus.claimed:
         return const Color(0xFF3182CE);
-      case 'IN_PROGRESS':
+      case TaskStatus.inProgress:
         return const Color(0xFF805AD5);
-      case 'SUBMITTED':
+      case TaskStatus.submitted:
         return const Color(0xFF00B5D8);
-      case 'COORDINATOR_VERIFIED':
-      case 'PAID':
+      case TaskStatus.coordinatorVerified:
+      case TaskStatus.paid:
         return const Color(0xFF38A169);
-      case 'FLAGGED':
+      case TaskStatus.flagged:
         return const Color(0xFFE53E3E);
-      case 'CANCELLED':
+      case TaskStatus.cancelled:
         return const Color(0xFF718096);
-      case 'PENDING':
+      case TaskStatus.pending:
         return const Color(0xFFED8936);
-      case 'COMPLETED':
+      case TaskStatus.completed:
         return const Color(0xFF38A169);
-      case 'FAILED':
-      case 'REFUNDED':
+      case TaskStatus.failed:
+      case TaskStatus.refunded:
         return const Color(0xFFE53E3E);
-      case 'ACTIVE':
+      case TaskStatus.active:
         return const Color(0xFF38A169);
-      case 'DRAFT':
+      case TaskStatus.draft:
         return const Color(0xFF718096);
       default:
         return const Color(0xFF718096);
@@ -41,18 +42,20 @@ class StatusChip extends StatelessWidget {
   }
 
   String get _label {
-    switch (status.toUpperCase()) {
-      case 'IN_PROGRESS':
+    switch (status) {
+      case TaskStatus.inProgress:
         return 'In Progress';
-      case 'COORDINATOR_VERIFIED':
+      case TaskStatus.coordinatorVerified:
         return 'Verified';
-      case 'PENDING_APPROVAL':
+      case TaskStatus.pending:
         return 'Pending';
       default:
-        return status
+        return status.value
             .replaceAll('_', ' ')
             .split(' ')
-            .map((w) => w.isEmpty ? w : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}')
+            .map((w) => w.isEmpty
+                ? w
+                : '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}')
             .join(' ');
     }
   }

@@ -10,6 +10,7 @@ const poolConfig: PoolConfig = {
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
+  statement_timeout: 30000, // 30 second limit on all queries
 };
 
 export const pool = new Pool(poolConfig);

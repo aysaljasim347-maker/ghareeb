@@ -32,8 +32,10 @@ const allowedOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim());
 console.log(`[INIT] CORS Allowed Origins: ${allowedOrigins.join(', ')}`);
 
 const corsOptions = {
-  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+  origin: env.NODE_ENV === 'development'
+    ? true  // allow all in dev (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     // Allow requests with no origin (mobile apps, curl, etc.)
+    : (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     if (!origin) {
       return callback(null, true);
     }
@@ -97,22 +99,6 @@ const io = new SocketIOServer(httpServer, {
 });
 
 initializeChatGateway(io);
-
-// ── Server Start ────────────────────────────────────────────
-const PORT = env.PORT;
-
-httpServer.listen(PORT,'::', () => {
-  console.log(`
-╔══════════════════════════════════════════════╗
-║      DisasterAid V2.1 — Server Running       ║
-║──────────────────────────────────────────────║
-║  Port:        ${String(PORT).padEnd(30)}║
-║  Environment: ${env.NODE_ENV.padEnd(30)}║
-║  Database:    ${env.POSTGRES_HOST}:${env.POSTGRES_PORT}${' '.repeat(Math.max(0, 22 - `${env.POSTGRES_HOST}:${env.POSTGRES_PORT}`.length))}║
-║  CORS:        ${env.CORS_ORIGINS.padEnd(30)}║
-╚══════════════════════════════════════════════╝
-  `);
-});
 
 // ── Graceful Shutdown ───────────────────────────────────────
 const gracefulShutdown = async (signal: string) => {

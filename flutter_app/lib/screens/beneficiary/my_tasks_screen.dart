@@ -38,20 +38,20 @@ class _MyTasksScreenState extends ConsumerState<MyTasksScreen>
   List<TaskModel> _filter(List<TaskModel> tasks, int tabIndex) {
     switch (tabIndex) {
       case 1:
-        return tasks.where((t) => t.status == 'OPEN').toList();
+        return tasks.where((t) => t.status == TaskStatus.open).toList();
       case 2:
         return tasks
             .where((t) =>
-                t.status == 'CLAIMED' ||
-                t.status == 'ASSIGNED' ||
-                t.status == 'IN_PROGRESS')
+                t.status == TaskStatus.claimed ||
+                t.status == TaskStatus.assigned ||
+                t.status == TaskStatus.inProgress)
             .toList();
       case 3:
         return tasks
             .where((t) =>
-                t.status == 'PAID' ||
-                t.status == 'COORDINATOR_VERIFIED' ||
-                t.status == 'SUBMITTED')
+                t.status == TaskStatus.paid ||
+                t.status == TaskStatus.coordinatorVerified ||
+                t.status == TaskStatus.submitted)
             .toList();
       default:
         return tasks;
@@ -95,7 +95,8 @@ class _MyTasksScreenState extends ConsumerState<MyTasksScreen>
               return EmptyState(
                 icon: Icons.assignment_outlined,
                 title: 'No requests yet',
-                subtitle: 'Create your first help request and we\'ll connect you with volunteers.',
+                subtitle:
+                    'Create your first help request and we\'ll connect you with volunteers.',
                 ctaLabel: 'Create Request',
                 onCta: () => context.push('/beneficiary/create-task'),
               );
@@ -142,13 +143,13 @@ class _TaskCard extends StatelessWidget {
 
   Color _urgencyDotColor() {
     switch (task.urgency) {
-      case 'CRITICAL':
+      case TaskUrgency.critical:
         return const Color(0xFFE53E3E);
-      case 'HIGH':
+      case TaskUrgency.high:
         return const Color(0xFFED8936);
-      case 'MEDIUM':
+      case TaskUrgency.medium:
         return const Color(0xFFECC94B);
-      case 'LOW':
+      case TaskUrgency.low:
         return const Color(0xFF48BB78);
       default:
         return Colors.grey;
@@ -198,8 +199,7 @@ class _TaskCard extends StatelessWidget {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Text(_categoryEmoji(),
-                      style: const TextStyle(fontSize: 18)),
+                  Text(_categoryEmoji(), style: const TextStyle(fontSize: 18)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -221,17 +221,14 @@ class _TaskCard extends StatelessWidget {
                   children: [
                     Icon(Icons.location_on_outlined,
                         size: 14,
-                        color:
-                            Theme.of(context).colorScheme.onSurfaceVariant),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         task.locationText!,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurfaceVariant,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
