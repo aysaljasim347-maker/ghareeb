@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disasteraid_app/providers/coordinator_intelligence_provider.dart';
 import 'package:disasteraid_app/widgets/empty_state.dart';
+import 'package:disasteraid_app/utils/safe_parser.dart';
 
 class CoordinatorFraudSignalsScreen extends ConsumerWidget {
   const CoordinatorFraudSignalsScreen({super.key});
@@ -32,27 +33,33 @@ class CoordinatorFraudSignalsScreen extends ConsumerWidget {
             children: [
               if (signals.gpsMismatches.isNotEmpty) ...[
                 _buildHeader('GPS Distance Mismatches (>100m)'),
-                ...signals.gpsMismatches.map((s) => _AnomalyTile(
-                      title: s['title'],
-                      subtitle: 'Volunteer: ${s['volunteer_name']}',
-                      detail:
-                          '${s['distance_meters'].toStringAsFixed(0)} meters mismatch',
-                      severity: 'MEDIUM',
-                      onEscalate: () => _showEscalateDialog(
-                          context, ref, 'deliveries', s['delivery_id']),
-                    )),
+                ...signals.gpsMismatches.map((s) {
+                  final distance = SafeParser.toDouble(s['distance_meters']);
+                  return _AnomalyTile(
+                    title: SafeParser.toStringSafe(s['title'], defaultValue: 'Untitled Task'),
+                    subtitle: 'Volunteer: ${s['volunteer_name']}',
+                    detail:
+                        '${distance.toStringAsFixed(0)} meters mismatch',
+                    severity: 'MEDIUM',
+                    onEscalate: () => _showEscalateDialog(
+                        context, ref, 'deliveries', SafeParser.paramInt(s['delivery_id'])),
+                  );
+                }),
                 const SizedBox(height: 24),
               ],
               if (signals.highRiskVolunteers.isNotEmpty) ...[
                 _buildHeader('High Risk Volunteers (>2 flags)'),
-                ...signals.highRiskVolunteers.map((v) => _AnomalyTile(
-                      title: v['name'],
-                      subtitle: 'ID: ${v['volunteer_id']}',
-                      detail: '${v['flag_count']} repeated failures',
-                      severity: 'HIGH',
-                      onEscalate: () => _showEscalateDialog(
-                          context, ref, 'volunteers', v['volunteer_id']),
-                    )),
+                ...signals.highRiskVolunteers.map((v) {
+                  final flags = SafeParser.paramInt(v['flag_count']);
+                  return _AnomalyTile(
+                    title: SafeParser.toStringSafe(v['name'], defaultValue: 'Unknown Volunteer'),
+                    subtitle: 'ID: ${v['volunteer_id']}',
+                    detail: '$flags repeated failures',
+                    severity: 'HIGH',
+                    onEscalate: () => _showEscalateDialog(
+                        context, ref, 'volunteers', SafeParser.paramInt(v['volunteer_id'])),
+                  );
+                }),
               ],
             ],
           );
@@ -95,7 +102,7 @@ class CoordinatorFraudSignalsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: severity,
+                initialValue: severity,
                 items: ['LOW', 'MEDIUM', 'HIGH']
                     .map((s) => DropdownMenuItem(value: s, child: Text(s)))
                     .toList(),

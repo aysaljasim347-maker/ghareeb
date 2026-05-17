@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:disasteraid_app/providers/coordinator_intelligence_provider.dart';
 import 'package:disasteraid_app/widgets/error_view.dart';
 import 'package:disasteraid_app/core/theme/app_theme.dart';
+import 'package:disasteraid_app/utils/safe_parser.dart';
 
 class CoordinatorIntelligenceDashboard extends ConsumerWidget {
   const CoordinatorIntelligenceDashboard({super.key});
@@ -97,7 +98,7 @@ class CoordinatorIntelligenceDashboard extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: severity,
+                initialValue: severity,
                 items: ['HIGH', 'CRITICAL'].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
                 onChanged: (v) => setState(() => severity = v!),
                 decoration: const InputDecoration(labelText: 'Severity'),
@@ -193,17 +194,22 @@ class CoordinatorIntelligenceDashboard extends ConsumerWidget {
       children: [
         Text('Volunteer Reliability', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
-        ...volunteers.take(5).map((v) => Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            dense: true,
-            title: Text(v['name'] ?? 'Unknown', style: const TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text('Total Tasks: ${v['total_tasks'] ?? 0}'),
-            trailing: (v['flags'] ?? 0) > 0 
-                ? Tag(label: '${v['flags']} Flags', color: Colors.orange)
-                : const Tag(label: 'Reliable', color: Colors.green),
-          ),
-        )),
+        ...volunteers.take(5).map((v) {
+          final totalTasks = SafeParser.paramInt(v['total_tasks']);
+          final flags = SafeParser.paramInt(v['flags']);
+          
+          return Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: ListTile(
+              dense: true,
+              title: Text(SafeParser.toStringSafe(v['name'], defaultValue: 'Unknown'), style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text('Total Tasks: $totalTasks'),
+              trailing: flags > 0 
+                  ? Tag(label: '$flags Flags', color: Colors.orange)
+                  : const Tag(label: 'Reliable', color: Colors.green),
+            ),
+          );
+        }),
       ],
     );
   }
@@ -214,12 +220,17 @@ class CoordinatorIntelligenceDashboard extends ConsumerWidget {
       children: [
         Text('NGO Execution Speed', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
-        ...ngos.take(5).map((n) => ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(n['org_name'] ?? 'Unknown NGO'),
-          subtitle: Text('Tasks: ${n['total_tasks'] ?? 0}'),
-          trailing: Text('${n['avg_completion_hours'] ?? '0'}h avg', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
-        )),
+        ...ngos.take(5).map((n) {
+          final totalTasks = SafeParser.paramInt(n['total_tasks']);
+          final avgHours = SafeParser.toDouble(n['avg_completion_hours']);
+          
+          return ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(SafeParser.toStringSafe(n['org_name'], defaultValue: 'Unknown NGO')),
+            subtitle: Text('Tasks: $totalTasks'),
+            trailing: Text('${avgHours.toStringAsFixed(1)}h avg', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+          );
+        }),
       ],
     );
   }

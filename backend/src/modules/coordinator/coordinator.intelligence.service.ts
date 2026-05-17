@@ -57,11 +57,19 @@ export class CoordinatorIntelligenceService {
     return {
       stuck_tasks: stuckTasks.rows,
       verification_stats: {
-        verified: parseInt(verificationStats.rows[0].verified_count, 10),
-        flagged: parseInt(verificationStats.rows[0].flagged_count, 10)
+        verified: parseInt(verificationStats.rows[0].verified_count, 10) || 0,
+        flagged: parseInt(verificationStats.rows[0].flagged_count, 10) || 0
       },
-      top_volunteers: volunteerActivity.rows,
-      ngo_performance: ngoPerformance.rows
+      top_volunteers: volunteerActivity.rows.map(v => ({
+        ...v,
+        total_tasks: parseInt(v.total_tasks, 10) || 0,
+        flags: parseInt(v.flags, 10) || 0
+      })),
+      ngo_performance: ngoPerformance.rows.map(n => ({
+        ...n,
+        total_tasks: parseInt(n.total_tasks, 10) || 0,
+        avg_completion_hours: parseFloat(n.avg_completion_hours) || 0
+      }))
     };
   }
 
@@ -95,8 +103,14 @@ export class CoordinatorIntelligenceService {
     ]);
 
     return {
-      gps_mismatches: gpsMismatches.rows,
-      high_risk_volunteers: repeatedFailures.rows
+      gps_mismatches: gpsMismatches.rows.map(m => ({
+        ...m,
+        distance_meters: parseFloat(m.distance_meters) || 0
+      })),
+      high_risk_volunteers: repeatedFailures.rows.map(v => ({
+        ...v,
+        flag_count: parseInt(v.flag_count, 10) || 0
+      }))
     };
   }
 

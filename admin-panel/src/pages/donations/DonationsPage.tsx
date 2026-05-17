@@ -158,7 +158,7 @@ const DonationsPage: React.FC = () => {
       dataIndex: 'donor_name',
       key: 'donor_name',
       render: (text: string, record: Donation) => (
-        <Space direction="vertical" size={0}>
+        <Space orientation="vertical" size={0}>
           <Typography.Text strong>{text}</Typography.Text>
           <Typography.Text type="secondary" style={{ fontSize: '12px' }}>{record.donor_email}</Typography.Text>
         </Space>
@@ -208,28 +208,28 @@ const DonationsPage: React.FC = () => {
             </Button>
           )}
           {record.status === 'PENDING' && (
-            <>
-              <Button 
-                type="primary" 
-                icon={<CheckOutlined />} 
-                size="small"
-                loading={approveMutation.isPending && approveMutation.variables === record.id}
-                disabled={approveMutation.isPending || rejectMutation.isPending}
-                onClick={() => handleApprove(record)}
-              >
-                Approve
-              </Button>
-              <Button 
-                danger 
-                icon={<CloseOutlined />} 
-                size="small"
-                loading={rejectMutation.isPending && rejectMutation.variables === record.id}
-                disabled={approveMutation.isPending || rejectMutation.isPending}
-                onClick={() => handleReject(record)}
-              >
-                Reject
-              </Button>
-            </>
+            <Button 
+              type="primary" 
+              icon={<CheckOutlined />} 
+              size="small"
+              loading={approveMutation.isPending && approveMutation.variables === record.id}
+              disabled={approveMutation.isPending || rejectMutation.isPending}
+              onClick={() => handleApprove(record)}
+            >
+              Approve
+            </Button>
+          )}
+          {record.status === 'PENDING' && (
+            <Button 
+              danger 
+              icon={<CloseOutlined />} 
+              size="small"
+              loading={rejectMutation.isPending && rejectMutation.variables === record.id}
+              disabled={approveMutation.isPending || rejectMutation.isPending}
+              onClick={() => handleReject(record)}
+            >
+              Reject
+            </Button>
           )}
           {record.status === 'CONFIRMED' && !record.metadata?.disputed && (
             <Button 
@@ -318,3 +318,4 @@ const DonationsPage: React.FC = () => {
 };
 
 export default DonationsPage;
+DonationsPage;

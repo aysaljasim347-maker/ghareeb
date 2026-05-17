@@ -88,7 +88,7 @@ export class AdminService {
         COUNT(*) FILTER (WHERE role_id = (SELECT id FROM roles WHERE name = 'COORDINATOR')) as coordinator_count,
         COUNT(*) FILTER (WHERE role_id = (SELECT id FROM roles WHERE name = 'DONOR')) as donor_count,
         COUNT(*) FILTER (WHERE role_id = (SELECT id FROM roles WHERE name = 'BENEFICIARY')) as beneficiary_count,
-        COUNT(*) FILTER (WHERE role_id = (SELECT id FROM roles WHERE name = 'NGO') AND status = 'PENDING') as pending_ngo_count
+        (SELECT COUNT(*) FROM ngo_profiles WHERE status = 'PENDING') as pending_ngo_count
       FROM users
     `);
     return result.rows[0];

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disasteraid_app/providers/coordinator_intelligence_provider.dart';
+import 'package:disasteraid_app/utils/safe_parser.dart';
 
 class CoordinatorLiveDashboardScreen extends ConsumerWidget {
   const CoordinatorLiveDashboardScreen({super.key});
@@ -42,19 +43,23 @@ class CoordinatorLiveDashboardScreen extends ConsumerWidget {
               const Text('Reliability Benchmarks',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 12),
-              ...intel.topVolunteers.map((v) => ListTile(
+              ...intel.topVolunteers.map((v) {
+                final totalTasks = SafeParser.paramInt(v['total_tasks']);
+                final flags = SafeParser.paramInt(v['flags']);
+                return ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading:
                         const CircleAvatar(child: Icon(Icons.person, size: 16)),
-                    title: Text(v['name']),
-                    subtitle: Text('${v['total_tasks']} tasks performed'),
+                    title: Text(SafeParser.toStringSafe(v['name'], defaultValue: 'Unknown')),
+                    subtitle: Text('$totalTasks tasks performed'),
                     trailing: Text(
-                        '${(100 - (v['flags'] * 20)).clamp(0, 100)}% REL',
+                        '${(100 - (flags * 20)).clamp(0, 100)}% REL',
                         style: TextStyle(
                             color:
-                                v['flags'] > 0 ? Colors.orange : Colors.green,
+                                flags > 0 ? Colors.orange : Colors.green,
                             fontWeight: FontWeight.bold)),
-                  )),
+                  );
+              }),
               const SizedBox(height: 40),
             ],
           ),
@@ -142,7 +147,7 @@ class _LiveTaskTile extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        title: Text(task['title'],
+        title: Text(SafeParser.toStringSafe(task['title'], defaultValue: 'Untitled Task'),
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
         subtitle: const Text('Alert: IN_PROGRESS for >24h',
             style: TextStyle(color: Colors.red, fontSize: 12)),
