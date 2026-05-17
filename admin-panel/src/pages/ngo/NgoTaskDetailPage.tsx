@@ -21,7 +21,7 @@ const NgoTaskDetailPage: React.FC = () => {
   const { data: task, isLoading, error } = useQuery({
     queryKey: ['ngo', 'task', id],
     queryFn: async () => {
-      const response = await axiosClient.get(`/api/tasks/${id}`);
+      const response = await axiosClient.get(`/tasks/${id}`);
       return response.data;
     }
   });
@@ -29,7 +29,7 @@ const NgoTaskDetailPage: React.FC = () => {
   const { data: events } = useQuery({
     queryKey: ['ngo', 'task', id, 'events'],
     queryFn: async () => {
-      const response = await axiosClient.get(`/api/tasks/${id}/events`);
+      const response = await axiosClient.get(`/tasks/${id}/events`);
       return response.data.data;
     }
   });
@@ -37,7 +37,7 @@ const NgoTaskDetailPage: React.FC = () => {
   const { data: deliveries } = useQuery({
     queryKey: ['ngo', 'task', id, 'deliveries'],
     queryFn: async () => {
-      const response = await axiosClient.get(`/api/deliveries/task/${id}`);
+      const response = await axiosClient.get(`/deliveries/task/${id}`);
       return response.data.data;
     }
   });

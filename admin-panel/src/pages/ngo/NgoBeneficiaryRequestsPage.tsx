@@ -15,7 +15,7 @@ const NgoBeneficiaryRequestsPage: React.FC = () => {
     queryKey: ['beneficiary-requests'],
     queryFn: async () => {
       // Filtering for tasks from BENEFICIARY_REQUEST source that are still OPEN
-      const response = await axiosClient.get('/api/tasks/available', {
+      const response = await axiosClient.get('/tasks/available', {
         params: { source: 'BENEFICIARY_REQUEST' }
       });
       return response.data.data;

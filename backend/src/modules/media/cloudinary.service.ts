@@ -1,7 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { env } from '../../config/env.js';
 import { createError } from '../../middleware/errorHandler.js';
-import { logger } from '../common/logger.js';
+import { logger } from '../../common/logger.js';
 
 cloudinary.config({
   cloud_name: env.CLOUDINARY_CLOUD_NAME,

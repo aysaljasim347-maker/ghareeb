@@ -18,7 +18,7 @@ const NgoTaskCreatePage: React.FC = () => {
 
   const createMutation = useMutation({
     mutationFn: async (values: any) => {
-      return axiosClient.post('/api/tasks', values);
+      return axiosClient.post('/tasks', values);
     },
     onSuccess: () => {
       notification.success({

@@ -16,11 +16,9 @@ export class TasksController {
   async getAvailable(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const source = req.query.source as string | undefined;
-      const zoom = req.query.zoom ? parseInt(req.query.zoom as string, 10) : undefined;
-      const bbox = req.query.bbox as string | undefined;
 
-      const data = await tasksService.getAvailableTasks(source, zoom, bbox);
-      res.json(data);
+      const tasks = await tasksService.getAvailableTasks(source);
+      res.json(mapTaskList(tasks));
     } catch (err) { next(err); }
   }
 

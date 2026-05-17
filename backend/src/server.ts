@@ -96,6 +96,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/ngo', ngoRoutes);
 app.use('/api/coordinator', coordinatorRoutes);
+app.use('/api/media', mediaRoutes);
 
 // ── 404 Handler ─────────────────────────────────────────────
 app.use((_req, res) => {

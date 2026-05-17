@@ -14,7 +14,7 @@ const NgoPublicProfilePage: React.FC = () => {
   const { data, isLoading, error } = useQuery({
     queryKey: ['ngo', 'public', id],
     queryFn: async () => {
-      const response = await axiosClient.get(`/api/ngo/public/${id}`);
+      const response = await axiosClient.get(`/ngo/public/${id}`);
       return response.data.data;
     }
   });

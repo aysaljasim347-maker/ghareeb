@@ -20,7 +20,7 @@ const NgoTasksPage: React.FC = () => {
   const { data, isLoading } = useQuery({
     queryKey: ['ngo', 'tasks'],
     queryFn: async () => {
-      const response = await axiosClient.get('/api/tasks/my');
+      const response = await axiosClient.get('/tasks/my');
       return response.data.data;
     }
   });
@@ -35,7 +35,7 @@ const NgoTasksPage: React.FC = () => {
 
   const cancelMutation = useMutation({
     mutationFn: async (id: number) => {
-      return axiosClient.patch(`/api/tasks/${id}`, { status: 'CANCELLED' });
+      return axiosClient.patch(`/tasks/${id}`, { status: 'CANCELLED' });
     },
     onSuccess: () => {
       notification.success({ message: 'Task Cancelled' });

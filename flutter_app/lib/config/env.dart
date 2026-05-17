@@ -1,7 +1,7 @@
 class Env {
   static const String apiUrl = String.fromEnvironment(
     'API_URL',
-    defaultValue: 'https://api.disasteraid.pk/api',
+    defaultValue: 'http://localhost:3000/api',
   );
   static const String cloudinaryCloudName = String.fromEnvironment(
     'CLOUDINARY_CLOUD_NAME',
