@@ -10,6 +10,7 @@ export const submitDeliverySchema = z.object({
 
 export const verifyDeliverySchema = z.object({
   verified: z.boolean(),
+  outcome: z.enum(['VERIFY', 'FLAG', 'REJECT']).optional(),
   notes: z.string().optional(),
 });
 

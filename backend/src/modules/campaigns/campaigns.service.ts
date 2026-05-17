@@ -79,10 +79,30 @@ export class CampaignsService {
     return result.rows[0];
   }
 
-  async update(id: number, input: UpdateCampaignInput) {
+  async update(id: number, input: UpdateCampaignInput, requesterId?: number, ip?: string, role?: string) {
     const setClauses: string[] = [];
     const values: unknown[] = [];
     let paramIndex = 1;
+
+    // Fetch current campaign for checks
+    const current = await pool.query('SELECT status, created_by FROM campaigns WHERE id = $1', [id]);
+    if (current.rows.length === 0) {
+      throw createError('Campaign not found', 404);
+    }
+    const currentCampaign = current.rows[0];
+    const oldStatus = currentCampaign.status;
+
+    // Ownership check for NGOs
+    if (role === 'NGO' && requesterId !== undefined) {
+      if (currentCampaign.created_by !== requesterId) {
+        throw createError('You do not have permission to update this campaign', 403);
+      }
+    }
+
+    // Status check: Closed campaigns are read-only
+    if (currentCampaign.status === 'CLOSED') {
+      throw createError('Cannot edit a closed campaign', 400);
+    }
 
     if (input.title !== undefined) {
       setClauses.push(`title = $${paramIndex++}`);
@@ -118,6 +138,15 @@ export class CampaignsService {
 
     if (result.rows.length === 0) {
       throw createError('Campaign not found', 404);
+    }
+
+    // Audit Log if status changed by a requester
+    if (input.status !== undefined && requesterId !== undefined && oldStatus !== input.status) {
+      await pool.query(
+        `INSERT INTO audit_logs (admin_id, action_type, target_entity, target_id, metadata, ip_address)
+         VALUES ($1, 'UPDATE_CAMPAIGN_STATUS', 'campaigns', $2, $3, $4)`,
+        [requesterId, id, JSON.stringify({ old_status: oldStatus, new_status: input.status }), ip || null]
+      );
     }
 
     return result.rows[0];

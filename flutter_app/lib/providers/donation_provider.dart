@@ -16,7 +16,24 @@ class DonationRepository {
           .map((d) => DonationModel.fromJson(d as Map<String, dynamic>))
           .toList();
     }
-    final list = (data as Map<String, dynamic>)['donations'] as List? ?? [];
+    final list = (data as Map<String, dynamic>)['data'] as List? ?? [];
+    return list
+        .map((d) => DonationModel.fromJson(d as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<List<DonationModel>> getCampaignDonations(int campaignId) async {
+    final response =
+        await _client.get(ApiConstants.campaignDonations(campaignId));
+    final data = response.data;
+    List<dynamic> list;
+    if (data is List) {
+      list = data;
+    } else if (data is Map) {
+      list = (data['data'] ?? data['donations'] ?? []) as List<dynamic>;
+    } else {
+      list = [];
+    }
     return list
         .map((d) => DonationModel.fromJson(d as Map<String, dynamic>))
         .toList();
@@ -25,14 +42,16 @@ class DonationRepository {
   Future<DonationModel> createDonation({
     required int campaignId,
     required double amountPkr,
-    String? gatewayRef,
+    required String referenceNumber,
+    String? receiptUrl,
   }) async {
     final response = await _client.post(
       ApiConstants.donations,
       data: {
         'campaign_id': campaignId,
         'amount_pkr': amountPkr,
-        if (gatewayRef != null) 'gateway_ref': gatewayRef,
+        'reference_number': referenceNumber,
+        if (receiptUrl != null && receiptUrl.isNotEmpty) 'receipt_url': receiptUrl,
       },
     );
     final data = response.data as Map<String, dynamic>;
@@ -86,14 +105,16 @@ class DonateNotifier extends StateNotifier<DonateState> {
   Future<void> donate({
     required int campaignId,
     required double amountPkr,
-    String? gatewayRef,
+    required String referenceNumber,
+    String? receiptUrl,
   }) async {
     state = state.copyWith(status: DonateStatus.loading, error: null);
     try {
       final donation = await _repo.createDonation(
         campaignId: campaignId,
         amountPkr: amountPkr,
-        gatewayRef: gatewayRef,
+        referenceNumber: referenceNumber,
+        receiptUrl: receiptUrl,
       );
       _ref.invalidate(myDonationsProvider);
       state = DonateState(status: DonateStatus.success, result: donation);
@@ -102,6 +123,7 @@ class DonateNotifier extends StateNotifier<DonateState> {
         status: DonateStatus.error,
         error: _extractError(e),
       );
+      rethrow;
     }
   }
 
@@ -109,10 +131,13 @@ class DonateNotifier extends StateNotifier<DonateState> {
 
   String _extractError(dynamic e) {
     final msg = e.toString();
+    if (msg.contains('Reference number already used')) {
+      return 'This reference number is already linked to another donation.';
+    }
     if (msg.contains('network') || msg.contains('connection')) {
       return 'No internet connection. Please try again.';
     }
-    return 'Payment could not be processed. Please try again.';
+    return 'Donation could not be submitted. Please try again.';
   }
 }
 

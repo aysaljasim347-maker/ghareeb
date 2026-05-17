@@ -10,6 +10,7 @@ export interface AuthUser {
   name: string;
   role: string;
   role_id: number;
+  status: string;
 }
 
 export interface AuthRequest extends Request {
@@ -42,7 +43,7 @@ export async function authenticate(
 
     // SECURITY: Always read role from DB, never trust client
     const result = await pool.query(
-      `SELECT u.id, u.email, u.phone, u.name, u.role_id, r.name AS role
+      `SELECT u.id, u.email, u.phone, u.name, u.role_id, u.status, r.name AS role
        FROM users u
        JOIN roles r ON r.id = u.role_id
        WHERE u.id = $1`,
@@ -54,7 +55,13 @@ export async function authenticate(
       return;
     }
 
-    req.user = result.rows[0] as AuthUser;
+    const user = result.rows[0] as AuthUser;
+    if (user.status !== 'ACTIVE') {
+      res.status(403).json({ error: 'Account suspended' });
+      return;
+    }
+
+    req.user = user;
     next();
   } catch (err) {
     if (err instanceof jwt.JsonWebTokenError) {

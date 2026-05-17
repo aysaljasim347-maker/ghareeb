@@ -39,13 +39,19 @@ class ApiConstants {
   // ── Chat ──
   static const String chatRooms = '/chat/rooms';
   static String roomMessages(int roomId) => '/chat/rooms/$roomId/messages';
+  static String roomByTaskId(int taskId) => '/chat/rooms/task/$taskId';
 
-  // ── My Tasks (beneficiary filter on available) ──
-  static const String myTasks = '/tasks/available';
+  // ── My Tasks ──
+  static const String myTasks = '/tasks/my';
+  static const String coordinatorTasks = '/tasks/coordinator';
 
   // ── Task Actions ──
   static String unclaimTask(int id) => '/tasks/$id/unclaim';
   static String startTask(int id) => '/tasks/$id/start';
+
+  // ── Withdrawals ──
+  static const String withdrawals = '/withdrawals';
+  static const String myWithdrawals = '/withdrawals/mine';
 
   // ── Health ──
   static const String health = '/health';

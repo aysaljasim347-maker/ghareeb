@@ -14,6 +14,9 @@ enum TaskStatus {
   refunded('REFUNDED'),
   active('ACTIVE'),
   draft('DRAFT'),
+  confirmed('CONFIRMED'),
+  rejected('REJECTED'),
+  approved('APPROVED'),
   unknown('UNKNOWN');
 
   final String value;
@@ -90,6 +93,9 @@ class TaskModel {
   final String? claimedAt;
   final String? createdByName;
   final String? claimedByName;
+  final String? beneficiaryName;
+  final String? campaignTitle;
+  final String? ngoName;
 
   const TaskModel({
     required this.id,
@@ -119,6 +125,9 @@ class TaskModel {
     this.claimedAt,
     this.createdByName,
     this.claimedByName,
+    this.beneficiaryName,
+    this.campaignTitle,
+    this.ngoName,
   });
 
   factory TaskModel.fromJson(Map<String, dynamic> json) {
@@ -153,6 +162,9 @@ class TaskModel {
       claimedAt: json['claimed_at'] as String?,
       createdByName: json['created_by_name'] as String?,
       claimedByName: json['claimed_by_name'] as String?,
+      beneficiaryName: json['beneficiary_name'] as String?,
+      campaignTitle: json['campaign_title'] as String?,
+      ngoName: json['ngo_name'] as String?,
     );
   }
 

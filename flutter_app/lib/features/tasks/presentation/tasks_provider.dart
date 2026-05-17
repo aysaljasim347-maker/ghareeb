@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disasteraid_app/core/api/api_client.dart';
 import 'package:disasteraid_app/features/tasks/data/tasks_repository.dart';
@@ -36,6 +37,7 @@ class ClaimState {
 class ClaimNotifier extends StateNotifier<ClaimState> {
   final TasksRepository _repository;
   final Ref _ref;
+  bool _claiming = false;
 
   ClaimNotifier({required TasksRepository repository, required Ref ref})
       : _repository = repository,
@@ -43,6 +45,8 @@ class ClaimNotifier extends StateNotifier<ClaimState> {
         super(const ClaimState());
 
   Future<void> claim(int taskId) async {
+    if (_claiming) return;
+    _claiming = true;
     state = const ClaimState(status: ClaimStatus.loading);
     try {
       await _repository.claimTask(taskId);
@@ -50,11 +54,24 @@ class ClaimNotifier extends StateNotifier<ClaimState> {
       // Refresh the available tasks list
       _ref.invalidate(availableTasksProvider);
     } catch (e) {
-      state = ClaimState(
-        status: ClaimStatus.error,
-        error: e.toString(),
-      );
+      final message = _extractError(e);
+      state = ClaimState(status: ClaimStatus.error, error: message);
+    } finally {
+      _claiming = false;
     }
+  }
+
+  String _extractError(dynamic e) {
+    if (e is DioException) {
+      final body = e.response?.data;
+      if (body is Map && body['error'] != null) {
+        return body['error'] as String;
+      }
+      if (e.response?.statusCode == 409) {
+        return 'This task is already claimed by another volunteer.';
+      }
+    }
+    return 'Failed to claim task. Please try again.';
   }
 }
 

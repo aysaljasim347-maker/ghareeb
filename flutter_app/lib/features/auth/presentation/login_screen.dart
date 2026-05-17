@@ -42,7 +42,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     // Listen for auth success and navigate
     ref.listen<AuthState>(authProvider, (prev, next) {
       if (next.status == AuthStatus.authenticated) {
-        context.go('/dashboard');
+        context.go('/');
       }
       if (next.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(

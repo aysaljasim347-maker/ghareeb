@@ -40,6 +40,10 @@ class ChatRoom {
   final int id;
   final int taskId;
   final String taskTitle;
+  final String taskStatus;
+  final String? creatorName;
+  final String? claimerName;
+  final String? coordinatorName;
   final int messageCount;
   final String? createdAt;
 
@@ -47,6 +51,10 @@ class ChatRoom {
     required this.id,
     required this.taskId,
     required this.taskTitle,
+    this.taskStatus = 'OPEN',
+    this.creatorName,
+    this.claimerName,
+    this.coordinatorName,
     this.messageCount = 0,
     this.createdAt,
   });
@@ -56,6 +64,10 @@ class ChatRoom {
       id: json['id'] as int,
       taskId: json['task_id'] as int,
       taskTitle: (json['task_title'] as String?) ?? 'Task',
+      taskStatus: (json['task_status'] as String?) ?? 'OPEN',
+      creatorName: json['creator_name'] as String?,
+      claimerName: json['claimer_name'] as String?,
+      coordinatorName: json['coordinator_name'] as String?,
       messageCount: (json['message_count'] as num?)?.toInt() ?? 0,
       createdAt: json['created_at'] as String?,
     );
@@ -77,18 +89,14 @@ class ChatRepository {
           .map((m) => ChatMessage.fromJson(m as Map<String, dynamic>))
           .toList();
     }
-    final list =
-        (data as Map<String, dynamic>)['messages'] as List? ?? [];
+    final list = (data as Map<String, dynamic>)['data'] as List? ?? [];
     return list
         .map((m) => ChatMessage.fromJson(m as Map<String, dynamic>))
         .toList();
   }
 
   Future<ChatRoom> ensureRoom(int taskId) async {
-    final response = await _client.post(
-      ApiConstants.chatRooms,
-      data: {'task_id': taskId},
-    );
+    final response = await _client.get(ApiConstants.roomByTaskId(taskId));
     final data = response.data as Map<String, dynamic>;
     return ChatRoom.fromJson(data['room'] as Map<String, dynamic>? ?? data);
   }
@@ -101,7 +109,7 @@ class ChatRepository {
           .map((r) => ChatRoom.fromJson(r as Map<String, dynamic>))
           .toList();
     }
-    final list = (data as Map<String, dynamic>)['rooms'] as List? ?? [];
+    final list = (data as Map<String, dynamic>)['data'] as List? ?? [];
     return list
         .map((r) => ChatRoom.fromJson(r as Map<String, dynamic>))
         .toList();

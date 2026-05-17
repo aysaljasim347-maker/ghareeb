@@ -19,6 +19,28 @@ router.get(
 );
 
 /**
+ * GET /api/tasks/my
+ * Returns ALL tasks created by the authenticated beneficiary (all statuses).
+ */
+router.get(
+  '/my',
+  authenticate,
+  authorize('BENEFICIARY', 'ADMIN', 'NGO'),
+  (req, res, next) => tasksController.getMyTasks(req, res, next)
+);
+
+/**
+ * GET /api/tasks/coordinator
+ * Returns tasks assigned to the authenticated coordinator.
+ */
+router.get(
+  '/coordinator',
+  authenticate,
+  authorize('COORDINATOR', 'ADMIN'),
+  (req, res, next) => tasksController.getCoordinatorTasks(req, res, next)
+);
+
+/**
  * POST /api/tasks
  * Create a new task.
  */
@@ -48,7 +70,7 @@ router.get(
 router.patch(
   '/:id',
   authenticate,
-  authorize('NGO', 'COORDINATOR', 'ADMIN'),
+  authorize('NGO', 'COORDINATOR', 'ADMIN', 'BENEFICIARY'),
   validate({ params: taskIdParam, body: updateTaskSchema }),
   (req, res, next) => tasksController.update(req, res, next)
 );
@@ -64,6 +86,30 @@ router.post(
   authorize('VOLUNTEER'),
   validate({ params: taskIdParam }),
   (req, res, next) => tasksController.claim(req, res, next)
+);
+
+/**
+ * POST /api/tasks/:id/start
+ * Transition CLAIMED → IN_PROGRESS. VOLUNTEER only.
+ */
+router.post(
+  '/:id/start',
+  authenticate,
+  authorize('VOLUNTEER'),
+  validate({ params: taskIdParam }),
+  (req, res, next) => tasksController.start(req, res, next)
+);
+
+/**
+ * POST /api/tasks/:id/unclaim
+ * Transition CLAIMED → OPEN, releases volunteer. VOLUNTEER only.
+ */
+router.post(
+  '/:id/unclaim',
+  authenticate,
+  authorize('VOLUNTEER'),
+  validate({ params: taskIdParam }),
+  (req, res, next) => tasksController.unclaim(req, res, next)
 );
 
 /**

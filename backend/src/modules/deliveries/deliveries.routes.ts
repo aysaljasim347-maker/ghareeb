@@ -41,4 +41,16 @@ router.get(
   (req, res, next) => deliveriesController.getByTask(req, res, next)
 );
 
+/**
+ * POST /api/deliveries/:id/beneficiary-confirm
+ * Beneficiary confirms receipt or reports issue.
+ */
+router.post(
+  '/:id/beneficiary-confirm',
+  authenticate,
+  authorize('BENEFICIARY', 'ADMIN'),
+  validate({ params: deliveryIdParam }),
+  (req, res, next) => deliveriesController.beneficiaryConfirm(req, res, next)
+);
+
 export default router;

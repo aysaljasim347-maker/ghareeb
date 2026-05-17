@@ -9,6 +9,8 @@ import 'package:disasteraid_app/core/theme/app_theme.dart';
 import 'package:disasteraid_app/features/auth/presentation/auth_provider.dart';
 import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
 import 'package:disasteraid_app/features/tasks/presentation/tasks_provider.dart';
+import 'package:disasteraid_app/core/api/api_client.dart';
+import 'package:disasteraid_app/core/api/api_constants.dart';
 import 'package:disasteraid_app/widgets/error_view.dart';
 import 'package:disasteraid_app/widgets/status_chip.dart';
 
@@ -22,6 +24,7 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
     final taskAsync = ref.watch(taskDetailProvider(taskId));
     final authUser = ref.watch(authProvider).user;
     final claimState = ref.watch(claimTaskProvider);
+    final theme = Theme.of(context);
 
     ref.listen<ClaimState>(claimTaskProvider, (_, next) {
       if (next.status == ClaimStatus.success) {
@@ -96,7 +99,9 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // ── Status + Urgency ──
+                    // ── Progress + Status + Urgency ──
+                    _CompletionProgressBar(status: task.status),
+                    const SizedBox(height: 16),
                     Row(
                       children: [
                         StatusChip(status: task.status),
@@ -112,19 +117,32 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
 
-                    // ── Description ──
-                    if (task.description != null) ...[
-                      Text(
-                        task.description!,
-                        style: TextStyle(
-                          fontSize: 15,
-                          height: 1.6,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
+                    // ── Verification Feedback ──
+                    if (task.status == TaskStatus.coordinatorVerified ||
+                        task.status == TaskStatus.paid ||
+                        task.status == TaskStatus.flagged)
+                      _VerificationFeedbackCard(status: task.status),
+
+                    // ── Execution Stepper ──
+                    if (!isOpen && task.status != TaskStatus.cancelled) ...[
+                      Text('Execution Progress',
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 12),
+                      _TaskExecutionStepper(status: task.status),
+                      const SizedBox(height: 24),
+                    ],
+
+                    // ── Instructions Card ──
+                    _InstructionsCard(task: task),
+                    const SizedBox(height: 24),
+
+                    // ── Checklist (UI-only) ──
+                    if (isClaimedByMe && !isOpen && task.status != TaskStatus.cancelled && task.status != TaskStatus.coordinatorVerified && task.status != TaskStatus.paid) ...[
+                      _ExecutionChecklist(status: task.status),
+                      const SizedBox(height: 24),
                     ],
 
                     // ── Details Card ──
@@ -154,7 +172,7 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
 
                     // ── Location Map ──
                     if (task.latitude != null && task.longitude != null) ...[
@@ -251,14 +269,45 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
             isOpen: isOpen,
             isClaimed: isClaimed,
             isClaimedByMe: isClaimedByMe,
+            isParticipant: task.createdBy == authUser?.id ||
+                task.claimedBy == authUser?.id ||
+                task.coordinatorId == authUser?.id,
             isInProgress: isInProgress,
             isLoading: claimState.status == ClaimStatus.loading,
             onClaim: () {
               HapticFeedback.lightImpact();
               ref.read(claimTaskProvider.notifier).claim(taskId);
             },
+            onStart: () async {
+              try {
+                await ref.read(apiClientProvider).post(ApiConstants.startTask(taskId));
+                ref.invalidate(taskDetailProvider(taskId));
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Failed to start task. Please try again.'),
+                    backgroundColor: AppTheme.errorColor,
+                  ));
+                }
+              }
+            },
+            onUnclaim: () async {
+              try {
+                await ref.read(apiClientProvider).post(ApiConstants.unclaimTask(taskId));
+                ref.invalidate(taskDetailProvider(taskId));
+                ref.invalidate(availableTasksProvider);
+                if (context.mounted) context.pop();
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Failed to unclaim task. Please try again.'),
+                    backgroundColor: AppTheme.errorColor,
+                  ));
+                }
+              }
+            },
             onUploadProof: () => context.push('/volunteer/proof/$taskId'),
-            onChat: () => context.push('/chat/$taskId'),
+            onChat: () => context.push('/chat/$taskId?title=${Uri.encodeComponent(task.title)}'),
           ),
         );
       },
@@ -275,6 +324,428 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
 }
 
 // ── Sub-widgets ──
+
+class _CompletionProgressBar extends StatelessWidget {
+  final TaskStatus status;
+  const _CompletionProgressBar({required this.status});
+
+  double _getProgress() {
+    switch (status) {
+      case TaskStatus.open:
+        return 0.05;
+      case TaskStatus.claimed:
+      case TaskStatus.assigned:
+        return 0.25;
+      case TaskStatus.inProgress:
+        return 0.50;
+      case TaskStatus.submitted:
+        return 0.75;
+      case TaskStatus.coordinatorVerified:
+      case TaskStatus.paid:
+      case TaskStatus.completed:
+        return 1.0;
+      default:
+        return 0.0;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final progress = _getProgress();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Task Progress',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            Text(
+              '${(progress * 100).toInt()}%',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 8,
+            backgroundColor: Colors.grey.shade100,
+            valueColor: AlwaysStoppedAnimation<Color>(
+                Theme.of(context).colorScheme.primary),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TaskExecutionStepper extends StatelessWidget {
+  final TaskStatus status;
+  const _TaskExecutionStepper({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final steps = [
+      _StepItem(
+        title: 'Task Accepted',
+        isCompleted: _isAtLeast(TaskStatus.claimed),
+        isActive: status == TaskStatus.claimed || status == TaskStatus.assigned,
+      ),
+      _StepItem(
+        title: 'In Progress',
+        isCompleted: _isAtLeast(TaskStatus.inProgress),
+        isActive: status == TaskStatus.inProgress,
+      ),
+      _StepItem(
+        title: 'Submit Proof',
+        isCompleted: _isAtLeast(TaskStatus.submitted),
+        isActive: status == TaskStatus.submitted,
+      ),
+      _StepItem(
+        title: 'Verification',
+        isCompleted: _isAtLeast(TaskStatus.coordinatorVerified),
+        isActive: status == TaskStatus.coordinatorVerified || status == TaskStatus.paid,
+      ),
+    ];
+
+    return Column(
+      children: List.generate(steps.length, (index) {
+        final step = steps[index];
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: step.isCompleted
+                        ? AppTheme.successColor
+                        : step.isActive
+                            ? AppTheme.primaryColor
+                            : Colors.grey.shade300,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    step.isCompleted ? Icons.check : Icons.circle,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                ),
+                if (index < steps.length - 1)
+                  Container(
+                    width: 2,
+                    height: 30,
+                    color: steps[index + 1].isCompleted
+                        ? AppTheme.successColor
+                        : Colors.grey.shade300,
+                  ),
+              ],
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  step.title,
+                  style: TextStyle(
+                    fontWeight: step.isActive || step.isCompleted
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: step.isActive || step.isCompleted
+                        ? Colors.black87
+                        : Colors.grey,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  bool _isAtLeast(TaskStatus target) {
+    final order = [
+      TaskStatus.open,
+      TaskStatus.claimed,
+      TaskStatus.assigned,
+      TaskStatus.inProgress,
+      TaskStatus.submitted,
+      TaskStatus.coordinatorVerified,
+      TaskStatus.paid,
+      TaskStatus.completed,
+    ];
+    
+    // Handle both claimed and assigned as equivalent for order
+    TaskStatus normalizedStatus = status;
+    if (status == TaskStatus.assigned) normalizedStatus = TaskStatus.claimed;
+    
+    TaskStatus normalizedTarget = target;
+    if (target == TaskStatus.assigned) normalizedTarget = TaskStatus.claimed;
+
+    final currentIdx = order.indexOf(normalizedStatus);
+    final targetIdx = order.indexOf(normalizedTarget);
+    
+    // If not found in order (e.g. unknown or cancelled), return false unless it's open
+    if (currentIdx == -1) return false;
+    
+    return currentIdx >= targetIdx;
+  }
+}
+
+class _StepItem {
+  final String title;
+  final bool isCompleted;
+  final bool isActive;
+  _StepItem({required this.title, required this.isCompleted, required this.isActive});
+}
+
+class _InstructionsCard extends StatelessWidget {
+  final TaskModel task;
+  const _InstructionsCard({required this.task});
+
+  @override
+  Widget build(BuildContext context) {
+    final text = task.description ?? 'No specific instructions provided.';
+    final keywords = ['photo required', 'gps required', 'urgent', 'priority', 'mandatory'];
+    
+    return Card(
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'Task Instructions',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontFamily: 'Inter',
+                ),
+                children: _getHighlightedSpans(text, keywords, context),
+              ),
+            ),
+            if (task.locationText != null) ...[
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      'Location: ${task.locationText}',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<TextSpan> _getHighlightedSpans(String text, List<String> keywords, BuildContext context) {
+    List<TextSpan> spans = [];
+    String lowerText = text.toLowerCase();
+    
+    int currentPos = 0;
+    
+    // Simple greedy keyword highlighting
+    while (currentPos < text.length) {
+      int? firstMatchIdx;
+      String? matchedKeyword;
+      
+      for (var keyword in keywords) {
+        int idx = lowerText.indexOf(keyword, currentPos);
+        if (idx != -1 && (firstMatchIdx == null || idx < firstMatchIdx)) {
+          firstMatchIdx = idx;
+          matchedKeyword = text.substring(idx, idx + keyword.length);
+        }
+      }
+      
+      if (firstMatchIdx != null && matchedKeyword != null) {
+        // Add text before match
+        if (firstMatchIdx > currentPos) {
+          spans.add(TextSpan(text: text.substring(currentPos, firstMatchIdx)));
+        }
+        
+        // Add matched keyword with highlight
+        spans.add(TextSpan(
+          text: matchedKeyword,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.primary,
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
+          ),
+        ));
+        
+        currentPos = firstMatchIdx + matchedKeyword.length;
+      } else {
+        // No more matches
+        spans.add(TextSpan(text: text.substring(currentPos)));
+        break;
+      }
+    }
+    
+    return spans;
+  }
+}
+
+class _ExecutionChecklist extends StatefulWidget {
+  final TaskStatus status;
+  const _ExecutionChecklist({required this.status});
+
+  @override
+  State<_ExecutionChecklist> createState() => _ExecutionChecklistState();
+}
+
+class _ExecutionChecklistState extends State<_ExecutionChecklist> {
+  final List<bool> _checked = [false, false, false, false];
+  final List<String> _items = [
+    'Reach destination location',
+    'Verify beneficiary identity',
+    'Deliver required aid items',
+    'Capture photographic proof'
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Execution Checklist',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        ...List.generate(_items.length, (index) {
+          return CheckboxListTile(
+            value: _checked[index],
+            onChanged: (val) => setState(() => _checked[index] = val ?? false),
+            title: Text(_items[index], style: const TextStyle(fontSize: 14)),
+            controlAffinity: ListTileControlAffinity.leading,
+            dense: true,
+            contentPadding: EdgeInsets.zero,
+            activeColor: AppTheme.primaryColor,
+          );
+        }),
+      ],
+    );
+  }
+}
+
+class _VerificationFeedbackCard extends StatelessWidget {
+  final TaskStatus status;
+  const _VerificationFeedbackCard({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final isVerified = status == TaskStatus.coordinatorVerified || status == TaskStatus.paid;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: isVerified ? Colors.green.shade50 : Colors.red.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isVerified ? Colors.green.shade200 : Colors.red.shade200,
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                isVerified ? Icons.verified : Icons.report_problem,
+                color: isVerified ? Colors.green : Colors.red,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                isVerified ? 'Delivery Verified!' : 'Attention Required',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isVerified ? Colors.green.shade900 : Colors.red.shade900,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isVerified 
+              ? 'Great job! Your delivery has been confirmed by the coordinator. This impact has been added to your profile.'
+              : 'There was an issue with your delivery proof. Please check the coordinator notes below and update your submission if necessary.',
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.4,
+              color: isVerified ? Colors.green.shade800 : Colors.red.shade800,
+            ),
+          ),
+          if (isVerified) ...[
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                const Icon(Icons.star, color: Colors.amber, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  '+10 Trust Points Earned',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green.shade900,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
 
 class _TaskHeroImage extends StatelessWidget {
   final TaskModel task;
@@ -378,9 +849,12 @@ class _ActionBar extends StatelessWidget {
   final bool isOpen;
   final bool isClaimed;
   final bool isClaimedByMe;
+  final bool isParticipant;
   final bool isInProgress;
   final bool isLoading;
   final VoidCallback onClaim;
+  final VoidCallback onStart;
+  final VoidCallback onUnclaim;
   final VoidCallback onUploadProof;
   final VoidCallback onChat;
 
@@ -389,9 +863,12 @@ class _ActionBar extends StatelessWidget {
     required this.isOpen,
     required this.isClaimed,
     required this.isClaimedByMe,
+    required this.isParticipant,
     required this.isInProgress,
     required this.isLoading,
     required this.onClaim,
+    required this.onStart,
+    required this.onUnclaim,
     required this.onUploadProof,
     required this.onChat,
   });
@@ -414,6 +891,19 @@ class _ActionBar extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (isParticipant && !isOpen)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: OutlinedButton.icon(
+                  onPressed: onChat,
+                  icon: const Icon(Icons.chat_bubble_outline),
+                  label: const Text('Open Coordination Chat'),
+                ),
+              ),
+            ),
           if (isOpen)
             SizedBox(
               width: double.infinity,
@@ -438,43 +928,27 @@ class _ActionBar extends StatelessWidget {
                   child: SizedBox(
                     height: 56,
                     child: FilledButton(
-                      onPressed: () {},
+                      onPressed: onStart,
                       child: const Text('Start Task'),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 TextButton(
-                  onPressed: () {},
+                  onPressed: onUnclaim,
                   child: const Text('Unclaim'),
                 ),
               ],
             ),
           if (isInProgress && isClaimedByMe)
-            Row(
-              children: [
-                Expanded(
-                  child: SizedBox(
-                    height: 56,
-                    child: FilledButton.icon(
-                      onPressed: onUploadProof,
-                      icon: const Icon(Icons.upload_file),
-                      label: const Text('Upload Proof'),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: SizedBox(
-                    height: 56,
-                    child: OutlinedButton.icon(
-                      onPressed: onChat,
-                      icon: const Icon(Icons.chat_bubble_outline),
-                      label: const Text('Chat'),
-                    ),
-                  ),
-                ),
-              ],
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: FilledButton.icon(
+                onPressed: onUploadProof,
+                icon: const Icon(Icons.upload_file),
+                label: const Text('Upload Proof of Completion'),
+              ),
             ),
         ],
       ),

@@ -7,10 +7,6 @@ import { createDonationSchema, donationIdParam } from './donations.schema.js';
 
 const router = Router();
 
-/**
- * POST /api/donations
- * Create a donation. Any authenticated user can donate.
- */
 router.post(
   '/',
   authenticate,
@@ -18,32 +14,28 @@ router.post(
   (req, res, next) => donationsController.create(req, res, next)
 );
 
-/**
- * GET /api/donations/mine
- * Get current user's donations.
- */
 router.get(
   '/mine',
   authenticate,
   (req, res, next) => donationsController.getMyDonations(req, res, next)
 );
 
-/**
- * POST /api/donations/:id/confirm
- * Confirm a donation (webhook / admin).
- */
 router.post(
-  '/:id/confirm',
+  '/:id/approve',
   authenticate,
-  authorize('ADMIN', 'COORDINATOR'),
+  authorize('ADMIN'),
   validate({ params: donationIdParam }),
-  (req, res, next) => donationsController.confirm(req, res, next)
+  (req, res, next) => donationsController.approve(req, res, next)
 );
 
-/**
- * GET /api/donations/campaign/:campaignId
- * Get donations for a campaign.
- */
+router.post(
+  '/:id/reject',
+  authenticate,
+  authorize('ADMIN'),
+  validate({ params: donationIdParam }),
+  (req, res, next) => donationsController.reject(req, res, next)
+);
+
 router.get(
   '/campaign/:campaignId',
   authenticate,

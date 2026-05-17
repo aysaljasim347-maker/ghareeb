@@ -9,19 +9,32 @@ class CampaignRepository {
   CampaignRepository({required ApiClient client}) : _client = client;
 
   Future<List<CampaignModel>> getCampaigns({String? status}) async {
-    final params = status != null ? {'status': status} : null;
-    final response =
-        await _client.get(ApiConstants.campaigns, queryParameters: params);
-    final data = response.data;
-    if (data is List) {
-      return data
+    try {
+      final params = status != null ? {'status': status} : null;
+      final response =
+          await _client.get(ApiConstants.campaigns, queryParameters: params);
+      final data = response.data;
+
+      // Handle the standardized 'data' wrapper from backend
+      List<dynamic> list = [];
+      if (data is List) {
+        list = data;
+      } else if (data is Map && data.containsKey('data')) {
+        list = data['data'] as List? ?? [];
+      } else if (data is Map && data.containsKey('campaigns')) {
+        // Fallback for old structure
+        list = data['campaigns'] as List? ?? [];
+      }
+
+      return list
           .map((c) => CampaignModel.fromJson(c as Map<String, dynamic>))
           .toList();
+    } catch (e) {
+      // INTERNAL LOGGING (Placeholder)
+      print('[RESILIENCE] Failed to load campaigns: $e');
+      // Return empty list instead of throwing to keep UI stable
+      return [];
     }
-    final list = (data as Map<String, dynamic>)['campaigns'] as List? ?? [];
-    return list
-        .map((c) => CampaignModel.fromJson(c as Map<String, dynamic>))
-        .toList();
   }
 
   Future<CampaignModel> getCampaignById(int id) async {

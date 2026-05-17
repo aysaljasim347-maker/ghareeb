@@ -95,7 +95,7 @@ export class AuthService {
     const field = input.email ? 'email' : 'phone';
 
     const result = await pool.query(
-      `SELECT u.id, u.email, u.phone, u.name, u.password_hash, u.role_id, r.name AS role
+      `SELECT u.id, u.email, u.phone, u.name, u.password_hash, u.role_id, u.status, r.name AS role
        FROM users u
        JOIN roles r ON r.id = u.role_id
        WHERE u.${field} = $1`,
@@ -107,6 +107,11 @@ export class AuthService {
     }
 
     const user = result.rows[0];
+
+    if (user.status === 'SUSPENDED') {
+      throw createError('Your account has been suspended. Please contact support.', 403);
+    }
+
     const isValidPassword = await bcrypt.compare(input.password, user.password_hash);
 
     if (!isValidPassword) {

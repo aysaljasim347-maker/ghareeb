@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(flutter pub *)",
-      "Bash(flutter analyze *)"
+      "Bash(flutter analyze *)",
+      "Bash(npx tsc *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\finalproject\\\\disasteraid-v2\\\\backend\" -Recurse -Directory)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "Bash(xargs cat)",
+      "Bash(dart run *)",
+      "Bash(docker exec disasteraid-db *)",
+      "Bash(docker exec disasteraid-api *)",
+      "Bash(echo \"EXIT_CODE:$?\")"
     ]
   }
 }

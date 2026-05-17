@@ -5,10 +5,33 @@ export class ChatService {
   /**
    * Create a chat room for a task.
    */
-  async createRoom(taskId: number, createdBy: number) {
+  async createRoom(taskId: number, userId: number) {
+    if (!taskId) throw createError('task_id is required', 400);
+
+    // Verify task exists and user is participant
+    const taskResult = await pool.query(
+      `SELECT id, created_by, claimed_by, coordinator_id FROM tasks WHERE id = $1`,
+      [taskId]
+    );
+
+    if (taskResult.rows.length === 0) {
+      throw createError('Task not found', 404);
+    }
+
+    const task = taskResult.rows[0];
+    const isParticipant =
+      task.created_by === userId ||
+      task.claimed_by === userId ||
+      task.coordinator_id === userId;
+
+    if (!isParticipant) {
+      // Check if user is an admin or something? For now, stick to participants
+      throw createError('Only task participants can create or access chat', 403);
+    }
+
     // Check if room already exists for this task
     const existing = await pool.query(
-      'SELECT id FROM chat_rooms WHERE task_id = $1',
+      'SELECT id, task_id, created_at FROM chat_rooms WHERE task_id = $1',
       [taskId]
     );
 
@@ -20,15 +43,56 @@ export class ChatService {
       `INSERT INTO chat_rooms (task_id, created_by)
        VALUES ($1, $2)
        RETURNING *`,
-      [taskId, createdBy]
+      [taskId, userId]
     );
 
     // Record event
     await pool.query(
       `INSERT INTO task_events (task_id, user_id, event_type)
        VALUES ($1, $2, 'CHAT_STARTED')`,
-      [taskId, createdBy]
+      [taskId, userId]
     );
+
+    return result.rows[0];
+  }
+
+  /**
+   * Get room info by task ID.
+   */
+  async getRoomByTaskId(taskId: number, userId: number) {
+    const result = await pool.query(
+      `SELECT cr.*, 
+              t.title AS task_title, 
+              t.status AS task_status,
+              creator.name AS creator_name,
+              claimer.name AS claimer_name,
+              coord.name AS coordinator_name
+       FROM chat_rooms cr
+       JOIN tasks t ON t.id = cr.task_id
+       LEFT JOIN users creator ON creator.id = t.created_by
+       LEFT JOIN users claimer ON claimer.id = t.claimed_by
+       LEFT JOIN users coord   ON coord.id = t.coordinator_id
+       WHERE cr.task_id = $1 AND (t.created_by = $2 OR t.claimed_by = $2 OR t.coordinator_id = $2)`,
+      [taskId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      // Check if task exists and user is participant
+      const taskCheck = await pool.query(
+        'SELECT id, title, status, created_by, claimed_by, coordinator_id FROM tasks WHERE id = $1',
+        [taskId]
+      );
+
+      if (taskCheck.rows.length === 0) throw createError('Task not found', 404);
+
+      const task = taskCheck.rows[0];
+      const isPart = task.created_by === userId || task.claimed_by === userId || task.coordinator_id === userId;
+
+      if (!isPart) throw createError('Access denied to task chat', 403);
+
+      // Participant but no room? Create it.
+      return this.createRoom(taskId, userId);
+    }
 
     return result.rows[0];
   }

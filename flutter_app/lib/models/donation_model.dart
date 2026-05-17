@@ -1,10 +1,14 @@
+import 'package:disasteraid_app/utils/safe_parser.dart';
+
 class DonationModel {
   final int id;
   final int? campaignId;
   final int? donorId;
   final double amountPkr;
   final String status;
-  final String? gatewayRef;
+  final String paymentMethod;
+  final String? referenceNumber;
+  final String? receiptUrl;
   final String? campaignTitle;
   final String? donorName;
   final String? createdAt;
@@ -16,7 +20,9 @@ class DonationModel {
     this.donorId,
     required this.amountPkr,
     this.status = 'PENDING',
-    this.gatewayRef,
+    this.paymentMethod = 'BANK_TRANSFER',
+    this.referenceNumber,
+    this.receiptUrl,
     this.campaignTitle,
     this.donorName,
     this.createdAt,
@@ -25,39 +31,46 @@ class DonationModel {
 
   factory DonationModel.fromJson(Map<String, dynamic> json) {
     return DonationModel(
-      id: json['id'] as int,
-      campaignId: json['campaign_id'] as int?,
-      donorId: json['donor_id'] as int?,
-      amountPkr: (json['amount_pkr'] as num?)?.toDouble() ?? 0,
-      status: (json['status'] as String?) ?? 'PENDING',
-      gatewayRef: json['gateway_ref'] as String?,
-      campaignTitle: json['campaign_title'] as String?,
-      donorName: json['donor_name'] as String?,
-      createdAt: json['created_at'] as String?,
-      updatedAt: json['updated_at'] as String?,
+      id: SafeParser.paramInt(json['id']),
+      campaignId: json['campaign_id'] != null ? SafeParser.paramInt(json['campaign_id']) : null,
+      donorId: json['donor_id'] != null ? SafeParser.paramInt(json['donor_id']) : null,
+      amountPkr: SafeParser.toDouble(json['amount_pkr']),
+      status: SafeParser.toStringSafe(json['status'], defaultValue: 'PENDING'),
+      paymentMethod: SafeParser.toStringSafe(json['payment_method'], defaultValue: 'BANK_TRANSFER'),
+      referenceNumber: json['gateway_ref'] != null ? SafeParser.toStringSafe(json['gateway_ref']) : null,
+      receiptUrl: json['receipt_url'] != null ? SafeParser.toStringSafe(json['receipt_url']) : null,
+      campaignTitle: json['campaign_title'] != null ? SafeParser.toStringSafe(json['campaign_title']) : null,
+      donorName: json['donor_name'] != null ? SafeParser.toStringSafe(json['donor_name']) : null,
+      createdAt: json['created_at'] != null ? SafeParser.toStringSafe(json['created_at']) : null,
+      updatedAt: json['updated_at'] != null ? SafeParser.toStringSafe(json['updated_at']) : null,
     );
   }
 
-  bool get isCompleted => status == 'COMPLETED';
+  bool get isConfirmed => status == 'CONFIRMED';
 }
 
 class DonationSummary {
   final double totalPkr;
   final int count;
   final int familiesHelped;
+  final int campaignsCount;
 
   const DonationSummary({
     required this.totalPkr,
     required this.count,
     required this.familiesHelped,
+    this.campaignsCount = 0,
   });
 
   factory DonationSummary.fromDonations(List<DonationModel> donations) {
-    final completed = donations.where((d) => d.isCompleted).toList();
+    final confirmed = donations.where((d) => d.isConfirmed).toList();
+    final uniqueCampaigns =
+        confirmed.map((d) => d.campaignId).whereType<int>().toSet().length;
     return DonationSummary(
-      totalPkr: completed.fold(0, (sum, d) => sum + d.amountPkr),
-      count: completed.length,
-      familiesHelped: completed.length,
+      totalPkr: confirmed.fold(0, (sum, d) => sum + d.amountPkr),
+      count: confirmed.length,
+      familiesHelped: confirmed.length,
+      campaignsCount: uniqueCampaigns,
     );
   }
 }

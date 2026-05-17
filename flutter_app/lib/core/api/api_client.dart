@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disasteraid_app/config/env.dart';
 import 'package:disasteraid_app/core/api/api_interceptor.dart';
+import 'package:disasteraid_app/core/api/observability_interceptor.dart';
 import 'package:disasteraid_app/core/api/retry_interceptor.dart';
 import 'package:disasteraid_app/core/storage/secure_storage.dart';
 
@@ -25,7 +26,10 @@ class ApiClient {
         receiveTimeout: const Duration(seconds: 15),
         sendTimeout: const Duration(seconds: 15),
         headers: {
-          'Content-Type': 'application/json',
+          // Do NOT force Content-Type here. Dio sets it automatically:
+          //   Map  data  → application/json
+          //   FormData   → multipart/form-data; boundary=...
+          // Forcing application/json globally breaks multipart uploads.
           'Accept': 'application/json',
         },
       ),
@@ -33,6 +37,7 @@ class ApiClient {
 
     _dio.interceptors.add(RetryInterceptor(dio: _dio));
     _dio.interceptors.add(AuthInterceptor(storage: storage));
+    _dio.interceptors.add(ObservabilityInterceptor(storage: storage));
     _dio.interceptors.add(LogInterceptor(
       requestBody: kDebugMode,
       responseBody: kDebugMode,

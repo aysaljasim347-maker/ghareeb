@@ -12,7 +12,7 @@ export const updateCampaignSchema = z.object({
   title: z.string().min(1).max(255).optional(),
   description: z.string().optional(),
   goal_pkr: z.number().positive().optional(),
-  status: z.enum(['DRAFT', 'PENDING_APPROVAL', 'ACTIVE', 'COMPLETED', 'REJECTED']).optional(),
+  status: z.enum(['DRAFT', 'PENDING_APPROVAL', 'ACTIVE', 'PAUSED', 'CLOSED', 'REJECTED', 'COMPLETED']).optional(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
 });

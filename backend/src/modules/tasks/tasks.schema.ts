@@ -32,7 +32,14 @@ export const updateTaskSchema = z.object({
   radius_km: z.number().int().positive().optional(),
   budget_pkr: z.number().min(0).optional(),
   urgency: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
-});
+  status: z.string().max(50).optional(),
+  coordinator_id: z.number().int().positive().optional(),
+}).refine(
+  (data) =>
+    (data.latitude === undefined && data.longitude === undefined) ||
+    (data.latitude !== undefined && data.longitude !== undefined),
+  { message: 'latitude and longitude must be provided together' }
+);
 
 export const taskIdParam = z.object({
   id: z.coerce.number().int().positive(),

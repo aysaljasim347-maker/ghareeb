@@ -1,7 +1,9 @@
 import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:disasteraid_app/models/donation_model.dart';
 import 'package:disasteraid_app/providers/donation_provider.dart';
 import 'package:disasteraid_app/widgets/empty_state.dart';
@@ -59,59 +61,93 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final fmt = NumberFormat('#,##0');
     return Card(
       color: cs.primaryContainer,
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Total Donated',
-                    style:
-                        TextStyle(color: cs.onPrimaryContainer, fontSize: 13),
+            Text(
+              'Donation Portfolio',
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: cs.onPrimaryContainer.withValues(alpha: 0.7),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '₹${NumberFormat('#,##0').format(summary.totalPkr)}',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: cs.onPrimaryContainer,
-                        ),
-                  ),
-                ],
-              ),
             ),
-            Container(
-              width: 1,
-              height: 50,
-              color: cs.onPrimaryContainer.withValues(alpha: 0.2),
+            const SizedBox(height: 12),
+            Text(
+              '₹${fmt.format(summary.totalPkr)}',
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: cs.onPrimaryContainer,
+                  ),
             ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    'Families Helped',
-                    style:
-                        TextStyle(color: cs.onPrimaryContainer, fontSize: 13),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${summary.familiesHelped}',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: cs.onPrimaryContainer,
-                        ),
-                  ),
-                ],
-              ),
+            const SizedBox(height: 4),
+            Text(
+              'total donated (confirmed)',
+              style: TextStyle(
+                  color: cs.onPrimaryContainer.withValues(alpha: 0.7),
+                  fontSize: 13),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                _StatPill(
+                  icon: Icons.volunteer_activism,
+                  value: '${summary.count}',
+                  label: 'Donations',
+                  cs: cs,
+                ),
+                const SizedBox(width: 12),
+                _StatPill(
+                  icon: Icons.campaign_outlined,
+                  value: '${summary.campaignsCount}',
+                  label: 'Campaigns',
+                  cs: cs,
+                ),
+              ],
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _StatPill extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  final ColorScheme cs;
+
+  const _StatPill(
+      {required this.icon,
+      required this.value,
+      required this.label,
+      required this.cs});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: cs.onPrimaryContainer.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: cs.onPrimaryContainer),
+          const SizedBox(width: 6),
+          Text(
+            '$value $label',
+            style: TextStyle(
+                color: cs.onPrimaryContainer,
+                fontWeight: FontWeight.w600,
+                fontSize: 13),
+          ),
+        ],
       ),
     );
   }
@@ -161,11 +197,25 @@ class _DonationTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      donation.campaignTitle ?? 'Donation',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    GestureDetector(
+                      onTap: donation.campaignId != null
+                          ? () => context
+                              .push('/donor/campaign/${donation.campaignId}')
+                          : null,
+                      child: Text(
+                        donation.campaignTitle ?? 'Donation',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: donation.campaignId != null
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
+                          decoration: donation.campaignId != null
+                              ? TextDecoration.underline
+                              : null,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -254,21 +304,34 @@ class _ReceiptSheet extends StatelessWidget {
                 DateFormat('dd MMM yyyy, hh:mm a')
                     .format(DateTime.parse(donation.createdAt!).toLocal()),
               ),
-            if (donation.gatewayRef != null)
-              _ReceiptRow('Reference', donation.gatewayRef!),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('PDF download coming soon.')),
-                  );
-                },
-                icon: const Icon(Icons.download),
-                label: const Text('Download PDF'),
+            if (donation.referenceNumber != null)
+              _ReceiptRow('Reference', donation.referenceNumber!),
+            if (donation.receiptUrl != null) ...[
+              _ReceiptRow('Receipt', donation.receiptUrl!),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    final uri = Uri.tryParse(donation.receiptUrl!);
+                    if (uri != null && await canLaunchUrl(uri)) {
+                      await launchUrl(uri,
+                          mode: LaunchMode.externalApplication);
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Could not open receipt URL.')),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.open_in_new),
+                  label: const Text('Open Receipt'),
+                ),
               ),
-            ),
+            ],
+            const SizedBox(height: 24),
           ],
         ),
       ),

@@ -12,10 +12,8 @@ class TasksRepository {
   Future<List<TaskModel>> getAvailableTasks() async {
     final response = await _client.get(ApiConstants.availableTasks);
     final data = response.data as Map<String, dynamic>;
-    final tasks = (data['tasks'] as List<dynamic>)
-        .map((t) => TaskModel.fromJson(t as Map<String, dynamic>))
-        .toList();
-    return tasks;
+    final list = (data['data'] as List<dynamic>?) ?? [];
+    return list.map((t) => TaskModel.fromJson(t as Map<String, dynamic>)).toList();
   }
 
   /// Get task details by ID.
@@ -28,7 +26,7 @@ class TasksRepository {
   Future<TaskModel> claimTask(int taskId) async {
     final response = await _client.post(ApiConstants.claimTask(taskId));
     final data = response.data as Map<String, dynamic>;
-    return TaskModel.fromJson(data['task'] as Map<String, dynamic>);
+    return TaskModel.fromJson(data['data'] as Map<String, dynamic>);
   }
 
   /// Create a new task.

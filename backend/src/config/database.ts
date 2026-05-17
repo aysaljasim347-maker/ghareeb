@@ -15,21 +15,27 @@ const poolConfig: PoolConfig = {
 
 export const pool = new Pool(poolConfig);
 
-// Graceful pool error handling
+// Pool-level idle client errors are non-fatal — the pool self-heals.
+// Calling process.exit here would crash the server on any transient DB blip.
 pool.on('error', (err) => {
-  console.error('Unexpected PostgreSQL pool error:', err);
-  process.exit(-1);
+  console.error('[DB POOL] Idle client error (pool will self-heal):', err.message);
 });
 
 /**
  * Health check for database connectivity.
  */
 export async function checkDatabaseHealth(): Promise<boolean> {
+  // Acquire a client explicitly so we test a real round-trip, not a cached query.
+  // pg returns all numeric literals as strings, so compare with string '1'.
+  let client;
   try {
-    const result = await pool.query('SELECT 1 AS ok');
-    return result.rows[0]?.ok === 1;
+    client = await pool.connect();
+    await client.query('SELECT 1');
+    return true;
   } catch (err) {
-    console.error('Database health check failed:', err);
+    console.error('[DB HEALTH] Check failed:', err);
     return false;
+  } finally {
+    client?.release();
   }
 }

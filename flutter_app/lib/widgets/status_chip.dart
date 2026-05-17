@@ -36,6 +36,11 @@ class StatusChip extends StatelessWidget {
         return const Color(0xFF38A169);
       case TaskStatus.draft:
         return const Color(0xFF718096);
+      case TaskStatus.confirmed:
+      case TaskStatus.approved:
+        return const Color(0xFF38A169);
+      case TaskStatus.rejected:
+        return const Color(0xFFE53E3E);
       default:
         return const Color(0xFF718096);
     }

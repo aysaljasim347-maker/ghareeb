@@ -6,6 +6,7 @@ import { Server as SocketIOServer } from 'socket.io';
 
 import { env } from './config/env.js';
 import { pool, checkDatabaseHealth } from './config/database.js';
+import { requestLogger } from './middleware/requestLogger.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initializeChatGateway } from './modules/chat/chat.gateway.js';
@@ -17,12 +18,21 @@ import donationsRoutes from './modules/donations/donations.routes.js';
 import chatRoutes from './modules/chat/chat.routes.js';
 import campaignsRoutes from './modules/campaigns/campaigns.routes.js';
 import deliveriesRoutes from './modules/deliveries/deliveries.routes.js';
+import withdrawalsRoutes from './modules/withdrawals/withdrawals.routes.js';
+import adminRoutes from './modules/admin/admin.routes.js';
+import usersRoutes from './modules/users/users.routes.js';
+import ngoRoutes from './modules/ngo/ngo.routes.js';
+import coordinatorRoutes from './modules/coordinator/coordinator.routes.js';
+import mediaRoutes from './modules/media/media.routes.js';
 
 // ── Express App Setup ───────────────────────────────────────
 const app = express();
 const httpServer = createServer(app);
 
 app.set('trust proxy', 1);
+
+// ── Observability Middleware ────────────────────────────────
+app.use(requestLogger);
 
 // ── Security Middleware ─────────────────────────────────────
 app.use(helmet());
@@ -81,6 +91,11 @@ app.use('/api/donations', donationsRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/campaigns', campaignsRoutes);
 app.use('/api/deliveries', deliveriesRoutes);
+app.use('/api/withdrawals', withdrawalsRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/ngo', ngoRoutes);
+app.use('/api/coordinator', coordinatorRoutes);
 
 // ── 404 Handler ─────────────────────────────────────────────
 app.use((_req, res) => {

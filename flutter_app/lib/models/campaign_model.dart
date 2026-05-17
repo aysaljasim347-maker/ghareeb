@@ -1,3 +1,5 @@
+import 'package:disasteraid_app/utils/safe_parser.dart';
+
 class CampaignModel {
   final int id;
   final int? ngoId;
@@ -6,6 +8,7 @@ class CampaignModel {
   final String? description;
   final double goalPkr;
   final double raisedPkr;
+  final double spentPkr;
   final String status;
   final double? latitude;
   final double? longitude;
@@ -23,6 +26,7 @@ class CampaignModel {
     this.description,
     required this.goalPkr,
     this.raisedPkr = 0,
+    this.spentPkr = 0,
     this.status = 'ACTIVE',
     this.latitude,
     this.longitude,
@@ -35,21 +39,22 @@ class CampaignModel {
 
   factory CampaignModel.fromJson(Map<String, dynamic> json) {
     return CampaignModel(
-      id: json['id'] as int,
-      ngoId: json['ngo_id'] as int?,
-      createdBy: json['created_by'] as int?,
-      title: json['title'] as String,
-      description: json['description'] as String?,
-      goalPkr: (json['goal_pkr'] as num?)?.toDouble() ?? 0,
-      raisedPkr: (json['raised_pkr'] as num?)?.toDouble() ?? 0,
-      status: (json['status'] as String?) ?? 'ACTIVE',
-      latitude: (json['latitude'] as num?)?.toDouble(),
-      longitude: (json['longitude'] as num?)?.toDouble(),
-      ngoName: json['ngo_name'] as String?,
-      createdByName: json['created_by_name'] as String?,
-      imageUrl: json['image_url'] as String?,
-      createdAt: json['created_at'] as String?,
-      updatedAt: json['updated_at'] as String?,
+      id: SafeParser.paramInt(json['id']),
+      ngoId: json['ngo_id'] != null ? SafeParser.paramInt(json['ngo_id']) : null,
+      createdBy: json['created_by'] != null ? SafeParser.paramInt(json['created_by']) : null,
+      title: SafeParser.toStringSafe(json['title'], defaultValue: 'Untitled Campaign'),
+      description: json['description'] != null ? SafeParser.toStringSafe(json['description']) : null,
+      goalPkr: SafeParser.toDouble(json['goal_pkr']),
+      raisedPkr: SafeParser.toDouble(json['raised_pkr']),
+      spentPkr: SafeParser.toDouble(json['spent_pkr']),
+      status: SafeParser.toStringSafe(json['status'], defaultValue: 'ACTIVE'),
+      latitude: json['latitude'] != null ? SafeParser.toDouble(json['latitude']) : null,
+      longitude: json['longitude'] != null ? SafeParser.toDouble(json['longitude']) : null,
+      ngoName: json['ngo_name'] != null ? SafeParser.toStringSafe(json['ngo_name']) : null,
+      createdByName: json['created_by_name'] != null ? SafeParser.toStringSafe(json['created_by_name']) : null,
+      imageUrl: json['image_url'] != null ? SafeParser.toStringSafe(json['image_url']) : null,
+      createdAt: json['created_at'] != null ? SafeParser.toStringSafe(json['created_at']) : null,
+      updatedAt: json['updated_at'] != null ? SafeParser.toStringSafe(json['updated_at']) : null,
     );
   }
 
@@ -57,4 +62,10 @@ class CampaignModel {
       goalPkr > 0 ? (raisedPkr / goalPkr).clamp(0.0, 1.0) : 0;
 
   bool get isActive => status == 'ACTIVE';
+
+  // Campaigns with ≥70 % of goal reached are surfaced as urgent
+  bool get isUrgent => isActive && progressFraction >= 0.7;
+
+  double get utilizationFraction =>
+      raisedPkr > 0 ? (spentPkr / raisedPkr).clamp(0.0, 1.0) : 0;
 }

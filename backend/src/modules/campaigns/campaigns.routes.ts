@@ -1,9 +1,14 @@
 import { Router } from 'express';
+import { z } from 'zod';
 import { campaignsController } from './campaigns.controller.js';
 import { authenticate } from '../../middleware/auth.js';
 import { authorize } from '../../middleware/authorize.js';
 import { validate } from '../../middleware/validate.js';
 import { createCampaignSchema, updateCampaignSchema, campaignIdParam } from './campaigns.schema.js';
+
+const updateStatusSchema = z.object({
+  status: z.enum(['DRAFT', 'PENDING_APPROVAL', 'ACTIVE', 'PAUSED', 'CLOSED', 'REJECTED', 'COMPLETED']),
+});
 
 const router = Router();
 
@@ -37,6 +42,17 @@ router.get(
   authenticate,
   validate({ params: campaignIdParam }),
   (req, res, next) => campaignsController.getById(req, res, next)
+);
+
+/**
+ * PATCH /api/campaigns/:id/status
+ */
+router.patch(
+  '/:id/status',
+  authenticate,
+  authorize('NGO', 'COORDINATOR', 'ADMIN'),
+  validate({ params: campaignIdParam, body: updateStatusSchema }),
+  (req, res, next) => campaignsController.updateStatus(req, res, next)
 );
 
 /**

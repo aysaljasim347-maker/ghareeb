@@ -2,13 +2,17 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../../middleware/auth.js';
 import { authService } from './auth.service.js';
 import { RegisterInput, LoginInput } from './auth.schema.js';
+import { mapUser } from '../../common/mappers/user.mapper.js';
 
 export class AuthController {
   async register(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const input = req.body as RegisterInput;
       const result = await authService.register(input);
-      res.status(201).json(result);
+      res.status(201).json({
+        token: result.token,
+        user: mapUser(result.user)
+      });
     } catch (err) {
       next(err);
     }
@@ -18,7 +22,10 @@ export class AuthController {
     try {
       const input = req.body as LoginInput;
       const result = await authService.login(input);
-      res.json(result);
+      res.json({
+        token: result.token,
+        user: mapUser(result.user)
+      });
     } catch (err) {
       next(err);
     }
@@ -31,7 +38,7 @@ export class AuthController {
         return;
       }
       const profile = await authService.getProfile(req.user.id);
-      res.json(profile);
+      res.json(mapUser(profile));
     } catch (err) {
       next(err);
     }

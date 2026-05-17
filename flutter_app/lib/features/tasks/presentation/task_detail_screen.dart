@@ -1,6 +1,7 @@
 import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:disasteraid_app/features/tasks/presentation/tasks_provider.dart';
 import 'package:disasteraid_app/features/auth/presentation/auth_provider.dart';
 import 'package:disasteraid_app/core/theme/app_theme.dart';
@@ -43,6 +44,11 @@ class TaskDetailScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Error: $err')),
         data: (task) {
+          final userId = authState.user?.id;
+          final isParticipant = task.createdBy == userId ||
+              task.claimedBy == userId ||
+              task.coordinatorId == userId;
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -54,6 +60,15 @@ class TaskDetailScreen extends ConsumerWidget {
                     _UrgencyBadge(urgency: task.urgency),
                     const SizedBox(width: 8),
                     _StatusBadge(status: task.status),
+                    if (isParticipant) ...[
+                      const SizedBox(width: 8),
+                      IconButton.filledTonal(
+                        onPressed: () => context
+                            .push('/chat/${task.id}?title=${task.title}'),
+                        icon: const Icon(Icons.chat_bubble),
+                        tooltip: 'Open Chat',
+                      ),
+                    ],
                     const Spacer(),
                     Text(
                       'PKR ${task.budgetPkr.toStringAsFixed(0)}',
@@ -152,7 +167,7 @@ class TaskDetailScreen extends ConsumerWidget {
                     runSpacing: 8,
                     children: task.itemsNeeded
                         .map((item) => Chip(
-                              label: Text(item.toString()),
+                              label: Text('${item.item} (${item.quantity})'),
                               backgroundColor:
                                   AppTheme.primaryColor.withValues(alpha: 0.1),
                             ))
@@ -161,7 +176,27 @@ class TaskDetailScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
                 ],
 
+                // ── Chat Button (for participants) ──
+                if (isParticipant && !task.isOpen)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: OutlinedButton.icon(
+                        onPressed: () => context
+                            .push('/chat/${task.id}?title=${task.title}'),
+                        icon: const Icon(Icons.chat_bubble_outline),
+                        label: const Text('Open Coordination Chat'),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: AppTheme.primaryColor),
+                        ),
+                      ),
+                    ),
+                  ),
+
                 // ── Claim Button (Volunteers only, OPEN tasks only) ──
+
                 if (task.isOpen && authState.user?.isVolunteer == true)
                   SizedBox(
                     width: double.infinity,

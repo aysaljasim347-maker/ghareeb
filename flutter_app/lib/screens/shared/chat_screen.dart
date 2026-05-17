@@ -20,8 +20,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
   final _imagePicker = ImagePicker();
-  int? _roomId;
+  ChatRoom? _room;
   bool _initializingRoom = true;
+  String? _chatError;
 
   @override
   void initState() {
@@ -37,17 +38,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _ensureRoom() async {
+    if (widget.taskId == 0) {
+      if (mounted) {
+        setState(() {
+          _chatError = 'Invalid task ID';
+          _initializingRoom = false;
+        });
+      }
+      return;
+    }
     try {
       final repo = ref.read(chatRepoProvider);
       final room = await repo.ensureRoom(widget.taskId);
       if (mounted) {
         setState(() {
-          _roomId = room.id;
+          _room = room;
           _initializingRoom = false;
         });
       }
-    } catch (_) {
-      if (mounted) setState(() => _initializingRoom = false);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _chatError = 'Failed to open chat. Please try again.';
+          _initializingRoom = false;
+        });
+      }
     }
   }
 
@@ -65,19 +80,56 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _sendMessage() {
     final text = _textController.text.trim();
-    if (text.isEmpty || _roomId == null) return;
+    if (text.isEmpty || _room == null) return;
 
     HapticFeedback.lightImpact();
-    ref.read(chatProvider(_roomId!).notifier).sendMessage(text);
+    ref.read(chatProvider(_room!.id).notifier).sendMessage(text);
     _textController.clear();
     _scrollToBottom();
   }
 
   void _notifyTyping(String value) {
-    if (_roomId == null) return;
-    ref
-        .read(chatProvider(_roomId!).notifier)
-        .notifyTyping(value.isNotEmpty);
+    if (_room == null) return;
+    ref.read(chatProvider(_room!.id).notifier).notifyTyping(value.isNotEmpty);
+  }
+
+  void _showParticipants(BuildContext context) {
+    if (_room == null) return;
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Chat Participants',
+                  style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 16),
+              if (_room!.creatorName != null)
+                ListTile(
+                  leading: const Icon(Icons.person),
+                  title: Text(_room!.creatorName!),
+                  subtitle: const Text('Beneficiary (Creator)'),
+                ),
+              if (_room!.claimerName != null)
+                ListTile(
+                  leading: const Icon(Icons.volunteer_activism),
+                  title: Text(_room!.claimerName!),
+                  subtitle: const Text('Volunteer'),
+                ),
+              if (_room!.coordinatorName != null)
+                ListTile(
+                  leading: const Icon(Icons.admin_panel_settings),
+                  title: Text(_room!.coordinatorName!),
+                  subtitle: const Text('Coordinator'),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -91,7 +143,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     }
 
-    if (_roomId == null) {
+    if (_room == null) {
       return Scaffold(
         appBar: AppBar(title: Text(widget.taskTitle ?? 'Chat')),
         body: Center(
@@ -100,10 +152,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             children: [
               const Icon(Icons.chat_bubble_outline, size: 48),
               const SizedBox(height: 16),
-              const Text('Could not open chat room.'),
+              Text(_chatError ?? 'Could not open chat room.'),
               TextButton(
                 onPressed: () {
-                  setState(() => _initializingRoom = true);
+                  setState(() {
+                    _initializingRoom = true;
+                    _chatError = null;
+                  });
                   _ensureRoom();
                 },
                 child: const Text('Retry'),
@@ -114,10 +169,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     }
 
-    final chatState = ref.watch(chatProvider(_roomId!));
+    final chatState = ref.watch(chatProvider(_room!.id));
 
     // scroll when new messages arrive
-    ref.listen<ChatState>(chatProvider(_roomId!), (prev, next) {
+    ref.listen<ChatState>(chatProvider(_room!.id), (prev, next) {
       if (next.messages.length != (prev?.messages.length ?? 0)) {
         _scrollToBottom();
       }
@@ -128,10 +183,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.taskTitle ?? 'Chat',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            Text(_room!.taskTitle,
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
             Text(
-              chatState.isConnected ? 'Online' : 'Connecting...',
+              '${_room!.taskStatus} • ${chatState.isConnected ? 'Online' : 'Connecting...'}',
               style: TextStyle(
                 fontSize: 11,
                 color: chatState.isConnected
@@ -141,6 +197,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.info_outline),
+            onPressed: () => _showParticipants(context),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -217,15 +279,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             onSend: _sendMessage,
             onTyping: _notifyTyping,
             onPickImage: () async {
-              final xf = await _imagePicker.pickImage(
-                  source: ImageSource.gallery);
-              if (xf != null && _roomId != null) {
+              final xf =
+                  await _imagePicker.pickImage(source: ImageSource.gallery);
+              if (xf != null && _room != null) {
                 // Image message: send path as text for now
                 ref
-                    .read(chatProvider(_roomId!).notifier)
+                    .read(chatProvider(_room!.id).notifier)
                     .sendMessage('[Image: ${xf.name}]');
               }
             },
+
           ),
         ],
       ),
@@ -308,8 +371,7 @@ class _MessageBubble extends StatelessWidget {
               constraints: BoxConstraints(
                 maxWidth: MediaQuery.of(context).size.width * 0.72,
               ),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
               decoration: BoxDecoration(
                 color: isMe ? cs.primary : cs.surfaceContainerHigh,
                 borderRadius: BorderRadius.only(

@@ -1,3 +1,5 @@
+import 'package:disasteraid_app/utils/safe_parser.dart';
+
 class UserProfile {
   final int id;
   final String? email;
@@ -19,13 +21,13 @@ class UserProfile {
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
-      id: json['id'],
-      email: json['email'],
-      phone: json['phone'],
-      name: json['name'],
-      role: json['role'],
-      cnic: json['cnic'],
-      locale: json['locale'] ?? 'en',
+      id: SafeParser.paramInt(json['id']),
+      email: json['email'] != null ? SafeParser.toStringSafe(json['email']) : null,
+      phone: json['phone'] != null ? SafeParser.toStringSafe(json['phone']) : null,
+      name: SafeParser.toStringSafe(json['name'], defaultValue: 'User'),
+      role: SafeParser.toStringSafe(json['role'], defaultValue: 'DONOR'),
+      cnic: json['cnic'] != null ? SafeParser.toStringSafe(json['cnic']) : null,
+      locale: SafeParser.toStringSafe(json['locale'], defaultValue: 'en'),
     );
   }
 
@@ -50,8 +52,8 @@ class AuthResponse {
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
     return AuthResponse(
-      user: UserProfile.fromJson(json['user']),
-      token: json['token'],
+      user: UserProfile.fromJson(json['user'] as Map<String, dynamic>? ?? {}),
+      token: SafeParser.toStringSafe(json['token']),
     );
   }
 }

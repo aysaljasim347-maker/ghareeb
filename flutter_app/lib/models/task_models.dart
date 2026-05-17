@@ -1,3 +1,5 @@
+import 'package:disasteraid_app/utils/safe_parser.dart';
+
 class TaskItem {
   final String item;
   final dynamic quantity;
@@ -6,8 +8,8 @@ class TaskItem {
 
   factory TaskItem.fromJson(Map<String, dynamic> json) {
     return TaskItem(
-      item: json['item'],
-      quantity: json['quantity'],
+      item: SafeParser.toStringSafe(json['item'], defaultValue: 'Unknown Item'),
+      quantity: json['quantity'] ?? 0,
     );
   }
 
@@ -42,14 +44,20 @@ class Task {
 
   factory Task.fromJson(Map<String, dynamic> json) {
     return Task(
-      id: json['id'],
-      title: json['title'],
-      sourceType: json['source_type'] ?? json['sourceType'] ?? 'BENEFICIARY_REQUEST',
-      itemsNeeded: (json['items_needed'] as List?)?.map((i) => TaskItem.fromJson(i)).toList() ?? [],
-      latitude: json['latitude']?.toDouble() ?? 0.0,
-      longitude: json['longitude']?.toDouble() ?? 0.0,
-      budgetPkr: json['budget_pkr']?.toDouble() ?? 0.0,
-      status: json['status'] ?? 'OPEN',
+      id: json['id'] != null ? SafeParser.paramInt(json['id']) : null,
+      title: SafeParser.toStringSafe(json['title'], defaultValue: 'Untitled Task'),
+      sourceType: SafeParser.toStringSafe(
+        json['source_type'] ?? json['sourceType'],
+        defaultValue: 'BENEFICIARY_REQUEST',
+      ),
+      itemsNeeded: (json['items_needed'] as List?)
+              ?.map((i) => TaskItem.fromJson(i as Map<String, dynamic>))
+              .toList() ??
+          [],
+      latitude: SafeParser.toDouble(json['latitude']),
+      longitude: SafeParser.toDouble(json['longitude']),
+      budgetPkr: SafeParser.toDouble(json['budget_pkr']),
+      status: SafeParser.toStringSafe(json['status'], defaultValue: 'OPEN'),
     );
   }
 

@@ -22,11 +22,14 @@ const envSchema = z.object({
   BCRYPT_ROUNDS: z.coerce.number().default(12),
 
   // CORS
-  CORS_ORIGINS: z.string().default('http://localhost:3000'),
+  CORS_ORIGINS: z.string().default('http://localhost:3000,http://localhost:5173,http://127.0.0.1:5173'),
 
   // Rate Limiting
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
   RATE_LIMIT_MAX: z.coerce.number().default(100),
+
+  // Features
+  ENABLE_MAP_CLUSTERING: z.string().transform(v => v === 'true').default('false'),
 
   // Cloudinary
   CLOUDINARY_CLOUD_NAME: z.string().default(''),

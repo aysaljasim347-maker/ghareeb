@@ -8,10 +8,14 @@ interface AuthenticatedSocket extends Socket {
   userId?: number;
 }
 
+let globalIo: SocketIOServer | null = null;
+
 /**
- * Socket.IO gateway for real-time chat messaging.
+ * Socket.IO gateway for real-time chat messaging and notifications.
  */
 export function initializeChatGateway(io: SocketIOServer): void {
+  globalIo = io;
+
   // Authentication middleware for Socket.IO
   io.use((socket: AuthenticatedSocket, next) => {
     const token = socket.handshake.auth.token || socket.handshake.query.token;
@@ -29,7 +33,12 @@ export function initializeChatGateway(io: SocketIOServer): void {
   });
 
   io.on('connection', (socket: AuthenticatedSocket) => {
+    if (!socket.userId) return;
+    
     console.log(`Socket connected: user ${socket.userId}`);
+
+    // Join user-specific room for private notifications
+    socket.join(`user:${socket.userId}`);
 
     // Join a chat room
     socket.on('join_room', async (roomId: number) => {
@@ -40,12 +49,12 @@ export function initializeChatGateway(io: SocketIOServer): void {
         const accessCheck = await pool.query(
           `SELECT 1 FROM chat_rooms cr
            JOIN tasks t ON t.id = cr.task_id
-           WHERE cr.id = $1 AND (t.created_by = $2 OR t.claimed_by = $2 OR t.coordinator_id = $2 OR cr.created_by = $2)`,
+           WHERE cr.id = $1 AND (t.created_by = $2 OR t.claimed_by = $2 OR t.coordinator_id = $2)`,
           [roomId, socket.userId]
         );
 
         if (accessCheck.rows.length === 0) {
-          socket.emit('error', { message: 'Access denied to room' });
+          socket.emit('error', 'Unauthorized room access');
           return;
         }
 
@@ -91,4 +100,13 @@ export function initializeChatGateway(io: SocketIOServer): void {
       console.log(`Socket disconnected: user ${socket.userId}`);
     });
   });
+}
+
+/**
+ * Emit a notification event to a specific user.
+ */
+export function emitToUser(userId: number, event: string, payload: any): void {
+  if (globalIo) {
+    globalIo.to(`user:${userId}`).emit(event, payload);
+  }
 }

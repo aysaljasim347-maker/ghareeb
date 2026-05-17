@@ -25,6 +25,16 @@ router.get(
 );
 
 /**
+ * GET /api/chat/rooms/task/:taskId
+ * Get chat room for a specific task.
+ */
+router.get(
+  '/rooms/task/:taskId',
+  authenticate,
+  (req, res, next) => chatController.getRoomByTaskId(req, res, next)
+);
+
+/**
  * POST /api/chat/rooms/:roomId/messages
  * Send a message.
  */

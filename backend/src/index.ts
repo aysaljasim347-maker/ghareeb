@@ -1,10 +1,14 @@
 import { httpServer } from './server.js';
 import { env } from './config/env.js';
+import { systemStateStore } from './system/state/system.state.store.js';
 
 const PORT = env.PORT;
 
-httpServer.listen(PORT, '::', () => {
-  console.log(`
+(async () => {
+  await systemStateStore.load();
+
+  httpServer.listen(PORT, '::', () => {
+    console.log(`
 ╔══════════════════════════════════════════════╗
 ║      DisasterAid V2.1 — Server Running       ║
 ║──────────────────────────────────────────────║
@@ -14,4 +18,5 @@ httpServer.listen(PORT, '::', () => {
 ║  CORS:        ${env.CORS_ORIGINS.padEnd(30)}║
 ╚══════════════════════════════════════════════╝
   `);
-});
+  });
+})();

@@ -41,7 +41,6 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
 
   @override
   void dispose() {
-    ref.read(createTaskProvider.notifier).reset();
     super.dispose();
   }
 
@@ -143,7 +142,7 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
     ref.listen<CreateTaskState>(createTaskProvider, (_, next) {
       if (next.status == CreateTaskStatus.success) {
         HapticFeedback.heavyImpact();
-        context.pop();
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Request submitted. An NGO will review it shortly.'),
@@ -151,6 +150,7 @@ class _CreateTaskScreenState extends ConsumerState<CreateTaskScreen> {
             duration: Duration(seconds: 4),
           ),
         );
+        context.pop();
       }
     });
 
