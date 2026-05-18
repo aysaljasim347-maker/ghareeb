@@ -54,6 +54,13 @@ import 'package:disasteraid_app/screens/coordinator/coordinator_notification_scr
 import 'package:disasteraid_app/screens/coordinator/coordinator_broadcast_screen.dart';
 import 'package:disasteraid_app/screens/coordinator/coordinator_live_dashboard_screen.dart';
 
+// ── InKind screens ──
+import 'package:disasteraid_app/screens/beneficiary/inkind_board_screen.dart';
+import 'package:disasteraid_app/screens/beneficiary/inkind_detail_screen.dart';
+import 'package:disasteraid_app/screens/donor/create_inkind_screen.dart';
+import 'package:disasteraid_app/screens/donor/my_inkind_donations_screen.dart';
+import 'package:disasteraid_app/screens/donor/inkind_requests_screen.dart';
+
 // ── Shared screens ──
 import 'package:disasteraid_app/screens/shared/chat_screen.dart';
 
@@ -98,6 +105,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (_, __) => const MyTasksScreen(),
           ),
           GoRoute(
+            path: '/beneficiary/inkind',
+            builder: (_, __) => const InKindBoardScreen(),
+          ),
+          GoRoute(
             path: '/beneficiary/task/:id',
             builder: (_, state) => BeneficiaryTaskDetailScreen(
               taskId: int.parse(state.pathParameters['id']!),
@@ -123,6 +134,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/beneficiary/create-task',
         builder: (_, __) => const CreateTaskScreen(),
       ),
+      GoRoute(
+        path: '/beneficiary/inkind/:id',
+        builder: (_, state) => InKindDetailScreen(
+          donationId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
 
       // ── Donor Shell ──
       ShellRoute(
@@ -138,10 +155,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (_, __) => const DonationHistoryScreen(),
           ),
           GoRoute(
+            path: '/donor/inkind',
+            builder: (_, __) => const MyInKindDonationsScreen(),
+          ),
+          GoRoute(
             path: '/donor/impact',
             builder: (_, __) => const ImpactDashboardScreen(),
           ),
         ],
+      ),
+      GoRoute(
+        path: '/donor/inkind/create',
+        builder: (_, __) => const CreateInKindScreen(),
+      ),
+      GoRoute(
+        path: '/donor/inkind/:id/requests',
+        builder: (_, state) => InKindRequestsScreen(
+          donationId: int.parse(state.pathParameters['id']!),
+        ),
       ),
       GoRoute(
         path: '/donor/payment/:campaignId',

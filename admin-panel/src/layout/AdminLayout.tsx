@@ -12,6 +12,7 @@ import {
   SafetyCertificateOutlined,
   BookOutlined,
   LogoutOutlined,
+  GiftOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuthContext } from '../auth/AuthContext';
@@ -81,6 +82,11 @@ const AdminLayout: React.FC = () => {
         key: '/ledger',
         icon: <BookOutlined />,
         label: 'Ledger',
+      },
+      {
+        key: '/inkind',
+        icon: <GiftOutlined />,
+        label: 'InKind Records',
       },
     ] : []),
     ...(isNgo ? [

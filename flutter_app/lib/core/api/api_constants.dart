@@ -53,6 +53,17 @@ class ApiConstants {
   static const String withdrawals = '/withdrawals';
   static const String myWithdrawals = '/withdrawals/mine';
 
+  // ── InKind Donations ──
+  static const String inKind             = '/inkind';
+  static const String inKindBoard        = '/inkind/board';
+  static const String inKindMine         = '/inkind/mine';
+  static const String inKindAdminRecords = '/inkind/admin/records';
+  static String inKindById(int id)             => '/inkind/$id';
+  static String inKindRequests(int id)         => '/inkind/$id/requests';
+  static String inKindRequest(int id)          => '/inkind/$id/request';
+  static String inKindAccept(int requestId)    => '/inkind/requests/$requestId/accept';
+  static String inKindReject(int requestId)    => '/inkind/requests/$requestId/reject';
+
   // ── Health ──
   static const String health = '/health';
 }

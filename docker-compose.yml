@@ -19,6 +19,7 @@ services:
       - ./database/005_comprehensive_seed.sql:/docker-entrypoint-initdb.d/005_comprehensive_seed.sql
       - ./database/006_system_config.sql:/docker-entrypoint-initdb.d/006_system_config.sql
       - ./database/007_beneficiary_feedback.sql:/docker-entrypoint-initdb.d/007_beneficiary_feedback.sql
+      - ./database/008_admin_stats_fix.sql:/docker-entrypoint-initdb.d/008_admin_stats_fix.sql
     healthcheck:
       test: [ 'CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-disasteraid_user} -d ${POSTGRES_DB:-disasteraid}' ]
       interval: 10s

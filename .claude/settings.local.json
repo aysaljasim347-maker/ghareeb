@@ -11,7 +11,10 @@
       "Bash(dart run *)",
       "Bash(docker exec disasteraid-db *)",
       "Bash(docker exec disasteraid-api *)",
-      "Bash(echo \"EXIT_CODE:$?\")"
+      "Bash(echo \"EXIT_CODE:$?\")",
+      "Bash(dir C:\\\\finalproject\\\\disasteraid-v2 *)",
+      "Bash(Get-ChildItem -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   }
 }

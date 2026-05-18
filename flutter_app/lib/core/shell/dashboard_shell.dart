@@ -89,7 +89,14 @@ class DashboardShell extends ConsumerWidget {
           foregroundColor: Colors.white,
         );
       case UserRole.donor:
-        return null;
+        return FloatingActionButton.extended(
+          heroTag: 'shell_donate_item_fab',
+          onPressed: () => context.push('/donor/inkind/create'),
+          icon: const Icon(Icons.volunteer_activism),
+          label: const Text('Donate Item'),
+          backgroundColor: const Color(0xFF2E7D32),
+          foregroundColor: Colors.white,
+        );
       default:
         return null;
     }
@@ -107,7 +114,7 @@ class DashboardShell extends ConsumerWidget {
         return NavigationBar(
           selectedIndex: _beneficiaryIndex(loc),
           onDestinationSelected: (i) {
-            if (i == 1) {
+            if (i == 2) {
               _showLogoutDialog(context, ref);
             } else {
               _beneficiaryNav(context, i);
@@ -118,6 +125,11 @@ class DashboardShell extends ConsumerWidget {
               icon: Icon(Icons.list_alt_outlined),
               selectedIcon: Icon(Icons.list_alt),
               label: 'My Requests',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.volunteer_activism_outlined),
+              selectedIcon: Icon(Icons.volunteer_activism),
+              label: 'InKind Board',
             ),
             NavigationDestination(
               icon: Icon(Icons.logout_outlined),
@@ -131,7 +143,7 @@ class DashboardShell extends ConsumerWidget {
         return NavigationBar(
           selectedIndex: _donorIndex(loc),
           onDestinationSelected: (i) {
-            if (i == 3) {
+            if (i == 4) {
               _showLogoutDialog(context, ref);
             } else {
               _donorNav(context, i);
@@ -147,6 +159,11 @@ class DashboardShell extends ConsumerWidget {
               icon: Icon(Icons.history_outlined),
               selectedIcon: Icon(Icons.history),
               label: 'My Donations',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.volunteer_activism_outlined),
+              selectedIcon: Icon(Icons.volunteer_activism),
+              label: 'InKind',
             ),
             NavigationDestination(
               icon: Icon(Icons.auto_graph_outlined),
@@ -282,13 +299,15 @@ class DashboardShell extends ConsumerWidget {
 
   int _beneficiaryIndex(String loc) {
     if (loc.startsWith('/beneficiary/tasks')) return 0;
+    if (loc.startsWith('/beneficiary/inkind')) return 1;
     return 0;
   }
 
   int _donorIndex(String loc) {
     if (loc.startsWith('/donor/campaigns')) return 0;
     if (loc.startsWith('/donor/donations')) return 1;
-    if (loc.startsWith('/donor/impact')) return 2;
+    if (loc.startsWith('/donor/inkind')) return 2;
+    if (loc.startsWith('/donor/impact')) return 3;
     return 0;
   }
 
@@ -323,6 +342,9 @@ class DashboardShell extends ConsumerWidget {
       case 0:
         context.go('/beneficiary/tasks');
         break;
+      case 1:
+        context.go('/beneficiary/inkind');
+        break;
     }
   }
 
@@ -335,6 +357,9 @@ class DashboardShell extends ConsumerWidget {
         context.go('/donor/donations');
         break;
       case 2:
+        context.go('/donor/inkind');
+        break;
+      case 3:
         context.go('/donor/impact');
         break;
     }

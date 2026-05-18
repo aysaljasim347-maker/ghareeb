@@ -24,6 +24,7 @@ import usersRoutes from './modules/users/users.routes.js';
 import ngoRoutes from './modules/ngo/ngo.routes.js';
 import coordinatorRoutes from './modules/coordinator/coordinator.routes.js';
 import mediaRoutes from './modules/media/media.routes.js';
+import inKindRoutes from './modules/inkind/inkind.routes.js';
 
 // ── Express App Setup ───────────────────────────────────────
 const app = express();
@@ -97,6 +98,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/ngo', ngoRoutes);
 app.use('/api/coordinator', coordinatorRoutes);
 app.use('/api/media', mediaRoutes);
+app.use('/api/inkind', inKindRoutes);
 
 // ── 404 Handler ─────────────────────────────────────────────
 app.use((_req, res) => {

@@ -26,6 +26,7 @@ import NgoTaskDetailPage from '../pages/ngo/NgoTaskDetailPage';
 import NgoTaskCreatePage from '../pages/ngo/NgoTaskCreatePage';
 import NgoBeneficiaryRequestsPage from '../pages/ngo/NgoBeneficiaryRequestsPage';
 
+import InKindRecordsPage from '../pages/inkind/InKindRecordsPage';
 import { AuthProvider, useAuthContext } from '../auth/AuthContext';
 
 const DashboardRedirect: React.FC = () => {
@@ -52,6 +53,7 @@ const AppRouter: React.FC = () => {
               <Route path="/ngos/verification" element={<NgoVerificationPage />} />
               <Route path="/ngos/:id" element={<NgoDetailPage />} />
               <Route path="/ledger" element={<LedgerPage />} />
+              <Route path="/inkind" element={<InKindRecordsPage />} />
 
               {/* NGO Specific Routes */}
               <Route path="/ngo/dashboard" element={<NgoDashboardPage />} />

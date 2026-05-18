@@ -34,6 +34,7 @@ export const API_ENDPOINTS = {
     CAMPAIGNS_STATS: '/admin/campaigns/stats',
     USERS: '/admin/users',
     USERS_STATS: '/admin/users/stats',
+    OPERATIONAL: '/admin/operational',
     LEDGER: '/admin/ledger',
     AUDIT_LOGS: '/admin/audit-logs',
   },

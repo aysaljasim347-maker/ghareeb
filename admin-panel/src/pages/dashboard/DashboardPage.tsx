@@ -183,7 +183,6 @@ const DashboardPage: React.FC = () => {
           </Card>
         </Col>
 
-        {/* Users Column */}
         <Col xs={24} sm={12} lg={6}>
           <Card loading={loadingUsers} title={<span><UserOutlined /> Users</span>}>
             <Statistic 
@@ -191,14 +190,17 @@ const DashboardPage: React.FC = () => {
               value={toNumber(userStats?.total_count)} 
             />
             <Row gutter={8} style={{ marginTop: 16 }}>
-              <Col span={8}>
-                <Statistic title="NGOs" value={toNumber(userStats?.ngo_count)} valueStyle={{ fontSize: '12px' }} />
+              <Col span={6}>
+                <Statistic title="NGOs" value={toNumber(userStats?.ngo_count)} valueStyle={{ fontSize: '11px' }} />
               </Col>
-              <Col span={8}>
-                <Statistic title="Volunteers" value={toNumber(userStats?.volunteer_count)} valueStyle={{ fontSize: '12px' }} />
+              <Col span={6}>
+                <Statistic title="Vol" value={toNumber(userStats?.volunteer_count)} valueStyle={{ fontSize: '11px' }} />
               </Col>
-              <Col span={8}>
-                <Statistic title="Donors" value={toNumber(userStats?.donor_count)} valueStyle={{ fontSize: '12px' }} />
+              <Col span={6}>
+                <Statistic title="Donors" value={toNumber(userStats?.donor_count)} valueStyle={{ fontSize: '11px' }} />
+              </Col>
+              <Col span={6}>
+                <Statistic title="Pending" value={toNumber(userStats?.pending_ngo_count)} valueStyle={{ color: '#faad14', fontSize: '11px' }} />
               </Col>
             </Row>
           </Card>
