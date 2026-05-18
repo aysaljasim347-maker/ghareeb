@@ -1,5 +1,6 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disasteraid_app/core/api/socket_provider.dart';
+import 'package:disasteraid_app/core/socket/socket_provider.dart';
 
 class AppNotification {
   final String title;
@@ -8,7 +9,7 @@ class AppNotification {
   final int taskId;
   final String type;
 
-  AppNotification({
+  const AppNotification({
     required this.title,
     required this.message,
     required this.timestamp,
@@ -16,59 +17,48 @@ class AppNotification {
     required this.type,
   });
 
-  factory AppNotification.fromJson(Map<String, dynamic> json) {
-    return AppNotification(
-      title: json['title'] as String,
-      message: json['message'] as String,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-      taskId: json['taskId'] as int,
-      type: json['type'] as String,
-    );
-  }
+  factory AppNotification.fromJson(Map<String, dynamic> json) =>
+      AppNotification(
+        title: (json['title'] as String?) ?? '',
+        message: (json['message'] as String?) ?? '',
+        timestamp: DateTime.tryParse(
+              (json['timestamp'] as String?) ?? '',
+            ) ??
+            DateTime.now(),
+        taskId: (json['taskId'] as num?)?.toInt() ?? 0,
+        type: (json['type'] as String?) ?? 'INFO',
+      );
 }
 
 class NotificationNotifier extends StateNotifier<List<AppNotification>> {
-  final Ref _ref;
+  final SocketService _service;
+  StreamSubscription<Map<String, dynamic>>? _sub;
 
-  NotificationNotifier(this._ref) : super([]) {
-    _init();
+  NotificationNotifier(this._service) : super([]) {
+    // StreamSubscription — one listener, cleaned up in dispose().
+    // No ref.watch(), no socket.on() scattered in constructors.
+    _sub = _service.notificationStream.listen(_onPayload);
   }
 
-  void _init() {
-    final socket = _ref.watch(globalSocketProvider);
-    if (socket == null) return;
-
-    socket.on('notification', (data) {
-      try {
-        final notification = AppNotification.fromJson(data as Map<String, dynamic>);
-        state = [notification, ...state];
-      } catch (e) {
-        // Silently ignore
-      }
-    });
-
-    socket.on('broadcast_alert', (data) {
-      try {
-        final notification = AppNotification(
-          title: data['title'] ?? 'Operational Alert',
-          message: data['message'] ?? '',
-          timestamp: DateTime.parse(data['timestamp'] ?? DateTime.now().toIso8601String()),
-          taskId: data['taskId'] ?? 0,
-          type: 'BROADCAST',
-        );
-        state = [notification, ...state];
-      } catch (e) {
-        // Silently ignore
-      }
-    });
+  void _onPayload(Map<String, dynamic> data) {
+    try {
+      state = [AppNotification.fromJson(data), ...state];
+    } catch (_) {
+      // Malformed server payload — discard silently.
+    }
   }
 
-  void clear() {
-    state = [];
+  void clear() => state = [];
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 }
 
 final notificationProvider =
     StateNotifierProvider<NotificationNotifier, List<AppNotification>>((ref) {
-  return NotificationNotifier(ref);
+  // ref.read is correct here — SocketService is a stable Provider, not reactive.
+  return NotificationNotifier(ref.read(socketServiceProvider));
 });

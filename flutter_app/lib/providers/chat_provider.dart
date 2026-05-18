@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:disasteraid_app/core/api/api_client.dart';
 import 'package:disasteraid_app/core/api/api_constants.dart';
-import 'package:disasteraid_app/core/storage/secure_storage.dart';
-import 'package:disasteraid_app/config/env.dart';
+import 'package:disasteraid_app/core/socket/socket_provider.dart';
+import 'package:disasteraid_app/core/socket/socket_service.dart';
+
+// ── Domain models ──────────────────────────────────────────────────────────────
 
 class ChatMessage {
   final int id;
@@ -23,17 +24,16 @@ class ChatMessage {
     required this.createdAt,
   });
 
-  factory ChatMessage.fromJson(Map<String, dynamic> json) {
-    return ChatMessage(
-      id: json['id'] as int,
-      roomId: json['room_id'] as int,
-      senderId: json['sender_id'] as int,
-      senderName: (json['sender_name'] as String?) ?? 'User',
-      text: json['text'] as String,
-      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
-          DateTime.now(),
-    );
-  }
+  factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
+        id: json['id'] as int,
+        roomId: json['room_id'] as int,
+        senderId: json['sender_id'] as int,
+        senderName: (json['sender_name'] as String?) ?? 'User',
+        text: json['text'] as String,
+        createdAt:
+            DateTime.tryParse(json['created_at'] as String? ?? '') ??
+                DateTime.now(),
+      );
 }
 
 class ChatRoom {
@@ -59,22 +59,20 @@ class ChatRoom {
     this.createdAt,
   });
 
-  factory ChatRoom.fromJson(Map<String, dynamic> json) {
-    return ChatRoom(
-      id: json['id'] as int,
-      taskId: json['task_id'] as int,
-      taskTitle: (json['task_title'] as String?) ?? 'Task',
-      taskStatus: (json['task_status'] as String?) ?? 'OPEN',
-      creatorName: json['creator_name'] as String?,
-      claimerName: json['claimer_name'] as String?,
-      coordinatorName: json['coordinator_name'] as String?,
-      messageCount: (json['message_count'] as num?)?.toInt() ?? 0,
-      createdAt: json['created_at'] as String?,
-    );
-  }
+  factory ChatRoom.fromJson(Map<String, dynamic> json) => ChatRoom(
+        id: json['id'] as int,
+        taskId: json['task_id'] as int,
+        taskTitle: (json['task_title'] as String?) ?? 'Task',
+        taskStatus: (json['task_status'] as String?) ?? 'OPEN',
+        creatorName: json['creator_name'] as String?,
+        claimerName: json['claimer_name'] as String?,
+        coordinatorName: json['coordinator_name'] as String?,
+        messageCount: (json['message_count'] as num?)?.toInt() ?? 0,
+        createdAt: json['created_at'] as String?,
+      );
 }
 
-// ── REST helpers ──
+// ── Repository ─────────────────────────────────────────────────────────────────
 
 class ChatRepository {
   final ApiClient _client;
@@ -89,16 +87,19 @@ class ChatRepository {
           .map((m) => ChatMessage.fromJson(m as Map<String, dynamic>))
           .toList();
     }
-    final list = (data as Map<String, dynamic>)['data'] as List? ?? [];
+    final list =
+        (data as Map<String, dynamic>)['data'] as List? ?? [];
     return list
         .map((m) => ChatMessage.fromJson(m as Map<String, dynamic>))
         .toList();
   }
 
   Future<ChatRoom> ensureRoom(int taskId) async {
-    final response = await _client.get(ApiConstants.roomByTaskId(taskId));
+    final response =
+        await _client.get(ApiConstants.roomByTaskId(taskId));
     final data = response.data as Map<String, dynamic>;
-    return ChatRoom.fromJson(data['room'] as Map<String, dynamic>? ?? data);
+    return ChatRoom.fromJson(
+        data['room'] as Map<String, dynamic>? ?? data);
   }
 
   Future<List<ChatRoom>> getMyRooms() async {
@@ -109,7 +110,8 @@ class ChatRepository {
           .map((r) => ChatRoom.fromJson(r as Map<String, dynamic>))
           .toList();
     }
-    final list = (data as Map<String, dynamic>)['data'] as List? ?? [];
+    final list =
+        (data as Map<String, dynamic>)['data'] as List? ?? [];
     return list
         .map((r) => ChatRoom.fromJson(r as Map<String, dynamic>))
         .toList();
@@ -120,7 +122,7 @@ final chatRepoProvider = Provider<ChatRepository>((ref) {
   return ChatRepository(client: ref.read(apiClientProvider));
 });
 
-// ── Chat State ──
+// ── State ──────────────────────────────────────────────────────────────────────
 
 class ChatState {
   final List<ChatMessage> messages;
@@ -146,97 +148,103 @@ class ChatState {
     String? typingUserName,
     bool? isLoading,
     String? error,
-  }) {
-    return ChatState(
-      messages: messages ?? this.messages,
-      isConnected: isConnected ?? this.isConnected,
-      isTyping: isTyping ?? this.isTyping,
-      typingUserName: typingUserName,
-      isLoading: isLoading ?? this.isLoading,
-      error: error,
-    );
-  }
+  }) =>
+      ChatState(
+        messages: messages ?? this.messages,
+        isConnected: isConnected ?? this.isConnected,
+        isTyping: isTyping ?? this.isTyping,
+        // Nullable field: passing null intentionally clears the name.
+        typingUserName: typingUserName,
+        isLoading: isLoading ?? this.isLoading,
+        error: error,
+      );
 }
+
+// ── Notifier ───────────────────────────────────────────────────────────────────
 
 class ChatNotifier extends StateNotifier<ChatState> {
   final ChatRepository _repo;
-  final SecureStorageService _storage;
+  final SocketService _socket; // injected — NOT created here
   final int _roomId;
-  io.Socket? _socket;
+
+  StreamSubscription<SocketPayload>? _msgSub;
+  StreamSubscription<SocketPayload>? _typingSub;
+  StreamSubscription<SocketStatus>? _statusSub;
   Timer? _typingTimer;
 
   ChatNotifier({
     required ChatRepository repo,
-    required SecureStorageService storage,
+    required SocketService socket,
     required int roomId,
   })  : _repo = repo,
-        _storage = storage,
+        _socket = socket,
         _roomId = roomId,
         super(const ChatState()) {
     _init();
   }
 
   Future<void> _init() async {
-    state = state.copyWith(isLoading: true);
+    // Reflect current socket status immediately — don't wait for a stream event.
+    final alreadyConnected = _socket.currentStatus == SocketStatus.connected;
+    state = state.copyWith(isConnected: alreadyConnected, isLoading: true);
+
+    // Load message history via REST before subscribing to real-time stream.
     try {
       final messages = await _repo.getMessages(_roomId);
       state = state.copyWith(messages: messages, isLoading: false);
-    } catch (_) {
-      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
-    await _connectSocket();
-  }
 
-  Future<void> _connectSocket() async {
-    final token = await _storage.getToken();
-    if (token == null) return;
-
-    final baseUrl = Env.apiUrl.replaceAll('/api', '');
-    _socket = io.io(
-      baseUrl,
-      io.OptionBuilder()
-          .setTransports(['websocket'])
-          .setAuth({'token': token})
-          .disableAutoConnect()
-          .build(),
-    );
-
-    _socket!.connect();
-
-    _socket!.onConnect((_) {
-      state = state.copyWith(isConnected: true);
-      _socket!.emit('join_room', _roomId);
+    // Subscribe to new messages for THIS room only.
+    _msgSub = _socket.messageStream
+        .where((data) => (data['room_id'] as num?)?.toInt() == _roomId)
+        .listen((data) {
+      try {
+        final msg = ChatMessage.fromJson(data);
+        state = state.copyWith(messages: [...state.messages, msg]);
+      } catch (_) {}
     });
 
-    _socket!.onDisconnect((_) {
-      state = state.copyWith(isConnected: false);
-    });
-
-    _socket!.on('new_message', (data) {
-      final msg = ChatMessage.fromJson(data as Map<String, dynamic>);
-      state = state.copyWith(messages: [...state.messages, msg]);
-    });
-
-    _socket!.on('user_typing', (data) {
-      final isTyping = (data as Map)['isTyping'] as bool? ?? false;
+    // Subscribe to typing indicators for THIS room only.
+    _typingSub = _socket.typingStream
+        .where((data) => (data['roomId'] as num?)?.toInt() == _roomId)
+        .listen((data) {
+      final isTyping = data['isTyping'] as bool? ?? false;
       state = state.copyWith(
         isTyping: isTyping,
-        typingUserName: isTyping ? 'User' : null,
+        typingUserName: isTyping
+            ? (data['userName'] as String?) ?? 'User'
+            : null,
       );
     });
+
+    // Track connection status. On reconnect, re-join the room automatically.
+    _statusSub = _socket.statusStream.listen((status) {
+      final connected = status == SocketStatus.connected;
+      state = state.copyWith(isConnected: connected);
+      if (connected) {
+        _socket.joinRoom(_roomId);
+      }
+    });
+
+    // Join the room. If already connected this emits immediately;
+    // if not, SocketService._attachHandlers onConnect re-joins all active rooms.
+    _socket.joinRoom(_roomId);
   }
 
   void sendMessage(String text) {
-    if (text.trim().isEmpty || _socket == null) return;
-    _socket!.emit('send_message', {'roomId': _roomId, 'text': text.trim()});
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return;
+    _socket.sendMessage(_roomId, trimmed);
   }
 
   void notifyTyping(bool isTyping) {
-    _socket?.emit('typing', {'roomId': _roomId, 'isTyping': isTyping});
+    _socket.sendTyping(_roomId, isTyping: isTyping);
     if (isTyping) {
       _typingTimer?.cancel();
       _typingTimer = Timer(const Duration(seconds: 3), () {
-        _socket?.emit('typing', {'roomId': _roomId, 'isTyping': false});
+        _socket.sendTyping(_roomId, isTyping: false);
       });
     }
   }
@@ -244,21 +252,26 @@ class ChatNotifier extends StateNotifier<ChatState> {
   @override
   void dispose() {
     _typingTimer?.cancel();
-    _socket?.emit('leave_room', _roomId);
-    _socket?.disconnect();
-    _socket?.dispose();
+    _msgSub?.cancel();
+    _typingSub?.cancel();
+    _statusSub?.cancel();
+    // Leave the room but do NOT disconnect the shared socket.
+    _socket.leaveRoom(_roomId);
     super.dispose();
   }
 }
 
+// ── Providers ──────────────────────────────────────────────────────────────────
+
 final chatProvider =
     StateNotifierProvider.family<ChatNotifier, ChatState, int>((ref, roomId) {
-  final repo = ref.read(chatRepoProvider);
-  final storage = ref.read(secureStorageProvider);
-  return ChatNotifier(repo: repo, storage: storage, roomId: roomId);
+  return ChatNotifier(
+    repo: ref.read(chatRepoProvider),
+    socket: ref.read(socketServiceProvider),
+    roomId: roomId,
+  );
 });
 
 final myRoomsProvider = FutureProvider<List<ChatRoom>>((ref) async {
-  final repo = ref.read(chatRepoProvider);
-  return repo.getMyRooms();
+  return ref.read(chatRepoProvider).getMyRooms();
 });

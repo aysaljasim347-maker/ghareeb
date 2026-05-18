@@ -1,16 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disasteraid_app/core/api/api_client.dart';
+import 'package:disasteraid_app/core/socket/socket_provider.dart';
 import 'package:disasteraid_app/core/storage/secure_storage.dart';
 import 'package:disasteraid_app/features/auth/data/auth_repository.dart';
 import 'package:disasteraid_app/features/auth/domain/user_model.dart';
 
-// ── Repository Provider ──
+// ── Repository provider ────────────────────────────────────────────────────────
+
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  final client = ref.read(apiClientProvider);
-  return AuthRepository(client: client);
+  return AuthRepository(client: ref.read(apiClientProvider));
 });
 
-// ── Auth State ──
+// ── State ──────────────────────────────────────────────────────────────────────
+
 enum AuthStatus { initial, authenticated, unauthenticated, loading }
 
 class AuthState {
@@ -24,50 +26,58 @@ class AuthState {
     this.error,
   });
 
-  AuthState copyWith({AuthStatus? status, UserModel? user, String? error}) {
-    return AuthState(
-      status: status ?? this.status,
-      user: user ?? this.user,
-      error: error,
-    );
-  }
+  AuthState copyWith({AuthStatus? status, UserModel? user, String? error}) =>
+      AuthState(
+        status: status ?? this.status,
+        user: user ?? this.user,
+        error: error,
+      );
 }
 
-// ── Auth Notifier ──
+// ── Notifier ───────────────────────────────────────────────────────────────────
+
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
   final SecureStorageService _storage;
+  final Ref _ref; // ref.read only — never ref.watch inside a StateNotifier
 
   AuthNotifier({
     required AuthRepository repository,
     required SecureStorageService storage,
+    required Ref ref,
   })  : _repository = repository,
         _storage = storage,
+        _ref = ref,
         super(const AuthState()) {
     _checkAuth();
   }
 
-  /// Check if user has a valid stored token.
+  // ── Startup ──────────────────────────────────────────────────────────────────
+
   Future<void> _checkAuth() async {
     final token = await _storage.getToken();
-    
-    // SECURITY: Prevent overwriting state if a login/register flow already started
+
+    // Guard: a concurrent login/register call may have already resolved auth.
     if (state.status != AuthStatus.initial) return;
 
-    if (token != null) {
-      try {
-        final user = await _repository.getProfile();
-        state = AuthState(status: AuthStatus.authenticated, user: user);
-      } catch (_) {
-        await _storage.clearAll();
-        state = const AuthState(status: AuthStatus.unauthenticated);
-      }
-    } else {
+    if (token == null) {
+      state = const AuthState(status: AuthStatus.unauthenticated);
+      return;
+    }
+
+    try {
+      final user = await _repository.getProfile();
+      state = AuthState(status: AuthStatus.authenticated, user: user);
+      // Token is valid — connect the socket now that the token is confirmed.
+      await _ref.read(socketServiceProvider).connect();
+    } catch (_) {
+      await _storage.clearAll();
       state = const AuthState(status: AuthStatus.unauthenticated);
     }
   }
 
-  /// Login with email or phone.
+  // ── Login ─────────────────────────────────────────────────────────────────────
+
   Future<void> login({
     String? email,
     String? phone,
@@ -84,6 +94,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _storage.saveUserRole(result.user.role);
       await _storage.saveUserId(result.user.id.toString());
       state = AuthState(status: AuthStatus.authenticated, user: result.user);
+      // Token is now in storage — connect the socket after state update so
+      // any listeners that react to authenticated status can start watching.
+      await _ref.read(socketServiceProvider).connect();
     } catch (e) {
       state = AuthState(
         status: AuthStatus.unauthenticated,
@@ -92,7 +105,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Register a new user.
+  // ── Register ──────────────────────────────────────────────────────────────────
+
   Future<void> register({
     String? email,
     String? phone,
@@ -115,6 +129,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _storage.saveUserRole(result.user.role);
       await _storage.saveUserId(result.user.id.toString());
       state = AuthState(status: AuthStatus.authenticated, user: result.user);
+      await _ref.read(socketServiceProvider).connect();
     } catch (e) {
       state = AuthState(
         status: AuthStatus.unauthenticated,
@@ -123,11 +138,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Logout.
+  // ── Logout ────────────────────────────────────────────────────────────────────
+
   Future<void> logout() async {
+    // Disconnect the socket BEFORE clearing the token — allows a clean
+    // leave_room / disconnect handshake with the server.
+    _ref.read(socketServiceProvider).disconnect();
     await _storage.clearAll();
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────────
 
   String _extractError(dynamic e) {
     if (e is Exception) {
@@ -137,9 +158,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 }
 
-// ── Provider ──
+// ── Provider ───────────────────────────────────────────────────────────────────
+
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final repository = ref.read(authRepositoryProvider);
-  final storage = ref.read(secureStorageProvider);
-  return AuthNotifier(repository: repository, storage: storage);
+  return AuthNotifier(
+    repository: ref.read(authRepositoryProvider),
+    storage: ref.read(secureStorageProvider),
+    ref: ref,
+  );
 });
