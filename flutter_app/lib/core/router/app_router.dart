@@ -25,6 +25,10 @@ import 'package:disasteraid_app/screens/donor/payment_screen.dart';
 import 'package:disasteraid_app/screens/donor/impact_dashboard_screen.dart';
 import 'package:disasteraid_app/screens/donor/activity_feed_screen.dart';
 import 'package:disasteraid_app/screens/donor/followed_campaigns_screen.dart';
+import 'package:disasteraid_app/screens/donor/goods_campaign_detail_screen.dart';
+import 'package:disasteraid_app/screens/donor/donate_item_screen.dart';
+import 'package:disasteraid_app/screens/donor/my_goods_donations_screen.dart';
+import 'package:disasteraid_app/screens/donor/goods_donation_detail_screen.dart';
 
 // ── Volunteer screens ──
 import 'package:disasteraid_app/screens/volunteer/volunteer_dashboard_screen.dart';
@@ -32,6 +36,8 @@ import 'package:disasteraid_app/screens/volunteer/activity_timeline_screen.dart'
 import 'package:disasteraid_app/screens/volunteer/volunteer_profile_screen.dart';
 import 'package:disasteraid_app/screens/volunteer/task_detail_screen.dart';
 import 'package:disasteraid_app/screens/volunteer/proof_upload_screen.dart';
+import 'package:disasteraid_app/screens/volunteer/goods_task_detail_screen.dart';
+import 'package:disasteraid_app/screens/volunteer/goods_proof_upload_screen.dart';
 
 // ── NGO screens ──
 import 'package:disasteraid_app/screens/ngo/ngo_dashboard_screen.dart';
@@ -41,6 +47,7 @@ import 'package:disasteraid_app/screens/ngo/campaign_report_screen.dart';
 import 'package:disasteraid_app/screens/ngo/ngo_withdrawal_screen.dart';
 
 // ── Coordinator screens ──
+import 'package:disasteraid_app/screens/coordinator/coordinator_goods_review_screen.dart';
 import 'package:disasteraid_app/screens/coordinator/coordinator_tasks_screen.dart';
 import 'package:disasteraid_app/screens/coordinator/coordinator_submitted_tasks_screen.dart';
 import 'package:disasteraid_app/screens/coordinator/coordinator_delivery_review_screen.dart';
@@ -200,6 +207,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/donor/followed',
         builder: (_, __) => const FollowedCampaignsScreen(),
       ),
+      // ── Goods donation routes ──
+      GoRoute(
+        path: '/donor/goods-campaign/:id',
+        builder: (_, state) => GoodsCampaignDetailScreen(
+          campaignId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/donor/goods-campaign/:id/donate',
+        builder: (_, state) => DonateItemScreen(
+          campaignId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/donor/goods-donations',
+        builder: (_, __) => const MyGoodsDonationsScreen(),
+      ),
+      GoRoute(
+        path: '/donor/goods-donation/:id',
+        builder: (_, state) => GoodsDonationDetailScreen(
+          donationId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
 
       // ── Volunteer Shell ──
       ShellRoute(
@@ -234,6 +264,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/volunteer/proof/:taskId',
         builder: (_, state) => ProofUploadScreen(
           taskId: int.parse(state.pathParameters['taskId']!),
+        ),
+      ),
+      GoRoute(
+        path: '/volunteer/goods-task/:id',
+        builder: (_, state) => GoodsTaskDetailScreen(
+          donationId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/volunteer/goods-proof/:id',
+        builder: (_, state) => GoodsProofUploadScreen(
+          donationId: int.parse(state.pathParameters['id']!),
         ),
       ),
 
@@ -329,6 +371,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/coordinator/review/:id',
         builder: (_, state) => CoordinatorDeliveryReviewScreen(
           taskId: int.parse(state.pathParameters['id']!),
+        ),
+      ),
+      GoRoute(
+        path: '/coordinator/goods-review/:id',
+        builder: (_, state) => CoordinatorGoodsReviewScreen(
+          donationId: int.parse(state.pathParameters['id']!),
         ),
       ),
       GoRoute(

@@ -21,12 +21,16 @@ axiosClient.interceptors.request.use(
   }
 );
 
+interface ExtendedAxiosResponse extends axios.AxiosResponse {
+  requestId?: string;
+}
+
 axiosClient.interceptors.response.use(
   (response) => {
     // Inject Request ID from header into the response object for tracing if needed
     const requestId = response.headers['x-request-id'];
     if (requestId) {
-      (response as any).requestId = requestId;
+      (response as ExtendedAxiosResponse).requestId = requestId;
     }
     return response;
   },

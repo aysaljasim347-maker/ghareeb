@@ -6,7 +6,7 @@ const { TextArea } = Input;
 
 interface CampaignFormProps {
   initialValues?: Partial<Campaign>;
-  onFinish: (values: any) => void;
+  onFinish: (values: Partial<Campaign>) => void;
   loading?: boolean;
   submitText?: string;
 }

@@ -14,7 +14,15 @@
       "Bash(echo \"EXIT_CODE:$?\")",
       "Bash(dir C:\\\\finalproject\\\\disasteraid-v2 *)",
       "Bash(Get-ChildItem -Recurse -Directory)",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "PowerShell(Get-ChildItem \"C:\\\\finalproject\\\\disasteraid-v2\" -Directory | ForEach-Object { $_.Name })",
+      "PowerShell(Get-ChildItem \"C:\\\\finalproject\\\\disasteraid-v2\\\\admin-panel\" -Recurse | Where-Object { $_.Name -match \"\\\\.\\(jsx|tsx|js|ts\\)$\" } | Select-Object -First 40 | ForEach-Object { $_.FullName })",
+      "PowerShell(Get-ChildItem \"C:\\\\finalproject\\\\disasteraid-v2\\\\admin-panel\\\\src\" -Recurse | Where-Object { $_.Name -match \"\\\\.\\(jsx|tsx|js|ts\\)$\" } | ForEach-Object { $_.FullName })",
+      "Bash(dart analyze *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\finalproject\\\\disasteraid-v2\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(Get-ChildItem -Path \"C:\\\\finalproject\\\\disasteraid-v2\\\\flutter_app\\\\lib\" -Recurse -Filter \"*.dart\")",
+      "Bash(grep *)"
     ]
   }
 }

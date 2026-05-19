@@ -10,6 +10,7 @@ import { requestLogger } from './middleware/requestLogger.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { initializeChatGateway } from './modules/chat/chat.gateway.js';
+import { logger } from './common/logger.js';
 
 // Import routes
 import authRoutes from './modules/auth/auth.routes.js';
@@ -25,6 +26,12 @@ import ngoRoutes from './modules/ngo/ngo.routes.js';
 import coordinatorRoutes from './modules/coordinator/coordinator.routes.js';
 import mediaRoutes from './modules/media/media.routes.js';
 import inKindRoutes from './modules/inkind/inkind.routes.js';
+import goodsCampaignsRoutes from './modules/goodsCampaigns/goodsCampaigns.routes.js';
+import goodsDonationsRoutes from './modules/goodsDonations/goodsDonations.routes.js';
+import goodsDonationsAdminRoutes from './modules/goodsDonations/goodsDonations.admin.routes.js';
+import { CorsOptions } from 'cors';
+// CorsRequest
+// import { Request } from 'express';
 
 // ── Express App Setup ───────────────────────────────────────
 const app = express();
@@ -39,27 +46,46 @@ app.use(requestLogger);
 app.use(helmet());
 
 // CORS whitelist — only allow specified origins
-const allowedOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim());
-console.log(`[INIT] CORS Allowed Origins: ${allowedOrigins.join(', ')}`);
+// const allowedOrigins = env.CORS_ORIGINS.split(',').map((o) => o.trim());
+// logger.info(`[INIT] CORS Allowed Origins: ${allowedOrigins.join(', ')}`);
 
-const corsOptions = {
-  origin: env.NODE_ENV === 'development'
-    ? true  // allow all in dev (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    // Allow requests with no origin (mobile apps, curl, etc.)
-    : (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    if (!origin) {
+// const corsOptions = {
+//   origin: env.NODE_ENV === 'development'
+//     ? true  // allow all in dev (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+//     // Allow requests with no origin (mobile apps, curl, etc.)
+//     : (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+//     if (!origin) {
+//       return callback(null, true);
+//     }
+//     if (allowedOrigins.includes(origin)) {
+//       return callback(null, true);
+//     }
+//     console.warn(`[CORS] Rejected origin: ${origin}`);
+//     callback(new Error(`CORS: Origin ${origin} not allowed`));
+//   },
+//   credentials: true,
+//   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+//   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+//   optionsSuccessStatus: 204
+// };
+
+
+const corsOptions: CorsOptions = {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    if (!origin) return callback(null, true);
+
+    const socketOrigins = env.SOCKET_CORS_ORIGIN.split(',').map(o => o.trim());
+
+    if (env.NODE_ENV === 'development' || socketOrigins.includes(origin)) {
       return callback(null, true);
     }
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    console.warn(`[CORS] Rejected origin: ${origin}`);
-    callback(new Error(`CORS: Origin ${origin} not allowed`));
+
+    return callback(new Error(`CORS blocked: ${origin}`));
   },
+
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
-  optionsSuccessStatus: 204
 };
 
 app.use(cors(corsOptions));
@@ -99,6 +125,10 @@ app.use('/api/ngo', ngoRoutes);
 app.use('/api/coordinator', coordinatorRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/inkind', inKindRoutes);
+app.use('/api/goods-campaigns', goodsCampaignsRoutes);
+app.use('/api/goods-donations', goodsDonationsRoutes);
+// app.use('/api/admin', goodsDonationsAdminRoutes);
+app.use('/api/admin/goods', goodsDonationsAdminRoutes);
 
 // ── 404 Handler ─────────────────────────────────────────────
 app.use((_req, res) => {
@@ -120,12 +150,12 @@ initializeChatGateway(io);
 
 // ── Graceful Shutdown ───────────────────────────────────────
 const gracefulShutdown = async (signal: string) => {
-  console.log(`\n${signal} received. Shutting down gracefully...`);
+  logger.info(`\n${signal} received. Shutting down gracefully...`);
 
   httpServer.close(async () => {
-    console.log('HTTP server closed');
+    logger.info('HTTP server closed');
     await pool.end();
-    console.log('Database pool closed');
+    logger.info('Database pool closed');
     process.exit(0);
   });
 

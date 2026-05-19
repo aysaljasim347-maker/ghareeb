@@ -16,7 +16,7 @@ class ActivityFeedScreen extends ConsumerWidget {
     final donationsAsync = ref.watch(myDonationsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Activity Feed')),
+      appBar: AppBar(title: const Text('Activity')),
       body: donationsAsync.when(
         loading: () => const ShimmerList(count: 6, itemHeight: 72),
         error: (err, _) => ErrorView(
@@ -36,7 +36,7 @@ class ActivityFeedScreen extends ConsumerWidget {
           return RefreshIndicator(
             onRefresh: () async => ref.invalidate(myDonationsProvider),
             child: ListView.separated(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.only(top: 8, bottom: 24),
               itemCount: donations.length,
               separatorBuilder: (_, __) => const SizedBox.shrink(),
               itemBuilder: (context, i) =>
@@ -59,6 +59,8 @@ class _ActivityItem extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final fmt = NumberFormat('#,##0');
 
+    final amount = 'Rs${fmt.format(donation.amountPkr)}';
+
     String? dateLabel;
     if (donation.createdAt != null) {
       final dt = DateTime.tryParse(donation.createdAt!);
@@ -69,122 +71,99 @@ class _ActivityItem extends StatelessWidget {
     }
 
     final Color statusColor;
-    final IconData statusIcon;
+    final String statusText;
     switch (donation.status) {
       case 'CONFIRMED':
         statusColor = Colors.green;
-        statusIcon = Icons.check_circle_outline;
+        statusText = 'Confirmed';
         break;
       case 'REJECTED':
         statusColor = cs.error;
-        statusIcon = Icons.cancel_outlined;
+        statusText = 'Rejected';
         break;
       default:
         statusColor = Colors.orange;
-        statusIcon = Icons.hourglass_top_outlined;
+        statusText = 'Pending';
     }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Timeline dot + line ──
-          Column(
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.volunteer_activism,
-                    size: 20, color: cs.primary),
+
+              /// 🔥 Top Row (Amount + Status)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        amount,
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: statusColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      statusText,
+                      style: TextStyle(
+                        color: statusColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
               ),
+
+              const SizedBox(height: 10),
+
+              /// 📌 Campaign Title
+              if (donation.campaignTitle != null)
+                GestureDetector(
+                  onTap: donation.campaignId != null
+                      ? () => context.push(
+                          '/donor/campaign/${donation.campaignId}')
+                      : null,
+                  child: Text(
+                    donation.campaignTitle!,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: cs.primary,
+                        ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+
+              const SizedBox(height: 6),
+
+              /// 🕒 Date
+              if (dateLabel != null)
+                Text(
+                  dateLabel,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                ),
             ],
           ),
-          const SizedBox(width: 14),
-
-          // ── Content ──
-          Expanded(
-            child: Card(
-              margin: EdgeInsets.zero,
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: RichText(
-                            text: TextSpan(
-                              style: DefaultTextStyle.of(context).style,
-                              children: [
-                                const TextSpan(
-                                  text: 'Donated ',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w500),
-                                ),
-                                TextSpan(
-                                  text:
-                                      '₹${fmt.format(donation.amountPkr)}',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      fontSize: 15),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        Icon(statusIcon, size: 16, color: statusColor),
-                        const SizedBox(width: 4),
-                        Text(
-                          donation.status,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: statusColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    if (donation.campaignTitle != null) ...[
-                      const SizedBox(height: 4),
-                      GestureDetector(
-                        onTap: donation.campaignId != null
-                            ? () => context.push(
-                                '/donor/campaign/${donation.campaignId}')
-                            : null,
-                        child: Text(
-                          donation.campaignTitle!,
-                          style: TextStyle(
-                            color: cs.primary,
-                            fontWeight: FontWeight.w600,
-                            decoration: TextDecoration.underline,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-
-                    if (dateLabel != null) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        dateLabel,
-                        style: TextStyle(
-                            fontSize: 11, color: cs.onSurfaceVariant),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -116,7 +116,7 @@ export class ChatService {
     const result = await pool.query(
       `INSERT INTO chat_messages (room_id, sender_id, text)
        VALUES ($1, $2, $3)
-       RETURNING *`,
+       RETURNING *, (SELECT name FROM users WHERE id = $2) AS sender_name`,
       [roomId, senderId, text]
     );
 

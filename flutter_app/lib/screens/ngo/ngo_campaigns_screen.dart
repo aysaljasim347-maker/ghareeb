@@ -91,7 +91,7 @@ class _CampaignReportTile extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '₹${NumberFormat('#,###').format(campaign.raisedPkr)} raised of ₹${NumberFormat('#,###').format(campaign.goalPkr)}',
+                    'Rs${NumberFormat('#,###').format(campaign.raisedPkr)} raised of Rs${NumberFormat('#,###').format(campaign.goalPkr)}',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
                   Text('$pct%',

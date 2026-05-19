@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disasteraid_app/core/api/api_client.dart';
 import 'package:disasteraid_app/core/api/api_constants.dart';
@@ -203,7 +204,9 @@ class ChatNotifier extends StateNotifier<ChatState> {
       try {
         final msg = ChatMessage.fromJson(data);
         state = state.copyWith(messages: [...state.messages, msg]);
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('[Chat] Failed to parse incoming message: $e\nPayload: $data');
+      }
     });
 
     // Subscribe to typing indicators for THIS room only.

@@ -30,11 +30,9 @@ class VolunteerImpactStats {
       );
 }
 
-/**
- * Aggregates volunteer impact from existing task and chat data.
- * Since there's no direct "claimed tasks" endpoint, we use Chat Rooms
- * as an index for tasks the volunteer is involved in.
- */
+/// Aggregates volunteer impact from existing task and chat data.
+/// Since there's no direct "claimed tasks" endpoint, we use Chat Rooms
+/// as an index for tasks the volunteer is involved in.
 final volunteerImpactProvider = FutureProvider<VolunteerImpactStats>((ref) async {
   final roomsAsync = ref.watch(myRoomsProvider);
   

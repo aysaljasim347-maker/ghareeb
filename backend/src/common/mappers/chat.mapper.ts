@@ -1,7 +1,29 @@
 /**
  * Chat Mapper
  */
-export const mapChatRoom = (raw: any) => {
+
+interface ChatRoomRow {
+  id: string | number;
+  task_id: string | number;
+  task_title?: string | null;
+  task_status?: string | null;
+  creator_name?: string | null;
+  claimer_name?: string | null;
+  coordinator_name?: string | null;
+  message_count?: string | number | null;
+  created_at?: string | Date | null;
+}
+
+interface ChatMessageRow {
+  id: string | number;
+  room_id: string | number;
+  sender_id: string | number;
+  sender_name?: string | null;
+  text?: string | null;
+  created_at?: string | Date | null;
+}
+
+export const mapChatRoom = (raw: ChatRoomRow) => {
   return {
     id: Number(raw.id),
     task_id: Number(raw.task_id),
@@ -15,7 +37,7 @@ export const mapChatRoom = (raw: any) => {
   };
 };
 
-export const mapChatMessage = (raw: any) => {
+export const mapChatMessage = (raw: ChatMessageRow) => {
   return {
     id: Number(raw.id),
     room_id: Number(raw.room_id),
@@ -26,14 +48,14 @@ export const mapChatMessage = (raw: any) => {
   };
 };
 
-export const mapChatRoomList = (rawList: any[]) => {
+export const mapChatRoomList = (rawList: ChatRoomRow[]) => {
   return {
     data: rawList.map(mapChatRoom),
     meta: { total: rawList.length }
   };
 };
 
-export const mapChatMessageList = (rawList: any[]) => {
+export const mapChatMessageList = (rawList: ChatMessageRow[]) => {
   return {
     data: rawList.map(mapChatMessage),
     meta: { total: rawList.length }

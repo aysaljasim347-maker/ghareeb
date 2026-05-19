@@ -86,7 +86,7 @@ class _CoordinatorDeliveryReviewScreenState extends ConsumerState<CoordinatorDel
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _SectionHeader(title: 'Task Information'),
+                  const _SectionHeader(title: 'Task Information'),
                   Text(task.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                   const SizedBox(height: 4),
                   Text('NGO: ${task.ngoName ?? 'Platform'}', style: const TextStyle(color: Colors.grey)),
@@ -96,7 +96,7 @@ class _CoordinatorDeliveryReviewScreenState extends ConsumerState<CoordinatorDel
                   
                   const Divider(height: 32),
                   
-                  _SectionHeader(title: 'Delivery Proof'),
+                  const _SectionHeader(title: 'Delivery Proof'),
                   if (delivery['photo_urls'] != null)
                     SizedBox(
                       height: 150,
@@ -121,7 +121,7 @@ class _CoordinatorDeliveryReviewScreenState extends ConsumerState<CoordinatorDel
 
                   const Divider(height: 32),
 
-                  _SectionHeader(title: 'Operational Review'),
+                  const _SectionHeader(title: 'Operational Review'),
                   TextField(
                     controller: _notesController,
                     decoration: const InputDecoration(

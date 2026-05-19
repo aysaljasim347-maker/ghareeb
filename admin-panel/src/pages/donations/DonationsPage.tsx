@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Table, Tag, Button, Space, Typography, Modal, notification, Card } from 'antd';
 import { CheckOutlined, CloseOutlined, EyeOutlined, DownloadOutlined, ProfileOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import axiosClient from '../../api/axiosClient';
 import { API_ENDPOINTS } from '../../api/endpoints';
 import type { Donation } from '../../types/donation';
@@ -25,8 +26,8 @@ const DonationsPage: React.FC = () => {
         params: { status: 'ALL', page, limit: pageSize }
       });
       return {
-        items: unwrapResponse<any>(response.data, 'donations').map(normalizeDonation),
-        total: response.data.meta?.total || 0
+        items: unwrapResponse<Record<string, unknown>>(response.data, 'donations').map(normalizeDonation),
+        total: (response.data as { meta?: { total?: number } }).meta?.total || 0
       };
     }
   });
@@ -72,7 +73,7 @@ const DonationsPage: React.FC = () => {
       notification.success({ message: 'Donation confirmed successfully' });
       queryClient.invalidateQueries({ queryKey: ['admin', 'donations'] });
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ error?: string }>) => {
       notification.error({ 
         message: 'Failed to confirm donation',
         description: error.response?.data?.error || 'Internal error'
@@ -88,7 +89,7 @@ const DonationsPage: React.FC = () => {
       notification.success({ message: 'Donation rejected' });
       queryClient.invalidateQueries({ queryKey: ['admin', 'donations'] });
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ error?: string }>) => {
       notification.error({ 
         message: 'Failed to reject donation',
         description: error.response?.data?.error || 'Internal error'
@@ -196,7 +197,7 @@ const DonationsPage: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: Donation) => (
+      render: (_: unknown, record: Donation) => (
         <Space>
           {record.receipt_url && (
             <Button 
@@ -318,4 +319,3 @@ const DonationsPage: React.FC = () => {
 };
 
 export default DonationsPage;
-DonationsPage;

@@ -41,22 +41,14 @@ class InKindRequestsScreen extends ConsumerWidget {
           final donation = donationAsync.valueOrNull;
 
           if (requests.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.inbox_outlined, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('No requests yet.', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-            );
+            return const _EmptyState();
           }
 
           return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(inKindRequestsProvider(donationId)),
+            onRefresh: () async =>
+                ref.invalidate(inKindRequestsProvider(donationId)),
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
               itemCount: requests.length,
               itemBuilder: (context, i) => _RequestCard(
                 request: requests[i],
@@ -87,12 +79,31 @@ class _RequestCard extends ConsumerStatefulWidget {
 }
 
 class _RequestCardState extends ConsumerState<_RequestCard> {
+  bool expanded = false;
+
   Color _statusColor(String status) {
     switch (status) {
-      case 'PENDING':  return Colors.orange;
-      case 'ACCEPTED': return Colors.green;
-      case 'REJECTED': return Colors.red;
-      default:         return Colors.grey;
+      case 'PENDING':
+        return Colors.orange;
+      case 'ACCEPTED':
+        return Colors.green;
+      case 'REJECTED':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData _statusIcon(String status) {
+    switch (status) {
+      case 'PENDING':
+        return Icons.hourglass_top;
+      case 'ACCEPTED':
+        return Icons.check_circle;
+      case 'REJECTED':
+        return Icons.cancel;
+      default:
+        return Icons.help_outline;
     }
   }
 
@@ -196,118 +207,172 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
 
   @override
   Widget build(BuildContext context) {
-    final request = widget.request;
+    final r = widget.request;
     final theme = Theme.of(context);
-    final createdAt = DateTime.tryParse(request.createdAt);
+    final color = _statusColor(r.status);
     final isLoading = ref.watch(inKindNotifierProvider).isLoading;
+
+    final createdAt = DateTime.tryParse(r.createdAt);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: theme.colorScheme.primaryContainer,
-                  child: Text(
-                    request.beneficiaryName.isNotEmpty ? request.beneficiaryName[0].toUpperCase() : '?',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onPrimaryContainer,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        request.beneficiaryName,
-                        style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      if (createdAt != null)
-                        Text(timeago.format(createdAt), style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey)),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _statusColor(request.status).withAlpha(30),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _statusColor(request.status).withAlpha(100)),
-                  ),
-                  child: Text(
-                    request.status,
-                    style: TextStyle(
-                      color: _statusColor(request.status),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            if (request.message != null) ...[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(request.message!, style: theme.textTheme.bodyMedium),
-              ),
-              const SizedBox(height: 10),
-            ],
-
-            // Contact details (always visible)
-            _ContactRow(icon: Icons.phone, label: 'Phone', value: request.phone),
-            if (request.email != null) ...[
-              const SizedBox(height: 4),
-              _ContactRow(icon: Icons.email_outlined, label: 'Email', value: request.email!),
-            ],
-
-            if (request.isAccepted && request.donorSharedPhone != null) ...[
-              const SizedBox(height: 4),
-              _ContactRow(
-                icon: Icons.phone_forwarded_outlined,
-                label: 'Your shared phone',
-                value: request.donorSharedPhone!,
-              ),
-            ],
-
-            if (request.isPending && widget.donationIsAvailable) ...[
-              const SizedBox(height: 14),
+      elevation: 1.2,
+      child: InkWell(
+        onTap: () => setState(() => expanded = !expanded),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── HEADER ──
               Row(
                 children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: isLoading ? null : _reject,
-                      style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
-                      child: const Text('Decline'),
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: theme.colorScheme.primaryContainer,
+                    child: Text(
+                      r.beneficiaryName.isNotEmpty
+                          ? r.beneficiaryName[0].toUpperCase()
+                          : '?',
+                      style: TextStyle(
+                        color: theme.colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
-                    child: FilledButton(
-                      onPressed: isLoading ? null : _acceptWithPhonePrompt,
-                      child: const Text('Accept'),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          r.beneficiaryName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (createdAt != null)
+                          Text(
+                            timeago.format(createdAt),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                      ],
                     ),
+                  ),
+                  _StatusPill(
+                    label: r.status,
+                    color: color,
+                    icon: _statusIcon(r.status),
                   ),
                 ],
               ),
+              const SizedBox(height: 10),
+              // ── MESSAGE (collapsed UX) ──
+              if (r.message != null && r.message!.isNotEmpty)
+                Text(
+                  r.message!,
+                  maxLines: expanded ? null : 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              const SizedBox(height: 10),
+              // ── EXPANDABLE CONTACT INFO ──
+              AnimatedCrossFade(
+                duration: const Duration(milliseconds: 180),
+                crossFadeState: expanded
+                    ? CrossFadeState.showSecond
+                    : CrossFadeState.showFirst,
+                firstChild: const SizedBox.shrink(),
+                secondChild: Column(
+                  children: [
+                    _ContactRow(
+                      icon: Icons.phone,
+                      value: r.phone,
+                    ),
+                    if (r.email != null)
+                      _ContactRow(
+                        icon: Icons.email_outlined,
+                        value: r.email!,
+                      ),
+                    if (r.isAccepted && r.donorSharedPhone != null)
+                      _ContactRow(
+                        icon: Icons.call,
+                        value: r.donorSharedPhone!,
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              // ── ACTIONS ──
+              if (r.isPending && widget.donationIsAvailable)
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: isLoading ? null : _reject,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red,
+                        ),
+                        child: const Text('Decline'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: isLoading ? null : _acceptWithPhonePrompt,
+                        icon: const Icon(Icons.check),
+                        label: const Text('Accept'),
+                      ),
+                    ),
+                  ],
+                ),
             ],
-          ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  final String label;
+  final Color color;
+  final IconData icon;
+
+  const _StatusPill({
+    required this.label,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -315,22 +380,66 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
 
 class _ContactRow extends StatelessWidget {
   final IconData icon;
-  final String label;
   final String value;
 
-  const _ContactRow({required this.icon, required this.label, required this.value});
+  const _ContactRow({
+    required this.icon,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.grey.shade600),
-        const SizedBox(width: 6),
-        Text('$label: ', style: const TextStyle(color: Colors.grey, fontSize: 13)),
-        Expanded(
-          child: Text(value, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
+    final cs = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        children: [
+          Icon(icon, size: 16, color: cs.onSurfaceVariant),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: cs.onSurfaceVariant,
+                fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox_outlined, size: 72, color: cs.outline),
+            const SizedBox(height: 12),
+            Text(
+              'No requests yet',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Requests will appear here when people apply for this donation.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: cs.onSurfaceVariant),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

@@ -46,7 +46,7 @@ const NgoTaskDetailPage: React.FC = () => {
   if (error) return <Alert message="Error" description="Could not load task details." type="error" showIcon />;
 
   const getStatusColor = (s: string) => {
-    const colors: any = { OPEN: 'blue', CLAIMED: 'cyan', IN_PROGRESS: 'orange', SUBMITTED: 'purple', VERIFIED: 'green', PAID: 'green', CANCELLED: 'red' };
+    const colors: Record<string, string> = { OPEN: 'blue', CLAIMED: 'cyan', IN_PROGRESS: 'orange', SUBMITTED: 'purple', VERIFIED: 'green', PAID: 'green', CANCELLED: 'red' };
     return colors[s] || 'default';
   };
 
@@ -68,7 +68,7 @@ const NgoTaskDetailPage: React.FC = () => {
           >
             <Paragraph style={{ fontSize: '16px' }}>{task.description}</Paragraph>
             
-            <Divider orientation={"left" as any}>Operational Info</Divider>
+            <Divider orientation="left">Operational Info</Divider>
             <Descriptions column={2} bordered size="small">
               <Descriptions.Item label="Urgency">
                 <Tag color={task.urgency === 'CRITICAL' ? 'red' : 'gold'}>{task.urgency}</Tag>
@@ -83,11 +83,11 @@ const NgoTaskDetailPage: React.FC = () => {
               </Descriptions.Item>
             </Descriptions>
 
-            <Divider orientation={"left" as any}>Required Items</Divider>
+            <Divider orientation="left">Required Items</Divider>
             <List
               size="small"
               dataSource={task.items_needed}
-              renderItem={(item: any) => (
+              renderItem={(item: { item: string; quantity: string | number }) => (
                 <List.Item>
                   <Text strong>{item.item}</Text> — {item.quantity}
                 </List.Item>
@@ -97,7 +97,7 @@ const NgoTaskDetailPage: React.FC = () => {
 
           {deliveries && deliveries.length > 0 && (
             <Card title="Execution Proof (Delivery)" style={{ marginTop: 24 }}>
-              {deliveries.map((d: any) => (
+              {deliveries.map((d: { id: number; photo_urls: string[]; notes?: string; volunteer_name: string; submitted_at: string }) => (
                 <div key={d.id}>
                   <Space direction="vertical" style={{ width: '100%' }}>
                     <div style={{ display: 'flex', gap: 12, overflowX: 'auto', padding: '8px 0' }}>
@@ -145,7 +145,7 @@ const NgoTaskDetailPage: React.FC = () => {
 
           <Card title={<span><HistoryOutlined /> Task Timeline</span>} style={{ marginTop: 24 }}>
             <Timeline
-              items={events?.map((e: any) => ({
+              items={events?.map((e: { event_type: string; created_at: string }) => ({
                 children: (
                   <Space direction="vertical" size={0}>
                     <Text strong style={{ fontSize: '12px' }}>{e.event_type}</Text>

@@ -16,6 +16,6 @@ export interface Donation {
   campaign_title?: string;
   metadata?: {
     disputed?: boolean;
-    [key: string]: any;
+    [key: string]: unknown;
   };
 }

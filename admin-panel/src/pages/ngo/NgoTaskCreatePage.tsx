@@ -17,7 +17,7 @@ const NgoTaskCreatePage: React.FC = () => {
   const prefilledValues = location.state?.prefilled;
 
   const createMutation = useMutation({
-    mutationFn: async (values: any) => {
+    mutationFn: async (values: unknown) => {
       return axiosClient.post('/tasks', values);
     },
     onSuccess: () => {
@@ -28,10 +28,11 @@ const NgoTaskCreatePage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['ngo', 'tasks'] });
       navigate('/ngo/tasks');
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { error?: string } } };
       notification.error({
         message: 'Creation Failed',
-        description: error.response?.data?.error || 'Could not create task.',
+        description: err.response?.data?.error || 'Could not create task.',
       });
     }
   });

@@ -43,5 +43,26 @@ export const API_ENDPOINTS = {
     PROFILE: '/ngo/profile',
     CAMPAIGNS: '/ngo/campaigns',
     PUBLIC: (id: number) => `/ngo/public/${id}`,
-  }
+  },
+  GOODS_CAMPAIGNS: {
+    LIST:   '/goods-campaigns',
+    MINE:   '/goods-campaigns/mine',
+    BY_ID:  (id: number) => `/goods-campaigns/${id}`,
+    CREATE: '/goods-campaigns',
+    UPDATE: (id: number) => `/goods-campaigns/${id}`,
+    DELETE: (id: number) => `/goods-campaigns/${id}`,
+  },
+  GOODS_DONATIONS: {
+    MINE:         '/goods-donations/mine',
+    NGO:          '/goods-donations/ngo',
+    AVAILABLE:    '/goods-donations/available',
+    FOR_REVIEW:   '/goods-donations/for-review',
+    ADMIN_ALL:    '/admin/goods-donations',
+    BY_ID:        (id: number) => `/goods-donations/${id}`,
+    CLAIM:        (id: number) => `/goods-donations/${id}/claim`,
+    DELIVER:      (id: number) => `/goods-donations/${id}/deliver`,
+    APPROVE:      (id: number) => `/goods-donations/${id}/approve`,
+    REJECT:       (id: number) => `/goods-donations/${id}/reject`,
+    ADMIN_OVERRIDE: (id: number) => `/admin/goods-donations/${id}/override`,
+  },
 };

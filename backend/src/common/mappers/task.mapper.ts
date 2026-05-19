@@ -1,7 +1,42 @@
 /**
  * Task Mapper
  */
-export const mapTask = (raw: any) => {
+
+interface TaskRow {
+  id: string | number;
+  campaign_id?: string | number | null;
+  beneficiary_id?: string | number | null;
+  created_by?: string | number | null;
+  claimed_by?: string | number | null;
+  coordinator_id?: string | number | null;
+  source_type?: string | null;
+  title?: string | null;
+  description?: string | null;
+  category?: string | null;
+  family_size?: string | number | null;
+  items_needed?: unknown; // Could be more specific if we knew the structure
+  latitude?: string | number | null;
+  longitude?: string | number | null;
+  location_text?: string | null;
+  radius_km?: string | number | null;
+  budget_pkr?: string | number | null;
+  urgency?: string | null;
+  status?: string | null;
+  upvotes?: string | number | null;
+  downvotes?: string | number | null;
+  view_count?: string | number | null;
+  created_at?: string | Date | null;
+  updated_at?: string | Date | null;
+  claimed_at?: string | Date | null;
+  created_by_name?: string | null;
+  claimed_by_name?: string | null;
+  coordinator_name?: string | null;
+  beneficiary_name?: string | null;
+  campaign_title?: string | null;
+  ngo_name?: string | null;
+}
+
+export const mapTask = (raw: TaskRow) => {
   return {
     id: Number(raw.id),
     campaign_id: raw.campaign_id ? Number(raw.campaign_id) : null,
@@ -15,11 +50,11 @@ export const mapTask = (raw: any) => {
     category: raw.category || '',
     family_size: Number(raw.family_size || 1),
     items_needed: raw.items_needed || [],
-    latitude: raw.latitude ? parseFloat(raw.latitude) : null,
-    longitude: raw.longitude ? parseFloat(raw.longitude) : null,
+    latitude: raw.latitude ? parseFloat(raw.latitude.toString()) : null,
+    longitude: raw.longitude ? parseFloat(raw.longitude.toString()) : null,
     location_text: raw.location_text || '',
     radius_km: Number(raw.radius_km || 5),
-    budget_pkr: raw.budget_pkr ? parseFloat(raw.budget_pkr) : 0,
+    budget_pkr: raw.budget_pkr ? parseFloat(raw.budget_pkr.toString()) : 0,
     urgency: raw.urgency || 'MEDIUM',
     status: raw.status || 'OPEN',
     upvotes: Number(raw.upvotes || 0),
@@ -37,7 +72,7 @@ export const mapTask = (raw: any) => {
   };
 };
 
-export const mapTaskList = (rawList: any[]) => {
+export const mapTaskList = (rawList: TaskRow[]) => {
   return {
     data: rawList.map(mapTask),
     meta: {

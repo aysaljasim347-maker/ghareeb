@@ -54,7 +54,7 @@ const NgoDashboardPage: React.FC = () => {
     { 
       title: 'Progress', 
       key: 'progress',
-      render: (_: any, record: any) => {
+      render: (_: unknown, record: { raised_pkr: number; goal_pkr: number }) => {
         const percent = (record.raised_pkr / record.goal_pkr) * 100;
         return <Progress percent={Math.min(100, Math.round(percent))} size="small" />;
       }

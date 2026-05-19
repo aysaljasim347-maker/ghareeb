@@ -2,7 +2,20 @@
  * User Mapper
  * Standardizes user responses for all frontends.
  */
-export const mapUser = (raw: any) => {
+
+interface UserRow {
+  id: string | number;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  role?: string | null;
+  status?: string | null;
+  cnic?: string | null;
+  locale?: string | null;
+  created_at?: string | Date | null;
+}
+
+export const mapUser = (raw: UserRow) => {
   return {
     id: Number(raw.id),
     name: raw.name || '',
@@ -16,7 +29,7 @@ export const mapUser = (raw: any) => {
   };
 };
 
-export const mapUserList = (rawList: any[]) => {
+export const mapUserList = (rawList: UserRow[]) => {
   return {
     data: rawList.map(mapUser),
     meta: {

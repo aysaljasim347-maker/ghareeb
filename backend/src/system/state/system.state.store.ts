@@ -1,5 +1,6 @@
 import { pool } from '../../config/database.js';
 import { SystemState } from './system.state.js';
+import { logger } from '../../common/logger.js';
 
 export type RecoveryStatus = 'ok' | 'fallback' | 'repaired';
 export type PersistenceSource = 'database' | 'default';
@@ -35,7 +36,7 @@ class SystemStateStore {
         await this.persist('NORMAL');
         this.persistenceSource = 'default';
         this.recoveryStatus = 'ok';
-        console.log('[SystemState] No persisted state found — initialized to NORMAL');
+        logger.info('[SystemState] No persisted state found — initialized to NORMAL');
         return;
       }
 
@@ -54,7 +55,7 @@ class SystemStateStore {
       this.persistenceSource = 'database';
       this.recoveryStatus = 'ok';
 
-      console.log(
+      logger.info(
         `[SystemState] Hydrated from DB: state=${this.current}` +
           (this.lastUpdatedAt ? ` last_updated=${this.lastUpdatedAt}` : ''),
       );

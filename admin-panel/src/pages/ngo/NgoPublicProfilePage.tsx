@@ -23,7 +23,7 @@ const NgoPublicProfilePage: React.FC = () => {
   if (error) return <Alert message="NGO not found or profile is private" type="error" showIcon />;
 
   const { profile, campaigns } = data;
-  const totalRaised = campaigns.reduce((acc: number, c: any) => acc + parseFloat(c.raised_pkr), 0);
+  const totalRaised = campaigns.reduce((acc: number, c: unknown) => acc + parseFloat((c as { raised_pkr: string }).raised_pkr), 0);
 
   const columns = [
     { title: 'Campaign', dataIndex: 'title', key: 'title', ellipsis: true },
@@ -36,7 +36,7 @@ const NgoPublicProfilePage: React.FC = () => {
     { 
       title: 'Funding', 
       key: 'funding',
-      render: (_: any, record: any) => {
+      render: (_: unknown, record: { raised_pkr: number; goal_pkr: number }) => {
         const percent = Math.round((record.raised_pkr / record.goal_pkr) * 100);
         return <Progress percent={Math.min(100, percent)} size="small" />;
       }

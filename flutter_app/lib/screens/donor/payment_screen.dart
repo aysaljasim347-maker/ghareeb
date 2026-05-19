@@ -18,7 +18,7 @@ class PaymentScreen extends ConsumerStatefulWidget {
 }
 
 class _PaymentScreenState extends ConsumerState<PaymentScreen> {
-  static const _presetAmounts = [500.0, 1000.0, 2000.0, 5000.0];
+  int _step = 0; // 0 = amount, 1 = payment details
   double? _selectedPreset;
   final _customController = TextEditingController();
   final _referenceController = TextEditingController();
@@ -124,241 +124,55 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           child: Column(
             children: [
               Expanded(
-                child: SingleChildScrollView(
+                child: ListView(
                   padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ── Campaign Info ──
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                campaign.title,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w600),
-                              ),
-                              if (campaign.ngoName != null) ...[
-                                const SizedBox(height: 4),
-                                Text('By ${campaign.ngoName}',
-                                    style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurfaceVariant,
-                                        fontSize: 13)),
-                              ],
-                              const SizedBox(height: 12),
-                              LinearProgressIndicator(value: campaign.progressFraction),
-                              const SizedBox(height: 4),
-                              Text(
-                                '₹${campaign.raisedPkr.toStringAsFixed(0)} raised of ₹${campaign.goalPkr.toStringAsFixed(0)}',
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // ── Amount Selection ──
-                      Text('Select Amount',
-                          style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: _presetAmounts.map((amt) {
-                          final selected = !_useCustom && _selectedPreset == amt;
-                          return ChoiceChip(
-                            label: Text('₹${amt.toInt()}',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: selected ? Colors.white : null)),
-                            selected: selected,
-                            onSelected: (_) {
-                              HapticFeedback.lightImpact();
-                              setState(() {
-                                _selectedPreset = amt;
-                                _useCustom = false;
-                              });
-                            },
-                            selectedColor: Theme.of(context).colorScheme.primary,
-                          );
-                        }).toList(),
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _customController,
-                        decoration: const InputDecoration(
-                          labelText: 'Custom Amount (PKR)',
-                          prefixText: '₹ ',
-                          hintText: 'Enter amount',
-                        ),
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d+\.?\d{0,2}')),
-                        ],
-                        onChanged: (v) => setState(() {
-                          _useCustom = v.isNotEmpty;
-                          if (v.isNotEmpty) _selectedPreset = null;
-                        }),
-                        validator: (v) {
-                          if (!_useCustom) return null;
-                          final parsed = double.tryParse(v ?? '');
-                          if (parsed == null || parsed < 100) {
-                            return 'Minimum donation is ₹100';
-                          }
-                          return null;
+                  children: [
+                    _CampaignHeader(campaign: campaign),
+                    const SizedBox(height: 24),
+                    _StepIndicator(step: _step),
+                    const SizedBox(height: 24),
+                    if (_step == 0)
+                      _AmountSelector(
+                        selectedPreset: _selectedPreset,
+                        useCustom: _useCustom,
+                        customController: _customController,
+                        onPreset: (amt) {
+                          HapticFeedback.selectionClick();
+                          setState(() {
+                            _selectedPreset = amt;
+                            _useCustom = false;
+                          });
+                        },
+                        onCustomChanged: (v) {
+                          setState(() {
+                            _useCustom = v.isNotEmpty;
+                            _selectedPreset = null;
+                          });
                         },
                       ),
-                      const SizedBox(height: 28),
-
-                      // ── Bank Transfer Details ──
-                      Text('Bank Transfer Details',
-                          style: Theme.of(context).textTheme.titleMedium),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primaryContainer
-                              .withValues(alpha: 0.35),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _BankRow(label: 'Bank', value: 'HBL Pakistan'),
-                            _BankRow(label: 'Account Title', value: 'DisasterAid Relief Fund'),
-                            _BankRow(label: 'Account No.', value: '0123456789'),
-                            _BankRow(label: 'IBAN', value: 'PK36HABB0000000123456702'),
-                          ],
-                        ),
+                    if (_step == 1)
+                      _PaymentDetails(
+                        referenceController: _referenceController,
+                        receiptController: _receiptController,
                       ),
-                      const SizedBox(height: 20),
-
-                      TextFormField(
-                        controller: _referenceController,
-                        decoration: const InputDecoration(
-                          labelText: 'Transaction Reference Number *',
-                          hintText: 'e.g. TXN123456789',
-                          helperText: 'Enter the reference/transaction ID from your bank receipt',
-                        ),
-                        textCapitalization: TextCapitalization.characters,
-                        onChanged: (_) => setState(() {}),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return 'Please enter your transaction reference number';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _receiptController,
-                        decoration: const InputDecoration(
-                          labelText: 'Receipt URL (optional)',
-                          hintText: 'https://...',
-                          helperText: 'Link to an uploaded image of your bank receipt',
-                        ),
-                        keyboardType: TextInputType.url,
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return null;
-                          final uri = Uri.tryParse(v.trim());
-                          if (uri == null || !uri.hasAbsolutePath || !v.startsWith('http')) {
-                            return 'Please enter a valid URL';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .secondaryContainer
-                              .withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.info_outline, size: 20),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Your donation will appear as PENDING until an admin verifies your bank transfer. You will see it confirmed in My Donations.',
-                                style: TextStyle(
-                                    fontSize: 13,
-                                    color: Theme.of(context).colorScheme.onSurfaceVariant),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    const SizedBox(height: 100),
+                  ],
                 ),
               ),
-
-              // ── Submit Button ──
-              Container(
-                padding: EdgeInsets.fromLTRB(
-                    20, 12, 20, 12 + MediaQuery.of(context).padding.bottom),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 8,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_amount != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Text(
-                          'Amount: ₹${_amount!.toStringAsFixed(0)}',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: FilledButton.icon(
-                        onPressed: _canSubmit ? () => _submitDonation(campaign) : null,
-                        icon: _submitting
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: Colors.white),
-                              )
-                            : const Icon(Icons.send_outlined),
-                        label: Text(
-                          _submitting ? 'Submitting...' : 'Submit Donation Request',
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              _BottomCTA(
+                step: _step,
+                amount: _amount,
+                submitting: _submitting,
+                canContinue: _amount != null && _amount! >= 100,
+                canSubmit: _canSubmit,
+                onNext: () {
+                  HapticFeedback.mediumImpact();
+                  setState(() => _step = 1);
+                },
+                onBack: () {
+                  setState(() => _step = 0);
+                },
+                onSubmit: () => _submitDonation(campaign),
               ),
             ],
           ),
@@ -368,27 +182,358 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   }
 }
 
-class _BankRow extends StatelessWidget {
-  final String label;
-  final String value;
+class _CampaignHeader extends StatelessWidget {
+  final CampaignModel campaign;
 
-  const _BankRow({required this.label, required this.value});
+  const _CampaignHeader({required this.campaign});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.5)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              campaign.title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              campaign.ngoName ?? '',
+              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: campaign.progressFraction,
+                minHeight: 6,
+                backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Rs ${campaign.raisedPkr.toStringAsFixed(0)} raised of Rs ${campaign.goalPkr.toStringAsFixed(0)}",
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StepIndicator extends StatelessWidget {
+  final int step;
+
+  const _StepIndicator({required this.step});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 110,
-            child: Text(label,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-          ),
+          _dot(0, step, "Amount"),
           Expanded(
-            child: Text(value,
-                style: const TextStyle(fontSize: 13)),
+            child: Container(
+              height: 2,
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              color: step >= 1 ? Colors.green : Colors.grey.shade300,
+            ),
+          ),
+          _dot(1, step, "Details"),
+        ],
+      ),
+    );
+  }
+
+  Widget _dot(int index, int currentStep, String label) {
+    final active = currentStep >= index;
+    final isDone = currentStep > index;
+
+    return Column(
+      children: [
+        CircleAvatar(
+          radius: 14,
+          backgroundColor: active ? Colors.green : Colors.grey.shade300,
+          child: isDone
+              ? const Icon(Icons.check, size: 16, color: Colors.white)
+              : Text(
+                  "${index + 1}",
+                  style: const TextStyle(fontSize: 12, color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: active ? FontWeight.w700 : FontWeight.normal,
+            color: active ? Colors.black87 : Colors.grey,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AmountSelector extends StatelessWidget {
+  final double? selectedPreset;
+  final bool useCustom;
+  final TextEditingController customController;
+  final Function(double) onPreset;
+  final Function(String) onCustomChanged;
+
+  const _AmountSelector({
+    required this.selectedPreset,
+    required this.useCustom,
+    required this.customController,
+    required this.onPreset,
+    required this.onCustomChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final presets = [500.0, 1000.0, 2000.0, 5000.0];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Choose amount",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: presets.map((amt) {
+            final selected = !useCustom && selectedPreset == amt;
+            return ChoiceChip(
+              label: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Text("Rs ${amt.toInt()}"),
+              ),
+              selected: selected,
+              onSelected: (_) => onPreset(amt),
+              selectedColor: Theme.of(context).colorScheme.primary,
+              labelStyle: TextStyle(
+                color: selected ? Colors.white : Colors.black87,
+                fontWeight: FontWeight.w700,
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 20),
+        const Text(
+          "Or enter custom amount",
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey),
+        ),
+        const SizedBox(height: 10),
+        TextField(
+          controller: customController,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onChanged: onCustomChanged,
+          decoration: InputDecoration(
+            labelText: "Custom amount",
+            prefixText: "Rs ",
+            prefixStyle: const TextStyle(fontWeight: FontWeight.bold),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          ),
+        ),
+        const SizedBox(height: 12),
+        const Row(
+          children: [
+            Icon(Icons.info_outline, size: 14, color: Colors.grey),
+            SizedBox(width: 6),
+            Text("Minimum donation is Rs 100", style: TextStyle(fontSize: 11, color: Colors.grey)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _PaymentDetails extends StatelessWidget {
+  final TextEditingController referenceController;
+  final TextEditingController receiptController;
+
+  const _PaymentDetails({
+    required this.referenceController,
+    required this.receiptController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          "Payment details",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2)),
+          ),
+          child: const ExpansionTile(
+            title: Text("View Bank Details", style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+            leading: Icon(Icons.account_balance, color: Colors.green),
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  children: [
+                    _BankInfoRow(label: "Bank", value: "HBL Pakistan"),
+                    _BankInfoRow(label: "Account", value: "DisasterAid Relief"),
+                    _BankInfoRow(label: "Account #", value: "0123456789"),
+                    _BankInfoRow(label: "IBAN", value: "PK36HABB0000000123456702"),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        TextFormField(
+          controller: referenceController,
+          textCapitalization: TextCapitalization.characters,
+          decoration: InputDecoration(
+            labelText: "Transaction reference *",
+            hintText: "e.g. TXN123456789",
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            helperText: "Enter the reference ID from your bank receipt",
+          ),
+          validator: (v) => v == null || v.trim().isEmpty ? "Required" : null,
+        ),
+        const SizedBox(height: 16),
+        TextFormField(
+          controller: receiptController,
+          keyboardType: TextInputType.url,
+          decoration: InputDecoration(
+            labelText: "Receipt URL (optional)",
+            hintText: "https://...",
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            helperText: "Link to your payment proof image",
+          ),
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.blue.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.lock_outline, size: 16, color: Colors.blue),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  "Your donation will be verified by our team within 24 hours.",
+                  style: TextStyle(fontSize: 11, color: Colors.blue),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BankInfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _BankInfoRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+          Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+}
+
+class _BottomCTA extends StatelessWidget {
+  final int step;
+  final double? amount;
+  final bool submitting;
+  final bool canContinue;
+  final bool canSubmit;
+  final VoidCallback onNext;
+  final VoidCallback onBack;
+  final VoidCallback onSubmit;
+
+  const _BottomCTA({
+    required this.step,
+    required this.amount,
+    required this.submitting,
+    required this.canContinue,
+    required this.canSubmit,
+    required this.onNext,
+    required this.onBack,
+    required this.onSubmit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 12 + MediaQuery.of(context).padding.bottom),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, -2))],
+      ),
+      child: Row(
+        children: [
+          if (step == 1) ...[
+            OutlinedButton(
+              onPressed: submitting ? null : onBack,
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(80, 52),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text("Back"),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: FilledButton(
+              onPressed: step == 0
+                  ? (canContinue ? onNext : null)
+                  : (canSubmit ? onSubmit : null),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(52),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: submitting
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : Text(step == 0 ? "Continue" : "Submit Donation"),
+            ),
           ),
         ],
       ),
@@ -404,41 +549,31 @@ class _SuccessView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                color: const Color(0xFF38A169).withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.check_circle,
-                  size: 56, color: Color(0xFF38A169)),
-            ),
+            const Icon(Icons.check_circle, size: 80, color: Colors.green),
             const SizedBox(height: 24),
-            Text('Request Submitted!',
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineMedium
-                    ?.copyWith(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
             Text(
-              'Your donation request is pending admin verification. Once your bank transfer is confirmed, it will appear as CONFIRMED in My Donations.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: cs.onSurfaceVariant),
+              "Thank You!",
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 12),
+            const Text(
+              "Your donation request has been submitted and is pending verification.",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            const SizedBox(height: 40),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
                 onPressed: onViewHistory,
-                child: const Text('View My Donations'),
+                style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                child: const Text("View My Donations"),
               ),
             ),
             const SizedBox(height: 12),
@@ -446,7 +581,8 @@ class _SuccessView extends StatelessWidget {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: onGoHome,
-                child: const Text('Back to Campaigns'),
+                style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                child: const Text("Back to Home"),
               ),
             ),
           ],

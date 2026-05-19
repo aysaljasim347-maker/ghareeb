@@ -7,8 +7,9 @@ import axiosClient from '../../api/axiosClient';
 import { API_ENDPOINTS } from '../../api/endpoints';
 import type { User } from '../../types/user';
 import dayjs from 'dayjs';
-import { useAuthContext } from '../../auth/AuthContext';
+import { useAuthContext } from '../../auth/useAuthContext';
 import { unwrapResponse, normalizeUser } from '../../utils/apiNormalizer';
+import { AxiosError } from 'axios';
 
 const { Title, Text } = Typography;
 
@@ -21,7 +22,7 @@ const UsersPage: React.FC = () => {
     queryKey: ['admin', 'users', 'list'],
     queryFn: async () => {
       const response = await axiosClient.get(API_ENDPOINTS.ADMIN.USERS);
-      return unwrapResponse<any>(response.data, 'users').map(normalizeUser);
+      return unwrapResponse<User>(response.data, 'users').map(normalizeUser);
     }
   });
 
@@ -61,7 +62,7 @@ const UsersPage: React.FC = () => {
       notification.success({ message: 'User suspended' });
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ error?: string }>) => {
       notification.error({ 
         message: 'Failed to suspend user',
         description: error.response?.data?.error || 'Internal error'
@@ -77,7 +78,7 @@ const UsersPage: React.FC = () => {
       notification.success({ message: 'User reactivated' });
       queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ error?: string }>) => {
       notification.error({ 
         message: 'Failed to reactivate user',
         description: error.response?.data?.error || 'Internal error'
@@ -171,7 +172,7 @@ const UsersPage: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: User) => {
+      render: (_: unknown, record: User) => {
         const isSelf = record.id === currentUser?.id;
         const isAdmin = record.role === 'ADMIN';
         const isSuspended = record.status === 'SUSPENDED';

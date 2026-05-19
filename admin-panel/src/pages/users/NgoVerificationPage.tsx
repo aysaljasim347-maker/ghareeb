@@ -62,7 +62,7 @@ const NgoVerificationPage: React.FC = () => {
     }
   });
 
-  const handleVerify = (ngo: any) => {
+  const handleVerify = (ngo: { id: number, org_name: string }) => {
     Modal.confirm({
       title: 'Verify NGO',
       content: `Verify "${ngo.org_name}"? This allows them to create campaigns and request withdrawals.`,
@@ -70,7 +70,7 @@ const NgoVerificationPage: React.FC = () => {
     });
   };
 
-  const handleReject = (ngo: any) => {
+  const handleReject = (ngo: { id: number }) => {
     let reason = '';
     Modal.confirm({
       title: 'Reject NGO Registration',
@@ -92,14 +92,14 @@ const NgoVerificationPage: React.FC = () => {
   const columns = [
     { title: 'Org Name', dataIndex: 'org_name', key: 'org_name', render: (val: string) => <Text strong>{val}</Text> },
     { title: 'Reg #', dataIndex: 'registration_number', key: 'registration_number' },
-    { title: 'Representative', dataIndex: 'user_name', key: 'user_name', render: (val: string, record: any) => (
+    { title: 'Representative', dataIndex: 'user_name', key: 'user_name', render: (val: string, record: { email: string }) => (
       <div>{val}<br/><Text type="secondary">{record.email}</Text></div>
     )},
     { title: 'Submitted', dataIndex: 'created_at', key: 'created_at', render: (val: string) => dayjs(val).format('MMM D, YYYY') },
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: { id: number, org_name: string }) => (
         <Space>
           <Button 
             type="primary" 

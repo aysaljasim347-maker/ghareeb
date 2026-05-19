@@ -3,9 +3,11 @@ import jwt from 'jsonwebtoken';
 import { pool } from '../../config/database.js';
 import { env } from '../../config/env.js';
 import { chatService } from './chat.service.js';
+import { logger } from '../../common/logger.js';
 
 interface AuthenticatedSocket extends Socket {
   userId?: number;
+  userName?: string;
 }
 
 let globalIo: SocketIOServer | null = null;
@@ -26,6 +28,10 @@ export function initializeChatGateway(io: SocketIOServer): void {
     try {
       const decoded = jwt.verify(token, env.JWT_SECRET) as { userId: number };
       socket.userId = decoded.userId;
+      // Fetch the user's display name once at connection time for typing events.
+      pool.query('SELECT name FROM users WHERE id = $1', [decoded.userId])
+        .then(r => { socket.userName = r.rows[0]?.name ?? 'User'; })
+        .catch(() => { socket.userName = 'User'; });
       next();
     } catch {
       next(new Error('Invalid token'));
@@ -35,7 +41,7 @@ export function initializeChatGateway(io: SocketIOServer): void {
   io.on('connection', (socket: AuthenticatedSocket) => {
     if (!socket.userId) return;
     
-    console.log(`Socket connected: user ${socket.userId}`);
+    logger.info(`Socket connected: user ${socket.userId}`);
 
     // Join user-specific room for private notifications
     socket.join(`user:${socket.userId}`);
@@ -59,7 +65,7 @@ export function initializeChatGateway(io: SocketIOServer): void {
         }
 
         socket.join(`room:${roomId}`);
-        console.log(`User ${socket.userId} joined room ${roomId}`);
+        logger.info(`User ${socket.userId} joined room ${roomId}`);
       } catch {
         socket.emit('error', { message: 'Internal error' });
       }
@@ -92,12 +98,14 @@ export function initializeChatGateway(io: SocketIOServer): void {
     socket.on('typing', (data: { roomId: number; isTyping: boolean }) => {
       socket.to(`room:${data.roomId}`).emit('user_typing', {
         userId: socket.userId,
+        userName: socket.userName ?? 'User',
+        roomId: data.roomId,
         isTyping: data.isTyping,
       });
     });
 
     socket.on('disconnect', () => {
-      console.log(`Socket disconnected: user ${socket.userId}`);
+      logger.info(`Socket disconnected: user ${socket.userId}`);
     });
   });
 }

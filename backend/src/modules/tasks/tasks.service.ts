@@ -16,8 +16,8 @@ interface TaskRow {
   description: string | null;
   category: string | null;
   family_size: number;
-  items_needed: any;
-  location: any;
+  items_needed: Record<string, unknown>;
+  location: Record<string, unknown>;
   latitude?: number;
   longitude?: number;
   location_text: string | null;
@@ -83,7 +83,7 @@ export class TasksService {
    * Get ALL open tasks. Optional filter by source type.
    */
   async getAvailableTasks(sourceType?: string): Promise<TaskRow[]> {
-    const values: any[] = [];
+    const values: unknown[] = [];
     let whereClause = "WHERE t.status = 'OPEN'";
     
     if (sourceType) {

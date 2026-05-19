@@ -2,7 +2,7 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../../middleware/auth.js';
 import { deliveriesService } from './deliveries.service.js';
 import { SubmitDeliveryInput, VerifyDeliveryInput } from './deliveries.schema.js';
-import { mapDelivery, mapDeliveryList } from '../../common/mappers/delivery.mapper.js';
+import { mapDelivery, mapDeliveryList, DeliveryRow } from '../../common/mappers/delivery.mapper.js';
 import { executeAdminCommand } from '../../admin/commands/admin.command.router.js';
 
 export class DeliveriesController {
@@ -12,7 +12,7 @@ export class DeliveriesController {
       const delivery = await deliveriesService.submitDelivery(
         req.body as SubmitDeliveryInput,
         req.user.id
-      );
+      ) as unknown as DeliveryRow;
       res.status(201).json(mapDelivery(delivery));
     } catch (err) { next(err); }
   }
@@ -34,7 +34,7 @@ export class DeliveriesController {
       } else {
         result = await deliveriesService.verifyDelivery(id, req.user.id, body);
       }
-      res.json(mapDelivery(result));
+      res.json(mapDelivery(result as DeliveryRow));
     } catch (err) { next(err); }
   }
 

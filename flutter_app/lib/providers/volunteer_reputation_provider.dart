@@ -90,11 +90,11 @@ final volunteerReputationProvider = Provider<VolunteerReputation>((ref) {
       String rank = 'New Volunteer';
       if (trustScore > 90) {
         rank = 'Top Performer';
-        // ignore: curly_braces_in_flow_control_structures
-      } else if (trustScore > 70)
+      } else if (trustScore > 70) {
         rank = 'Trusted Contributor';
-      // ignore: curly_braces_in_flow_control_structures
-      else if (totalTasks > 5) rank = 'Regular Contributor';
+      } else if (totalTasks > 5) {
+        rank = 'Regular Contributor';
+      }
 
       // 5. Trend (last 10 tasks)
       String trend = 'STABLE';
@@ -104,8 +104,9 @@ final volunteerReputationProvider = Provider<VolunteerReputation>((ref) {
             last10.where((t) => t.status == TaskStatus.flagged).length;
         if (currentFlags == 0) {
           trend = 'UP';
-          // ignore: curly_braces_in_flow_control_structures
-        } else if (currentFlags > 1) trend = 'DOWN';
+        } else if (currentFlags > 1) {
+          trend = 'DOWN';
+        }
       }
 
       // 6. Badge System

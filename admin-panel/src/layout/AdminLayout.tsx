@@ -15,7 +15,7 @@ import {
   GiftOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { useAuthContext } from '../auth/AuthContext';
+import { useAuthContext } from '../auth/useAuthContext';
 
 const { Header, Sider, Content } = Layout;
 
@@ -109,6 +109,11 @@ const AdminLayout: React.FC = () => {
           { key: '/ngo/tasks/new', label: 'Create Task' },
           { key: '/ngo/beneficiaries/requests', label: 'Beneficiary Requests' },
         ]
+      },
+      {
+        key: '/ngo/goods-donations',
+        icon: <GiftOutlined />,
+        label: 'Goods Donations',
       },
       {
         key: '/ngo/profile',

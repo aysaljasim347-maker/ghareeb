@@ -17,11 +17,12 @@ class MyInKindDonationsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My InKind Donations'),
+        title: const Text('My Donations'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.invalidate(myInKindDonationsProvider),
+            onPressed: () =>
+                ref.invalidate(myInKindDonationsProvider),
           ),
         ],
       ),
@@ -36,27 +37,22 @@ class MyInKindDonationsScreen extends ConsumerWidget {
         ),
         error: (e, _) => ErrorView(
           message: e.toString(),
-          onRetry: () => ref.invalidate(myInKindDonationsProvider),
+          onRetry: () =>
+              ref.invalidate(myInKindDonationsProvider),
         ),
         data: (donations) {
           if (donations.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.volunteer_activism_outlined, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text("You haven't donated any items yet.", style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-            );
+            return const _EmptyState();
           }
+
           return RefreshIndicator(
-            onRefresh: () async => ref.invalidate(myInKindDonationsProvider),
+            onRefresh: () async =>
+                ref.invalidate(myInKindDonationsProvider),
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
               itemCount: donations.length,
-              itemBuilder: (context, i) => _DonorDonationCard(donation: donations[i]),
+              itemBuilder: (context, i) =>
+                  _DonationCard(donation: donations[i]),
             ),
           );
         },
@@ -65,115 +61,256 @@ class MyInKindDonationsScreen extends ConsumerWidget {
   }
 }
 
-class _DonorDonationCard extends StatelessWidget {
+class _DonationCard extends StatelessWidget {
   final InKindDonation donation;
-  const _DonorDonationCard({required this.donation});
-
-  Color _statusColor() {
-    switch (donation.status) {
-      case 'AVAILABLE': return Colors.green;
-      case 'ACCEPTED':  return Colors.blue;
-      case 'CANCELLED': return Colors.grey;
-      default:          return Colors.grey;
-    }
-  }
+  const _DonationCard({required this.donation});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
     final postedAt = DateTime.tryParse(donation.createdAt);
+    final timeLabel =
+        postedAt != null ? timeago.format(postedAt) : '';
+
     final pending = donation.pendingCount ?? 0;
 
-    return Card(
+    final color = _statusColor(donation.status);
+
+    return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: () => context.push('/donor/inkind/${donation.id}/requests'),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Material(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => context
+              .push('/donor/inkind/${donation.id}/requests'),
+          child: Row(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      donation.title,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                    ),
+              // ── LEFT STATUS BAR ──
+              Container(
+                width: 6,
+                height: 110,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    bottomLeft: Radius.circular(16),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: _statusColor().withAlpha(30),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: _statusColor().withAlpha(100)),
-                    ),
-                    child: Text(
-                      donation.status,
-                      style: TextStyle(color: _statusColor(), fontSize: 12, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.location_on_outlined, size: 15, color: Colors.grey),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      donation.addressText,
-                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.inbox_outlined, size: 15, color: Colors.grey),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${donation.requestCount ?? 0} total request${(donation.requestCount ?? 0) != 1 ? 's' : ''}',
-                    style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
-                  ),
-                  if (pending > 0) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.orange,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '$pending pending',
-                        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                  const Spacer(),
-                  if (postedAt != null)
-                    Text(
-                      timeago.format(postedAt),
-                      style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey),
-                    ),
-                ],
-              ),
-              if (donation.isAvailable) ...[
-                const SizedBox(height: 10),
-                const Row(
-                  children: [
-                    Icon(Icons.touch_app_outlined, size: 14, color: Colors.grey),
-                    SizedBox(width: 4),
-                    Text('Tap to review requests', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  ],
                 ),
-              ],
+              ),
+
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── TOP ROW ──
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              donation.title,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w800,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+
+                          _StatusPill(
+                            text: donation.status,
+                            color: color,
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // ── ADDRESS ──
+                      Text(
+                        donation.addressText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // ── METRICS ROW ──
+                      Row(
+                        children: [
+                          const Icon(Icons.inbox_outlined,
+                              size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${donation.requestCount ?? 0} requests',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: cs.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+
+                          const SizedBox(width: 10),
+
+                          if (pending > 0)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: Colors.orange
+                                    .withValues(alpha: 0.15),
+                                borderRadius:
+                                    BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                '$pending pending',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                            ),
+
+                          const Spacer(),
+
+                          Icon(Icons.schedule,
+                              size: 12,
+                              color: cs.onSurfaceVariant),
+                          const SizedBox(width: 4),
+                          Text(
+                            timeLabel,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // ── CTA HINT (only for active items) ──
+                      if (donation.isAvailable)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: cs.primaryContainer,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.touch_app_outlined,
+                                  size: 14,
+                                  color: cs.primary),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Tap to review requests',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: cs.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(width: 6),
+              const Icon(Icons.chevron_right),
+              const SizedBox(width: 8),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Color _statusColor(String status) {
+    switch (status.toUpperCase()) {
+      case 'AVAILABLE':
+        return Colors.green;
+      case 'ACCEPTED':
+        return Colors.blue;
+      case 'CANCELLED':
+        return Colors.grey;
+      default:
+        return Colors.grey;
+    }
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  final String text;
+  final Color color;
+
+  const _StatusPill({
+    required this.text,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inventory_2_outlined, size: 72, color: cs.outline),
+            const SizedBox(height: 12),
+            Text(
+              'No in-kind donations yet',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Post items you want to give away to people in need.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: cs.onSurfaceVariant),
+            ),
+          ],
         ),
       ),
     );

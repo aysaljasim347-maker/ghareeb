@@ -27,7 +27,7 @@ const NgoTasksPage: React.FC = () => {
 
   const tasks = data || [];
   
-  const filteredTasks = tasks.filter((t: any) => {
+  const filteredTasks = tasks.filter((t: { status: string }) => {
     if (activeTab === 'ALL') return true;
     if (activeTab === 'ACTIVE') return ['CLAIMED', 'IN_PROGRESS', 'SUBMITTED'].includes(t.status);
     return t.status === activeTab;
@@ -91,14 +91,14 @@ const NgoTasksPage: React.FC = () => {
       dataIndex: 'urgency',
       key: 'urgency',
       render: (u: string) => {
-        const colors: any = { CRITICAL: 'red', HIGH: 'volcano', MEDIUM: 'gold', LOW: 'blue' };
+        const colors: Record<string, string> = { CRITICAL: 'red', HIGH: 'volcano', MEDIUM: 'gold', LOW: 'blue' };
         return <Tag color={colors[u]}>{u}</Tag>;
       }
     },
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: { id: number; status: string }) => (
         <Space>
           <Tooltip title="View Details">
             <Link to={`/ngo/tasks/${record.id}`}>

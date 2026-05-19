@@ -21,17 +21,32 @@ class CampaignDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final campaignAsync = ref.watch(campaignDetailProvider(campaignId));
 
-    return Scaffold(
-      body: campaignAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Scaffold(
-          appBar: AppBar(),
-          body: ErrorView(
-            message: 'Could not load campaign details.',
-            onRetry: () => ref.invalidate(campaignDetailProvider(campaignId)),
+    return campaignAsync.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (err, _) => Scaffold(
+        appBar: AppBar(),
+        body: ErrorView(
+          message: 'Could not load campaign details.',
+          onRetry: () => ref.invalidate(campaignDetailProvider(campaignId)),
+        ),
+      ),
+      data: (campaign) => Scaffold(
+        body: _CampaignDetailBody(campaign: campaign),
+        bottomNavigationBar: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: SizedBox(
+              height: 52,
+              child: FilledButton.icon(
+                onPressed: () => context.push('/donor/payment/${campaign.id}'),
+                icon: const Icon(Icons.volunteer_activism),
+                label: const Text('Donate Now'),
+              ),
+            ),
           ),
         ),
-        data: (campaign) => _CampaignDetailBody(campaign: campaign),
       ),
     );
   }
@@ -55,14 +70,66 @@ class _CampaignDetailBody extends ConsumerWidget {
         SliverAppBar(
           expandedHeight: 220,
           pinned: true,
-          flexibleSpace: FlexibleSpaceBar(
-            background: campaign.imageUrl != null
-                ? CachedNetworkImage(
-                    imageUrl: campaign.imageUrl!,
-                    fit: BoxFit.cover,
-                    errorWidget: (_, __, ___) => _HeroPlaceholder(cs: cs),
-                  )
-                : _HeroPlaceholder(cs: cs),
+          flexibleSpace: Stack(
+            fit: StackFit.expand,
+            children: [
+              campaign.imageUrl != null
+                  ? CachedNetworkImage(
+                      imageUrl: campaign.imageUrl!,
+                      fit: BoxFit.cover,
+                    )
+                  : _HeroPlaceholder(cs: cs),
+
+              // 🔥 Dark overlay
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withValues(alpha: 0.4),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                  ),
+                ),
+              ),
+
+              // 🔥 Bottom content
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 16,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      campaign.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+
+                    // 🔥 Quick CTA
+                    Row(
+                      children: [
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () =>
+                                context.push('/donor/payment/${campaign.id}'),
+                            child: const Text('Donate Now'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           actions: [
             Consumer(
@@ -143,7 +210,7 @@ class _CampaignDetailBody extends ConsumerWidget {
               // ── Progress card ──
               _ProgressCard(campaign: campaign, pct: pct, fmt: fmt),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
 
               // ── Transparency card ──
               Consumer(
@@ -165,13 +232,15 @@ class _CampaignDetailBody extends ConsumerWidget {
                 },
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
+              const Divider(),
+              const SizedBox(height: 20),
 
               // ── Description ──
               if (campaign.description != null &&
                   campaign.description!.isNotEmpty) ...[
                 Text(
-                  'About this campaign',
+                  'Why this matters',
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium
@@ -185,12 +254,14 @@ class _CampaignDetailBody extends ConsumerWidget {
                       .bodyMedium
                       ?.copyWith(height: 1.6),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
+                const Divider(),
+                const SizedBox(height: 20),
               ],
 
               // ── Recent donations ──
               Text(
-                'Recent Donations',
+                'People are helping',
                 style: Theme.of(context)
                     .textTheme
                     .titleMedium
@@ -215,36 +286,27 @@ class _CampaignDetailBody extends ConsumerWidget {
                     );
                   }
                   final recent = donations.take(5).toList();
-                  return Column(
-                    children: recent
-                        .map((d) => _DonationRow(
-                              donorName: d.donorName ?? 'Anonymous',
-                              amountPkr: d.amountPkr,
-                              fmt: fmt,
-                              status: d.status,
-                            ))
-                        .toList(),
+                  return Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: recent
+                          .map((d) => _DonationRow(
+                                donorName: d.donorName ?? 'Anonymous',
+                                amountPkr: d.amountPkr,
+                                fmt: fmt,
+                                status: d.status,
+                              ))
+                          .toList(),
+                    ),
                   );
                 },
               ),
 
               const SizedBox(height: 32),
-
-              // ── Sticky donate CTA ──
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: FilledButton.icon(
-                  onPressed: () =>
-                      context.push('/donor/payment/${campaign.id}'),
-                  icon: const Icon(Icons.volunteer_activism),
-                  label: const Text('Donate to This Campaign'),
-                  style: FilledButton.styleFrom(
-                    textStyle: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
             ]),
           ),
         ),
@@ -266,14 +328,17 @@ class _ProgressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final width = MediaQuery.of(context).size.width;
+
     return Card(
       color: cs.primaryContainer,
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(width > 400 ? 20 : 16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
                   child: Column(
@@ -283,13 +348,17 @@ class _ProgressCard extends StatelessWidget {
                           style: TextStyle(
                               color: cs.onPrimaryContainer, fontSize: 13)),
                       const SizedBox(height: 4),
-                      Text(
-                        '₹${fmt.format(campaign.raisedPkr)}',
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: cs.onPrimaryContainer,
-                                ),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Rs${fmt.format(campaign.raisedPkr)}',
+                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: cs.onPrimaryContainer,
+                                fontSize: width > 400 ? 32 : 24,
+                              ),
+                        ),
                       ),
                     ],
                   ),
@@ -302,10 +371,11 @@ class _ProgressCard extends StatelessWidget {
                             color: cs.onPrimaryContainer, fontSize: 13)),
                     const SizedBox(height: 4),
                     Text(
-                      '₹${fmt.format(campaign.goalPkr)}',
+                      'Rs${fmt.format(campaign.goalPkr)}',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w700,
                             color: cs.onPrimaryContainer.withValues(alpha: 0.8),
+                            fontSize: width > 400 ? 18 : 14,
                           ),
                     ),
                   ],
@@ -429,13 +499,13 @@ class _TransparencyCard extends StatelessWidget {
             const SizedBox(height: 16),
             _TransparencyRow(
               label: 'Funds raised',
-              value: '₹${fmt.format(campaign.raisedPkr)}',
+              value: 'Rs${fmt.format(campaign.raisedPkr)}',
               cs: cs,
             ),
             _TransparencyRow(
               label: 'Funds deployed',
               value: campaign.spentPkr > 0
-                  ? '₹${fmt.format(campaign.spentPkr)}'
+                  ? 'Rs${fmt.format(campaign.spentPkr)}'
                   : 'Not yet disbursed',
               cs: cs,
             ),
@@ -530,7 +600,7 @@ class _DonationRow extends StatelessWidget {
           StatusChip(status: TaskStatus.fromString(status), fontSize: 10),
           const SizedBox(width: 8),
           Text(
-            '₹${fmt.format(amountPkr)}',
+            'Rs${fmt.format(amountPkr)}',
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
         ],

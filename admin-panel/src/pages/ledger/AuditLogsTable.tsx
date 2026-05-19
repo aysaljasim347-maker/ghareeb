@@ -8,11 +8,38 @@ import dayjs from 'dayjs';
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
+interface AuditLogEntry {
+  id: number;
+  admin_name: string;
+  admin_email: string;
+  action_type: string;
+  target_entity: string;
+  target_id: string | number;
+  metadata: Record<string, unknown>;
+  ip_address: string;
+  created_at: string;
+}
+
+interface AuditLogFilters {
+  action_type?: string;
+  target_entity?: string;
+  target_id?: string | number;
+  from_date?: string;
+  to_date?: string;
+}
+
+interface FilterFormValues {
+  action_type?: string;
+  target_entity?: string;
+  target_id?: string | number;
+  date_range?: [dayjs.Dayjs, dayjs.Dayjs];
+}
+
 const AuditLogsTable: React.FC = () => {
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<FilterFormValues>();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [filters, setFilters] = useState<any>({});
+  const [filters, setFilters] = useState<AuditLogFilters>({});
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin', 'audit-logs', page, pageSize, filters],
@@ -27,12 +54,12 @@ const AuditLogsTable: React.FC = () => {
     }
   });
 
-  const onFilter = (values: any) => {
-    const newFilters: any = {};
+  const onFilter = (values: FilterFormValues) => {
+    const newFilters: AuditLogFilters = {};
     if (values.action_type) newFilters.action_type = values.action_type;
     if (values.target_entity) newFilters.target_entity = values.target_entity;
     if (values.target_id) newFilters.target_id = values.target_id;
-    if (values.date_range) {
+    if (values.date_range && values.date_range[0] && values.date_range[1]) {
       newFilters.from_date = values.date_range[0].toISOString();
       newFilters.to_date = values.date_range[1].toISOString();
     }
@@ -45,7 +72,7 @@ const AuditLogsTable: React.FC = () => {
       title: 'Admin', 
       dataIndex: 'admin_name', 
       key: 'admin_name',
-      render: (name: string, record: any) => (
+      render: (name: string, record: AuditLogEntry) => (
         <Space direction="vertical" size={0}>
           <Text strong>{name}</Text>
           <Text type="secondary" style={{ fontSize: '11px' }}>{record.admin_email}</Text>
@@ -68,7 +95,7 @@ const AuditLogsTable: React.FC = () => {
       title: 'Details', 
       dataIndex: 'metadata', 
       key: 'metadata',
-      render: (meta: any) => (
+      render: (meta: Record<string, unknown>) => (
         <pre style={{ fontSize: '10px', maxHeight: '60px', overflow: 'auto' }}>
           {JSON.stringify(meta, null, 2)}
         </pre>

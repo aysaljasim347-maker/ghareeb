@@ -49,8 +49,8 @@ const LedgerPage: React.FC = () => {
     { 
       title: 'Balance', 
       key: 'remaining_balance', 
-      render: (_: any, record: any) => {
-        const balance = record.raised_pkr - record.spent_pkr;
+      render: (_: unknown, record: Campaign & { spent_pkr: number }) => {
+        const balance = record.raised_pkr - (record.spent_pkr || 0);
         return (
           <Text strong style={{ color: balance < 0 ? 'red' : 'green' }}>
             {safeFormatCurrency(balance)}

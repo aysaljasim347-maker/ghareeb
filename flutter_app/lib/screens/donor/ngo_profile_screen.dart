@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:disasteraid_app/models/campaign_model.dart';
 import 'package:disasteraid_app/providers/campaign_provider.dart';
 import 'package:disasteraid_app/providers/follow_provider.dart';
 import 'package:disasteraid_app/widgets/error_view.dart';
-import 'package:disasteraid_app/widgets/empty_state.dart';
 
-// NOTE: Only the NGO's ACTIVE campaigns are shown because campaignsProvider
-// fetches status=ACTIVE. Paused/closed campaigns are intentionally excluded.
 class NgoProfileScreen extends ConsumerWidget {
   final int ngoId;
 
@@ -33,70 +29,67 @@ class NgoProfileScreen extends ConsumerWidget {
           final ngoCampaigns = all.where((c) => c.ngoId == ngoId).toList();
           final ngoName = ngoCampaigns.isNotEmpty
               ? ngoCampaigns.first.ngoName ?? 'NGO'
-              : 'NGO';
+              : 'NGO Profile';
 
           return CustomScrollView(
             slivers: [
-              // ── Header ──
               SliverAppBar(
                 pinned: true,
-                expandedHeight: 160,
+                expandedHeight: 220,
                 flexibleSpace: FlexibleSpaceBar(
-                  background: _NgoHero(ngoName: ngoName),
-                ),
-                actions: [
-                  Consumer(
-                    builder: (context, ref, _) {
-                      final isFollowed =
-                          ref.watch(followedNgosProvider).contains(ngoId);
-                      return IconButton(
-                        icon: Icon(isFollowed
-                            ? Icons.bookmark
-                            : Icons.bookmark_add_outlined),
-                        tooltip: isFollowed ? 'Unfollow NGO' : 'Follow NGO',
-                        onPressed: () => ref
-                            .read(followedNgosProvider.notifier)
-                            .toggle(ngoId),
-                      );
-                    },
+                  background: _NgoHeroEnhanced(
+                    ngoId: ngoId,
+                    ngoName: ngoName,
                   ),
-                ],
+                ),
+                leading: const BackButton(color: Colors.white),
               ),
 
               SliverPadding(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // ── Stats ──
-                    _NgoStatsRow(campaigns: ngoCampaigns),
-                    const SizedBox(height: 24),
-
-                    // ── Campaigns list ──
-                    Text(
-                      'Active Campaigns',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 12),
+                    _NgoImpactStrip(campaigns: ngoCampaigns),
+                    const _SectionTitle("Active Campaigns"),
                   ]),
                 ),
               ),
 
               if (ngoCampaigns.isEmpty)
                 SliverFillRemaining(
-                  child: EmptyState(
-                    icon: Icons.campaign_outlined,
-                    title: 'No active campaigns',
-                    subtitle: 'This NGO has no active campaigns right now.',
-                    ctaLabel: 'Browse all',
-                    onCta: () => context.go('/donor/campaigns'),
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.campaign_outlined,
+                              size: 64,
+                              color: Colors.grey.withValues(alpha: 0.6)),
+                          const SizedBox(height: 12),
+                          const Text(
+                            "No active campaigns right now",
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            "Follow this NGO to get notified when new campaigns start.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey.shade600),
+                          ),
+                          const SizedBox(height: 16),
+                          FilledButton(
+                            onPressed: () => context.go('/donor/campaigns'),
+                            child: const Text("Explore campaigns"),
+                          )
+                        ],
+                      ),
+                    ),
                   ),
                 )
               else
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate(
                       (context, i) =>
@@ -105,6 +98,7 @@ class NgoProfileScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
+              const SliverToBoxAdapter(child: SizedBox(height: 32)),
             ],
           );
         },
@@ -113,42 +107,80 @@ class NgoProfileScreen extends ConsumerWidget {
   }
 }
 
-// ── NGO hero header ───────────────────────────────────────────────────────────
-
-class _NgoHero extends StatelessWidget {
+class _NgoHeroEnhanced extends ConsumerWidget {
+  final int ngoId;
   final String ngoName;
 
-  const _NgoHero({required this.ngoName});
+  const _NgoHeroEnhanced({
+    required this.ngoId,
+    required this.ngoName,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
+    final isFollowed = ref.watch(followedNgosProvider).contains(ngoId);
+
     return Container(
-      color: cs.primaryContainer,
-      alignment: Alignment.center,
+      padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            cs.primary,
+            cs.primary.withValues(alpha: 0.7),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 32),
           CircleAvatar(
-            radius: 36,
-            backgroundColor: cs.primary,
+            radius: 34,
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
             child: Text(
-              ngoName.isNotEmpty ? ngoName[0].toUpperCase() : 'N',
+              ngoName.isNotEmpty ? ngoName[0].toUpperCase() : "N",
               style: const TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white),
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 26,
+              ),
             ),
           ),
           const SizedBox(height: 10),
+
           Text(
             ngoName,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: cs.onPrimaryContainer,
-                ),
-            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: 20,
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          Text(
+            "Active humanitarian campaigns",
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.white.withValues(alpha: 0.8),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          FilledButton.icon(
+            onPressed: () => ref
+                .read(followedNgosProvider.notifier)
+                .toggle(ngoId),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: cs.primary,
+            ),
+            icon: Icon(isFollowed ? Icons.check : Icons.add),
+            label: Text(isFollowed ? "Following" : "Follow NGO"),
           ),
         ],
       ),
@@ -156,114 +188,87 @@ class _NgoHero extends StatelessWidget {
   }
 }
 
-// ── Stats row ─────────────────────────────────────────────────────────────────
-
-class _NgoStatsRow extends StatelessWidget {
+class _NgoImpactStrip extends StatelessWidget {
   final List<CampaignModel> campaigns;
 
-  const _NgoStatsRow({required this.campaigns});
+  const _NgoImpactStrip({required this.campaigns});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final totalRaised = campaigns.fold<double>(0, (s, c) => s + c.raisedPkr);
-    final totalSpent = campaigns.fold<double>(0, (s, c) => s + c.spentPkr);
-    final fmt = NumberFormat.compact();
 
-    // Derived transparency score for this view
-    double utilization = totalRaised > 0 ? totalSpent / totalRaised : 0.0;
-    int score = 0;
-    if (utilization > 0.6) score += 40;
-    if (campaigns.any((c) => c.progressFraction > 0.5)) score += 30;
-    if (totalSpent > 0) score += 30;
+    final raised = campaigns.fold<double>(0, (s, c) => s + c.raisedPkr);
+    final count = campaigns.length;
 
-    return Column(
-      children: [
-        Row(
-          children: [
-            _StatBox(
-              label: 'Campaigns',
-              value: '${campaigns.length}',
-              cs: cs,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _StatBox(
-                label: 'Raised',
-                value: 'PKR ${fmt.format(totalRaised)}',
-                cs: cs,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _StatBox(
-                label: 'Spent',
-                value: 'PKR ${fmt.format(totalSpent)}',
-                cs: cs,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          decoration: BoxDecoration(
-            color: Colors.amber.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.verified_user, size: 16, color: Colors.amber),
-              const SizedBox(width: 8),
-              const Text('Transparency Rating',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-              const Spacer(),
-              Text('$score/100',
-                  style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.amber)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatBox extends StatelessWidget {
-  final String label;
-  final String value;
-  final ColorScheme cs;
-
-  const _StatBox({required this.label, required this.value, required this.cs});
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.5)),
       ),
-      child: Column(
+      child: Row(
         children: [
-          Text(value,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w800)),
-          const SizedBox(height: 2),
-          Text(label,
-              style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
+          _MiniImpact(
+            icon: Icons.campaign_outlined,
+            value: "$count",
+            label: "Campaigns",
+          ),
+          const SizedBox(width: 12),
+          _MiniImpact(
+            icon: Icons.volunteer_activism_outlined,
+            value: "PKR ${(raised / 1000).toStringAsFixed(1)}K",
+            label: "Total Raised",
+          ),
         ],
       ),
     );
   }
 }
 
-// ── Campaign tile ─────────────────────────────────────────────────────────────
+class _MiniImpact extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+
+  const _MiniImpact({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Expanded(
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: cs.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 18, color: cs.primary),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(value,
+                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+              Text(label,
+                  style: TextStyle(
+                      fontSize: 10, color: cs.onSurfaceVariant)),
+            ],
+          )
+        ],
+      ),
+    );
+  }
+}
 
 class _NgoCampaignTile extends StatelessWidget {
   final CampaignModel campaign;
@@ -276,12 +281,17 @@ class _NgoCampaignTile extends StatelessWidget {
     final pct = (campaign.progressFraction * 100).round();
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5)),
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () => context.push('/donor/campaign/${campaign.id}'),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -290,45 +300,95 @@ class _NgoCampaignTile extends StatelessWidget {
                   Expanded(
                     child: Text(
                       campaign.title,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
                     ),
                   ),
                   if (campaign.isUrgent)
-                    const Icon(Icons.bolt, size: 16, color: Colors.orange),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        "URGENT",
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ),
                 ],
               ),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(
-                value: campaign.progressFraction,
-                backgroundColor: cs.surfaceContainerHighest,
-                color: campaign.isUrgent ? Colors.orange : cs.primary,
+
+              const SizedBox(height: 12),
+
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: campaign.progressFraction,
+                  minHeight: 8,
+                  backgroundColor: cs.surfaceContainerHighest,
+                  color: cs.primary,
+                ),
               ),
-              const SizedBox(height: 4),
+
+              const SizedBox(height: 10),
+
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '$pct% funded',
-                    style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+                    "$pct% funded",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: cs.primary,
+                    ),
                   ),
-                  FilledButton.tonal(
+                  const Spacer(),
+                  FilledButton(
                     onPressed: () =>
                         context.push('/donor/payment/${campaign.id}'),
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
+                          horizontal: 16, vertical: 8),
                       minimumSize: Size.zero,
-                      textStyle: const TextStyle(fontSize: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                     ),
-                    child: const Text('Donate'),
+                    child: const Text("Donate", style: TextStyle(fontSize: 12)),
                   ),
                 ],
-              ),
+              )
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String text;
+  const _SectionTitle(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 24, 4, 12),
+      child: Text(
+        text.toUpperCase(),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.1,
+              color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+            ),
       ),
     );
   }

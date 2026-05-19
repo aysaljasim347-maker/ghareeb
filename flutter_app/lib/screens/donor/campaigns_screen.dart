@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:disasteraid_app/models/campaign_model.dart';
+import 'package:disasteraid_app/models/goods_campaign_model.dart';
 import 'package:disasteraid_app/providers/campaign_provider.dart';
+import 'package:disasteraid_app/providers/goods_campaign_provider.dart';
 import 'package:disasteraid_app/widgets/empty_state.dart';
 import 'package:disasteraid_app/widgets/error_view.dart';
 import 'package:disasteraid_app/widgets/shimmer_card.dart';
@@ -39,9 +41,23 @@ class CampaignsScreen extends ConsumerStatefulWidget {
   ConsumerState<CampaignsScreen> createState() => _CampaignsScreenState();
 }
 
-class _CampaignsScreenState extends ConsumerState<CampaignsScreen> {
+class _CampaignsScreenState extends ConsumerState<CampaignsScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
   _CampaignFilter _filter = _CampaignFilter.all;
   _SortOption _sort = _SortOption.none;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   List<CampaignModel> _applyFilterSort(List<CampaignModel> all) {
     var list = all.toList();
@@ -72,8 +88,6 @@ class _CampaignsScreenState extends ConsumerState<CampaignsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final campaignsAsync = ref.watch(campaignsProvider);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Campaigns'),
@@ -91,8 +105,48 @@ class _CampaignsScreenState extends ConsumerState<CampaignsScreen> {
                 .toList(),
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Money'),
+            Tab(text: 'Goods (In-Kind)'),
+          ],
+        ),
       ),
-      body: campaignsAsync.when(
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // ── Tab 0: Money campaigns ──
+          _MoneyCampaignsTab(filter: _filter, sort: _sort, onSortChanged: (v) => setState(() => _sort = v), onFilterChanged: (f) => setState(() => _filter = f), applyFilterSort: _applyFilterSort),
+          // ── Tab 1: Goods campaigns ──
+          const _GoodsCampaignsTab(),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Money campaigns tab (extracted from original body) ────────────────────────
+
+class _MoneyCampaignsTab extends ConsumerWidget {
+  final _CampaignFilter filter;
+  final _SortOption sort;
+  final ValueChanged<_SortOption> onSortChanged;
+  final ValueChanged<_CampaignFilter> onFilterChanged;
+  final List<CampaignModel> Function(List<CampaignModel>) applyFilterSort;
+
+  const _MoneyCampaignsTab({
+    required this.filter,
+    required this.sort,
+    required this.onSortChanged,
+    required this.onFilterChanged,
+    required this.applyFilterSort,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final campaignsAsync = ref.watch(campaignsProvider);
+    return campaignsAsync.when(
         loading: () => const ShimmerGrid(count: 6, childAspectRatio: 0.78),
         error: (err, _) => ErrorView(
           message: 'Could not load campaigns. Please try again.',
@@ -110,7 +164,7 @@ class _CampaignsScreenState extends ConsumerState<CampaignsScreen> {
             );
           }
 
-          final filtered = _applyFilterSort(campaigns);
+          final filtered = applyFilterSort(campaigns);
           final urgent = campaigns.where((c) => c.isUrgent).toList();
 
           return RefreshIndicator(
@@ -118,17 +172,23 @@ class _CampaignsScreenState extends ConsumerState<CampaignsScreen> {
             child: CustomScrollView(
               slivers: [
                 // ── Filter chips ──
-                SliverToBoxAdapter(
-                  child: _FilterChipRow(
-                    selected: _filter,
-                    onSelected: (f) => setState(() => _filter = f),
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _StickyHeader(
+                    child: Container(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      child: _FilterChipRow(
+                        selected: filter,
+                        onSelected: onFilterChanged,
+                      ),
+                    ),
                   ),
                 ),
 
                 // ── Urgent section (only when no active filter) ──
                 // Intentional: urgent campaigns appear in both the strip and
                 // the grid below — "featured + full list" pattern.
-                if (_filter == _CampaignFilter.all && urgent.isNotEmpty) ...[
+                if (filter == _CampaignFilter.all && urgent.isNotEmpty) ...[
                   const SliverToBoxAdapter(
                     child: _SectionHeader(
                       icon: Icons.bolt,
@@ -140,9 +200,16 @@ class _CampaignsScreenState extends ConsumerState<CampaignsScreen> {
                     child: _UrgentCampaignRow(urgent: urgent),
                   ),
                   const SliverToBoxAdapter(
-                    child: _SectionHeader(
-                      icon: Icons.campaign,
-                      label: 'All Campaigns',
+                    child: Column(
+                      children: [
+                        SizedBox(height: 12),
+                        Divider(),
+                        SizedBox(height: 8),
+                        _SectionHeader(
+                          icon: Icons.campaign,
+                          label: 'All Campaigns',
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -152,21 +219,20 @@ class _CampaignsScreenState extends ConsumerState<CampaignsScreen> {
                   SliverFillRemaining(
                     child: EmptyState(
                       icon: Icons.search_off,
-                      title: 'No ${_filter.label} campaigns',
+                      title: 'No ${filter.label} campaigns',
                       subtitle: 'Try a different category.',
                       ctaLabel: 'Show all',
-                      onCta: () =>
-                          setState(() => _filter = _CampaignFilter.all),
+                      onCta: () => onFilterChanged(_CampaignFilter.all),
                     ),
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                     sliver: SliverGrid(
                       gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                        maxCrossAxisExtent: 220,
-                        childAspectRatio: 0.78,
+                          SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                        childAspectRatio: MediaQuery.of(context).size.width > 400 ? 0.72 : 0.65,
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
                       ),
@@ -181,6 +247,204 @@ class _CampaignsScreenState extends ConsumerState<CampaignsScreen> {
             ),
           );
         },
+      );
+  }
+}
+
+// ── Sticky Header Delegate ─────────────────────────────────────────────────────
+
+class _StickyHeader extends SliverPersistentHeaderDelegate {
+  final Widget child;
+  _StickyHeader({required this.child});
+
+  @override
+  double get minExtent => 52.0;
+  @override
+  double get maxExtent => 52.0;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return child;
+  }
+
+  @override
+  bool shouldRebuild(_StickyHeader oldDelegate) => false;
+}
+
+// ── Goods campaigns tab ───────────────────────────────────────────────────────
+
+class _GoodsCampaignsTab extends ConsumerWidget {
+  const _GoodsCampaignsTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(goodsCampaignsProvider);
+    return async.when(
+      loading: () => const ShimmerList(count: 4, itemHeight: 110),
+      error: (e, _) => ErrorView(
+        message: 'Could not load goods campaigns.',
+        onRetry: () => ref.invalidate(goodsCampaignsProvider),
+      ),
+      data: (campaigns) {
+        if (campaigns.isEmpty) {
+          return const EmptyState(
+            icon: Icons.inventory_2_outlined,
+            title: 'No goods campaigns',
+            subtitle: 'Check back soon for in-kind donation drives.',
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: () async => ref.invalidate(goodsCampaignsProvider),
+          child: ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: campaigns.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            itemBuilder: (_, i) => _GoodsCampaignCard(campaign: campaigns[i]),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _GoodsCampaignCard extends StatelessWidget {
+  final GoodsCampaign campaign;
+  const _GoodsCampaignCard({required this.campaign});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final deadline = DateTime.tryParse(campaign.deadline);
+    final daysLeft = deadline?.difference(DateTime.now()).inDays;
+    final pct = (campaign.progressFraction * 100).round();
+
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => context.push('/donor/goods-campaign/${campaign.id}'),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 7, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.teal.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                          color: Colors.teal.withValues(alpha: 0.4)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.inventory_2_outlined,
+                            size: 11, color: Colors.teal),
+                        SizedBox(width: 4),
+                        Text('GOODS',
+                            style: TextStyle(
+                                color: Colors.teal,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  if (campaign.ngoName != null)
+                    Expanded(
+                      child: Text(campaign.ngoName!,
+                          style: TextStyle(
+                              fontSize: 12, color: cs.onSurfaceVariant),
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                  if (daysLeft != null && daysLeft >= 0)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: daysLeft <= 7
+                            ? Colors.red.withValues(alpha: 0.1)
+                            : Colors.green.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        daysLeft == 0
+                            ? 'Today'
+                            : '$daysLeft days left',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: daysLeft <= 7 ? Colors.red : Colors.green,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                campaign.title,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w700),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${campaign.itemNeeded} · ${campaign.locationText}',
+                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: campaign.progressFraction,
+                  minHeight: 6,
+                  color: Colors.teal,
+                  backgroundColor:
+                      cs.surfaceContainerHighest,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${campaign.qtyReceived} / ${campaign.targetQty} ${campaign.unit}',
+                    style:
+                        TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+                  ),
+                  Text(
+                    '$pct%',
+                    style: const TextStyle(
+                        fontSize: 11, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => context
+                      .push('/donor/goods-campaign/${campaign.id}'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    textStyle: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                  child: const Text('Donate Item'),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -258,14 +522,18 @@ class _UrgentCampaignRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
     return SizedBox(
-      height: 140,
+      height: 180,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemCount: urgent.length,
-        itemBuilder: (context, i) => _UrgentCard(campaign: urgent[i]),
+        itemBuilder: (context, i) => _UrgentCard(
+          campaign: urgent[i],
+          width: width > 400 ? 240 : width * 0.6,
+        ),
       ),
     );
   }
@@ -273,8 +541,9 @@ class _UrgentCampaignRow extends StatelessWidget {
 
 class _UrgentCard extends StatelessWidget {
   final CampaignModel campaign;
+  final double width;
 
-  const _UrgentCard({required this.campaign});
+  const _UrgentCard({required this.campaign, required this.width});
 
   @override
   Widget build(BuildContext context) {
@@ -284,26 +553,35 @@ class _UrgentCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/donor/campaign/${campaign.id}'),
       child: Container(
-        width: 200,
+        width: width,
+        margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           color: cs.errorContainer,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(Icons.bolt, size: 14, color: Colors.orange),
-                const SizedBox(width: 4),
+                const Icon(Icons.bolt, size: 16, color: Colors.orange),
+                const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     campaign.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
                         ),
                   ),
                 ),
@@ -315,13 +593,16 @@ class _UrgentCard extends StatelessWidget {
               backgroundColor: cs.outline.withValues(alpha: 0.2),
               color: Colors.orange,
               borderRadius: BorderRadius.circular(4),
+              minHeight: 6,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 6),
             Text(
               '$pct% funded',
-              style: Theme.of(context).textTheme.labelSmall,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -329,8 +610,9 @@ class _UrgentCard extends StatelessWidget {
                     context.push('/donor/payment/${campaign.id}'),
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.orange,
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  textStyle: const TextStyle(fontSize: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                 ),
                 child: const Text('Donate Now'),
               ),
@@ -355,6 +637,7 @@ class _CampaignCard extends StatelessWidget {
 
     return Card(
       clipBehavior: Clip.antiAlias,
+      elevation: 1,
       child: InkWell(
         onTap: () => context.push('/donor/campaign/${campaign.id}'),
         child: Column(
@@ -388,7 +671,7 @@ class _CampaignCard extends StatelessWidget {
                       campaign.title,
                       style:
                           Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                               ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -396,17 +679,29 @@ class _CampaignCard extends StatelessWidget {
                     const Spacer(),
 
                     // ── Progress ──
-                    LinearProgressIndicator(
-                      value: campaign.progressFraction,
-                      backgroundColor: cs.surfaceContainerHighest,
+                    Text(
+                      'Rs${_fmt(campaign.raisedPkr)} raised',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: cs.primary,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: LinearProgressIndicator(
+                        value: campaign.progressFraction,
+                        backgroundColor: cs.surfaceContainerHighest,
+                        minHeight: 5,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '₹${_fmt(campaign.raisedPkr)} / ₹${_fmt(campaign.goalPkr)}',
+                      'Goal: Rs${_fmt(campaign.goalPkr)}',
                       style: TextStyle(
                           fontSize: 10, color: cs.onSurfaceVariant),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 10),
 
                     // ── CTA ──
                     SizedBox(
@@ -415,11 +710,11 @@ class _CampaignCard extends StatelessWidget {
                         onPressed: () =>
                             context.push('/donor/payment/${campaign.id}'),
                         style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
                           textStyle: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w600),
+                              fontSize: 13, fontWeight: FontWeight.w700),
                         ),
-                        child: const Text('Donate'),
+                        child: const Text('Donate Now'),
                       ),
                     ),
                   ],

@@ -1,6 +1,7 @@
 import { httpServer } from './server.js';
 import { env } from './config/env.js';
 import { systemStateStore } from './system/state/system.state.store.js';
+import { logger } from './common/logger.js';
 
 const PORT = env.PORT;
 
@@ -8,15 +9,6 @@ const PORT = env.PORT;
   await systemStateStore.load();
 
   httpServer.listen(PORT, '::', () => {
-    console.log(`
-╔══════════════════════════════════════════════╗
-║      DisasterAid V2.1 — Server Running       ║
-║──────────────────────────────────────────────║
-║  Port:        ${String(PORT).padEnd(30)}║
-║  Environment: ${env.NODE_ENV.padEnd(30)}║
-║  Database:    ${env.POSTGRES_HOST}:${env.POSTGRES_PORT}${' '.repeat(Math.max(0, 22 - `${env.POSTGRES_HOST}:${env.POSTGRES_PORT}`.length))}║
-║  CORS:        ${env.CORS_ORIGINS.padEnd(30)}║
-╚══════════════════════════════════════════════╝
-  `);
+    logger.info(`DisasterAid V2.1 — Server Running on Port ${PORT} in ${env.NODE_ENV} mode`);
   });
 })();

@@ -98,7 +98,7 @@ class _CoordinatorTaskView extends ConsumerWidget {
 
           // Volunteer Info
           if (task.claimedByName != null) ...[
-            _SectionHeader(title: 'Assigned Volunteer'),
+            const _SectionHeader(title: 'Assigned Volunteer'),
             Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
               child: ListTile(
@@ -130,7 +130,7 @@ class _CoordinatorTaskView extends ConsumerWidget {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _SectionHeader(title: 'Delivery Proof (Preview)'),
+                  const _SectionHeader(title: 'Delivery Proof (Preview)'),
                   const SizedBox(height: 8),
                   if (latest['proof_image_url'] != null)
                     ClipRRect(
@@ -177,7 +177,7 @@ class _CoordinatorTaskView extends ConsumerWidget {
           ),
 
           // Operational Details
-          _SectionHeader(title: 'Operational Context'),
+          const _SectionHeader(title: 'Operational Context'),
           const SizedBox(height: 8),
           if (task.campaignTitle != null)
             _DetailRow(label: 'Campaign', value: task.campaignTitle!),
@@ -190,7 +190,7 @@ class _CoordinatorTaskView extends ConsumerWidget {
           const Divider(),
 
           // Location
-          _SectionHeader(title: 'Field Location'),
+          const _SectionHeader(title: 'Field Location'),
           const SizedBox(height: 8),
           if (task.locationText != null)
             Padding(

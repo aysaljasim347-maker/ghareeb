@@ -83,7 +83,7 @@ class _ImpactCard extends StatelessWidget {
     final theme = Theme.of(context);
     return Card(
       elevation: 0,
-      color: theme.colorScheme.primaryContainer.withOpacity(0.2),
+      color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(color: theme.colorScheme.primaryContainer),

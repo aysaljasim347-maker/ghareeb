@@ -145,7 +145,7 @@ class _NgoWithdrawalScreenState extends ConsumerState<NgoWithdrawalScreen> {
                     controller: _amountController,
                     decoration: const InputDecoration(
                       labelText: 'Amount (PKR) *',
-                      prefixText: '₹ ',
+                      prefixText: 'Rs ',
                       hintText: 'e.g. 5000',
                     ),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -269,7 +269,7 @@ class _WithdrawalTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '₹${withdrawal.amount.toStringAsFixed(0)}',
+                    'Rs${withdrawal.amount.toStringAsFixed(0)}',
                     style: const TextStyle(
                         fontWeight: FontWeight.w700, fontSize: 16),
                   ),

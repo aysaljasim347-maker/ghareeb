@@ -4,8 +4,31 @@ import { useQuery } from '@tanstack/react-query';
 import axiosClient from '../../api/axiosClient';
 import dayjs from 'dayjs';
 import { safeFormatCurrency } from '../../utils/apiNormalizer';
+import { Donation } from '../../types/donation';
 
 const { Text } = Typography;
+
+interface LedgerEntry {
+  id: number;
+  type: string;
+  amount_pkr: number;
+  created_at: string;
+}
+
+interface AuditLog {
+  id: number;
+  action_type: string;
+  admin_name: string;
+  ip_address: string;
+  created_at: string;
+  metadata?: Record<string, unknown>;
+}
+
+interface TraceData {
+  donation: Donation;
+  ledger_entries: LedgerEntry[];
+  audit_logs: AuditLog[];
+}
 
 interface DonationTraceModalProps {
   id: number | null;
@@ -13,7 +36,7 @@ interface DonationTraceModalProps {
 }
 
 const DonationTraceModal: React.FC<DonationTraceModalProps> = ({ id, onClose }) => {
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery<TraceData | null>({
     queryKey: ['admin', 'donation', 'trace', id],
     queryFn: async () => {
       if (!id) return null;
@@ -51,7 +74,7 @@ const DonationTraceModal: React.FC<DonationTraceModalProps> = ({ id, onClose }) 
           <Descriptions.Item label="Created">{dayjs(donation.created_at).format('MMM D, YYYY HH:mm')}</Descriptions.Item>
         </Descriptions>
 
-        <Divider orientation={"left" as any}>Ledger Evidence</Divider>
+        <Divider orientation="left">Ledger Evidence</Divider>
         <Table 
           columns={ledgerColumns} 
           dataSource={ledger_entries} 
@@ -61,9 +84,9 @@ const DonationTraceModal: React.FC<DonationTraceModalProps> = ({ id, onClose }) 
           footer={() => ledger_entries.length === 0 ? <Text type="danger">No ledger entries found! Financial mismatch risk.</Text> : null}
         />
 
-        <Divider orientation={"left" as any}>Audit Trail</Divider>
+        <Divider orientation="left">Audit Trail</Divider>
         <Timeline
-          items={audit_logs.map((log: any) => ({
+          items={audit_logs.map((log) => ({
             children: (
               <Space direction="vertical" size={0}>
                 <Text strong>{log.action_type}</Text>

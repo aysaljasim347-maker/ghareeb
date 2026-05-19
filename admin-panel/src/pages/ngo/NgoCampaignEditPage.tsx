@@ -23,7 +23,7 @@ const NgoCampaignEditPage: React.FC = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (values: any) => {
+    mutationFn: async (values: unknown) => {
       return axiosClient.patch(API_ENDPOINTS.CAMPAIGNS.UPDATE(Number(id)), values);
     },
     onSuccess: () => {
@@ -35,10 +35,11 @@ const NgoCampaignEditPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['ngo', 'campaign', id] });
       navigate('/ngo/campaigns');
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const err = error as { response?: { data?: { error?: string } } };
       notification.error({
         message: 'Update Failed',
-        description: error.response?.data?.error || 'Could not update campaign. Please check your network.',
+        description: err.response?.data?.error || 'Could not update campaign. Please check your network.',
       });
     }
   });

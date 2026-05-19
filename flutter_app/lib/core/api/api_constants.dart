@@ -64,6 +64,26 @@ class ApiConstants {
   static String inKindAccept(int requestId)    => '/inkind/requests/$requestId/accept';
   static String inKindReject(int requestId)    => '/inkind/requests/$requestId/reject';
 
+  // ── Goods Campaigns ──
+  static const String goodsCampaigns         = '/goods-campaigns';
+  static const String myGoodsCampaigns       = '/goods-campaigns/mine';
+  static String goodsCampaignById(int id)    => '/goods-campaigns/$id';
+
+  // ── Goods Donations ──
+  static const String goodsDonations         = '/goods-donations';
+  static const String myGoodsDonations       = '/goods-donations/mine';
+  static const String goodsDonationsAvailable = '/goods-donations/available';
+  static const String goodsDonationsForReview = '/goods-donations/for-review';
+  static const String goodsDonationsNgo       = '/goods-donations/ngo';
+  static String goodsDonationById(int id)    => '/goods-donations/$id';
+  static String claimGoodsDonation(int id)   => '/goods-donations/$id/claim';
+  static String deliverGoodsDonation(int id) => '/goods-donations/$id/deliver';
+  static String approveGoodsDonation(int id) => '/goods-donations/$id/approve';
+  static String rejectGoodsDonation(int id)  => '/goods-donations/$id/reject';
+
+  // ── Media Upload ──
+  static const String mediaUpload = '/media/upload';
+
   // ── Health ──
   static const String health = '/health';
 }

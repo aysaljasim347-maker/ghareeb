@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Table, Tag, Button, Space, Typography, Modal, notification, Card } from 'antd';
 import { PlayCircleOutlined, PauseCircleOutlined, StopOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import axiosClient from '../../api/axiosClient';
 import { API_ENDPOINTS } from '../../api/endpoints';
 import type { Campaign, CampaignStatus } from '../../types/campaign';
@@ -18,7 +19,7 @@ const CampaignsPage: React.FC = () => {
     queryKey: ['admin', 'campaigns', 'list'],
     queryFn: async () => {
       const response = await axiosClient.get(API_ENDPOINTS.ADMIN.CAMPAIGNS);
-      return unwrapResponse<any>(response.data, 'campaigns').map(normalizeCampaign);
+      return unwrapResponse<Record<string, unknown>>(response.data, 'campaigns').map(normalizeCampaign);
     }
   });
 
@@ -58,7 +59,7 @@ const CampaignsPage: React.FC = () => {
       notification.success({ message: 'Campaign status updated' });
       queryClient.invalidateQueries({ queryKey: ['admin', 'campaigns'] });
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ error?: string }>) => {
       notification.error({ 
         message: 'Failed to update campaign status',
         description: error.response?.data?.error || 'Internal error'
@@ -111,7 +112,7 @@ const CampaignsPage: React.FC = () => {
     {
       title: 'Progress',
       key: 'progress',
-      render: (_: any, record: Campaign) => (
+      render: (_: unknown, record: Campaign) => (
         <Space direction="vertical" size={0}>
           <Typography.Text style={{ fontSize: '12px' }}>
             {safeFormatCurrency(record.raised_pkr)} / {safeFormatCurrency(record.goal_pkr)}
@@ -137,7 +138,7 @@ const CampaignsPage: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: Campaign) => {
+      render: (_: unknown, record: Campaign) => {
         const isClosed = record.status === 'CLOSED';
         return (
           <Space>

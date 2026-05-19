@@ -1,3 +1,5 @@
+import 'package:disasteraid_app/utils/safe_parser.dart';
+
 class InKindDonation {
   final int id;
   final int donorId;
@@ -33,23 +35,23 @@ class InKindDonation {
   bool get isAccepted => status == 'ACCEPTED';
 
   factory InKindDonation.fromJson(Map<String, dynamic> j) => InKindDonation(
-        id: j['id'] as int,
-        donorId: j['donor_id'] as int,
-        donorName: j['donor_name'] as String? ?? '',
-        title: j['title'] as String,
-        description: j['description'] as String?,
-        photoUrl: j['photo_url'] as String?,
-        addressText: j['address_text'] as String,
-        latitude: (j['latitude'] as num).toDouble(),
-        longitude: (j['longitude'] as num).toDouble(),
-        status: j['status'] as String,
+        id: SafeParser.paramInt(j['id']),
+        donorId: SafeParser.paramInt(j['donor_id']),
+        donorName: SafeParser.toStringSafe(j['donor_name']),
+        title: SafeParser.toStringSafe(j['title']),
+        description: j['description'] != null ? SafeParser.toStringSafe(j['description']) : null,
+        photoUrl: j['photo_url'] != null ? SafeParser.toStringSafe(j['photo_url']) : null,
+        addressText: SafeParser.toStringSafe(j['address_text']),
+        latitude: SafeParser.toDouble(j['latitude']),
+        longitude: SafeParser.toDouble(j['longitude']),
+        status: SafeParser.toStringSafe(j['status']),
         requestCount: j['request_count'] != null
-            ? int.tryParse(j['request_count'].toString())
+            ? SafeParser.paramInt(j['request_count'])
             : null,
         pendingCount: j['pending_count'] != null
-            ? int.tryParse(j['pending_count'].toString())
+            ? SafeParser.paramInt(j['pending_count'])
             : null,
-        createdAt: j['created_at'] as String,
+        createdAt: SafeParser.toStringSafe(j['created_at']),
       );
 }
 
@@ -85,17 +87,17 @@ class InKindRequest {
   bool get isRejected => status == 'REJECTED';
 
   factory InKindRequest.fromJson(Map<String, dynamic> j) => InKindRequest(
-        id: j['id'] as int,
-        donationId: j['donation_id'] as int,
-        beneficiaryId: j['beneficiary_id'] as int,
-        beneficiaryName: j['beneficiary_name'] as String? ?? '',
-        message: j['message'] as String?,
-        phone: j['phone'] as String,
-        email: j['email'] as String?,
-        status: j['status'] as String,
-        donorSharedPhone: j['donor_shared_phone'] as String?,
-        acceptedAt: j['accepted_at'] as String?,
-        createdAt: j['created_at'] as String,
+        id: SafeParser.paramInt(j['id']),
+        donationId: SafeParser.paramInt(j['donation_id']),
+        beneficiaryId: SafeParser.paramInt(j['beneficiary_id']),
+        beneficiaryName: SafeParser.toStringSafe(j['beneficiary_name']),
+        message: j['message'] != null ? SafeParser.toStringSafe(j['message']) : null,
+        phone: SafeParser.toStringSafe(j['phone']),
+        email: j['email'] != null ? SafeParser.toStringSafe(j['email']) : null,
+        status: SafeParser.toStringSafe(j['status']),
+        donorSharedPhone: j['donor_shared_phone'] != null ? SafeParser.toStringSafe(j['donor_shared_phone']) : null,
+        acceptedAt: j['accepted_at'] != null ? SafeParser.toStringSafe(j['accepted_at']) : null,
+        createdAt: SafeParser.toStringSafe(j['created_at']),
       );
 }
 
@@ -125,15 +127,15 @@ class InKindRecord {
   });
 
   factory InKindRecord.fromJson(Map<String, dynamic> j) => InKindRecord(
-        donationId: j['donation_id'] as int,
-        title: j['title'] as String,
-        photoUrl: j['photo_url'] as String?,
-        addressText: j['address_text'] as String,
-        acceptedAt: j['accepted_at'] as String,
-        donorName: j['donor_name'] as String,
-        donorSharedPhone: j['donor_shared_phone'] as String?,
-        beneficiaryName: j['beneficiary_name'] as String,
-        beneficiaryPhone: j['beneficiary_phone'] as String,
-        beneficiaryEmail: j['beneficiary_email'] as String?,
+        donationId: SafeParser.paramInt(j['donation_id']),
+        title: SafeParser.toStringSafe(j['title']),
+        photoUrl: j['photo_url'] != null ? SafeParser.toStringSafe(j['photo_url']) : null,
+        addressText: SafeParser.toStringSafe(j['address_text']),
+        acceptedAt: SafeParser.toStringSafe(j['accepted_at']),
+        donorName: SafeParser.toStringSafe(j['donor_name']),
+        donorSharedPhone: j['donor_shared_phone'] != null ? SafeParser.toStringSafe(j['donor_shared_phone']) : null,
+        beneficiaryName: SafeParser.toStringSafe(j['beneficiary_name']),
+        beneficiaryPhone: SafeParser.toStringSafe(j['beneficiary_phone']),
+        beneficiaryEmail: j['beneficiary_email'] != null ? SafeParser.toStringSafe(j['beneficiary_email']) : null,
       );
 }

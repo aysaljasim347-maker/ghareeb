@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disasteraid_app/core/api/api_client.dart';
 import 'package:disasteraid_app/core/api/api_constants.dart';
@@ -31,7 +32,7 @@ class CampaignRepository {
           .toList();
     } catch (e) {
       // INTERNAL LOGGING (Placeholder)
-      print('[RESILIENCE] Failed to load campaigns: $e');
+      debugPrint('[RESILIENCE] Failed to load campaigns: $e');
       // Return empty list instead of throwing to keep UI stable
       return [];
     }

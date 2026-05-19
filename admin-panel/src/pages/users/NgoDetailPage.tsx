@@ -38,7 +38,7 @@ const NgoDetailPage: React.FC = () => {
     { 
       title: 'Raised / Goal', 
       key: 'progress',
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: { raised_pkr: number, goal_pkr: number }) => (
         <span>{safeFormatCurrency(record.raised_pkr)} / {safeFormatCurrency(record.goal_pkr)}</span>
       )
     },

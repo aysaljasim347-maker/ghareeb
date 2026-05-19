@@ -7,8 +7,8 @@ import { API_ENDPOINTS } from '../../../api/endpoints';
 const { TextArea } = Input;
 
 interface TaskFormProps {
-  initialValues?: any;
-  onFinish: (values: any) => void;
+  initialValues?: Record<string, unknown>;
+  onFinish: (values: Record<string, unknown>) => void;
   loading?: boolean;
   submitText?: string;
   isConversion?: boolean;
@@ -28,7 +28,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
     queryKey: ['ngo', 'campaigns'],
     queryFn: async () => {
       const response = await axiosClient.get(API_ENDPOINTS.NGO.CAMPAIGNS);
-      return response.data.data;
+      return response.data.data as Array<{ id: number, title: string }>;
     }
   });
 
@@ -70,7 +70,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
           <Select 
             placeholder="Select a campaign" 
             allowClear
-            options={campaigns?.map((c: any) => ({ value: c.id, label: c.title }))}
+            options={campaigns?.map((c) => ({ value: c.id, label: c.title }))}
           />
         </Form.Item>
 

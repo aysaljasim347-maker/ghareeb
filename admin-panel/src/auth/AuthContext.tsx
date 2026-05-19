@@ -1,28 +1,19 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import type { User } from '../types/user';
 import { authService } from './authService';
 import { message } from 'antd';
-
-interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext } from './AuthContext';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('admin_token'));
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(!!localStorage.getItem('admin_token'));
 
   const logout = useCallback(() => {
     authService.logout();
     setUser(null);
     setToken(null);
+    setIsLoading(false);
   }, []);
 
   const verifySession = useCallback(async () => {
@@ -50,8 +41,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [logout]);
 
   useEffect(() => {
-    verifySession();
-  }, [verifySession]);
+    if (token) {
+      Promise.resolve().then(() => verifySession());
+    }
+  }, [verifySession, token]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -64,8 +57,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(data.user);
       setToken(data.token);
       message.success('Login successful');
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.error || 'Login failed';
+    } catch (error: unknown) {
+      const errorMsg = (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Login failed';
       message.error(errorMsg);
       throw error;
     }
@@ -81,12 +74,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuthContext = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuthContext must be used within an AuthProvider');
-  }
-  return context;
 };

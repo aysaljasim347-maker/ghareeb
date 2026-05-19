@@ -8,10 +8,25 @@ import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
+interface BeneficiaryRequest {
+  id: number;
+  title: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  location_text: string;
+  beneficiary_id: number;
+  category: string;
+  items_needed: string;
+  family_size: number;
+  created_by_name: string;
+  created_at: string;
+}
+
 const NgoBeneficiaryRequestsPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<BeneficiaryRequest[]>({
     queryKey: ['beneficiary-requests'],
     queryFn: async () => {
       // Filtering for tasks from BENEFICIARY_REQUEST source that are still OPEN
@@ -22,7 +37,7 @@ const NgoBeneficiaryRequestsPage: React.FC = () => {
     }
   });
 
-  const handleConvert = (request: any) => {
+  const handleConvert = (request: BeneficiaryRequest) => {
     navigate('/ngo/tasks/new', { 
       state: { 
         prefilled: {
@@ -56,7 +71,7 @@ const NgoBeneficiaryRequestsPage: React.FC = () => {
     {
       title: 'Location',
       key: 'location',
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: BeneficiaryRequest) => (
         <Tooltip title={`${record.latitude}, ${record.longitude}`}>
           <Space>
             <EnvironmentOutlined />
@@ -74,7 +89,7 @@ const NgoBeneficiaryRequestsPage: React.FC = () => {
     {
       title: 'Action',
       key: 'action',
-      render: (_: any, record: any) => (
+      render: (_: unknown, record: BeneficiaryRequest) => (
         <Button 
           type="primary" 
           icon={<RocketOutlined />} 

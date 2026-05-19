@@ -8,6 +8,8 @@ import type { Withdrawal } from '../../types/withdrawal';
 import dayjs from 'dayjs';
 import { unwrapResponse, normalizeWithdrawal, safeFormatCurrency } from '../../utils/apiNormalizer';
 
+import { AxiosError } from 'axios';
+
 const { Title } = Typography;
 
 const WithdrawalsPage: React.FC = () => {
@@ -22,7 +24,7 @@ const WithdrawalsPage: React.FC = () => {
         params: { status: 'ALL', page, limit: pageSize }
       });
       return {
-        items: unwrapResponse<any>(response.data, 'withdrawals').map(normalizeWithdrawal),
+        items: unwrapResponse<Withdrawal>(response.data, 'withdrawals').map(normalizeWithdrawal),
         total: response.data.meta?.total || 0
       };
     }
@@ -43,7 +45,7 @@ const WithdrawalsPage: React.FC = () => {
       notification.success({ message: 'Withdrawal approved successfully' });
       queryClient.invalidateQueries({ queryKey: ['admin', 'withdrawals'] });
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ error?: string }>) => {
       notification.error({ 
         message: 'Failed to approve withdrawal',
         description: error.response?.data?.error || 'Internal error'
@@ -59,7 +61,7 @@ const WithdrawalsPage: React.FC = () => {
       notification.success({ message: 'Withdrawal rejected' });
       queryClient.invalidateQueries({ queryKey: ['admin', 'withdrawals'] });
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ error?: string }>) => {
       notification.error({ 
         message: 'Failed to reject withdrawal',
         description: error.response?.data?.error || 'Internal error'
@@ -143,7 +145,7 @@ const WithdrawalsPage: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      render: (_: any, record: Withdrawal) => (
+      render: (_: unknown, record: Withdrawal) => (
         <Space>
           {record.status === 'PENDING' && (
             <>

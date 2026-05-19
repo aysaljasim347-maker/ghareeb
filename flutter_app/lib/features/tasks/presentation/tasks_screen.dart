@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:disasteraid_app/features/tasks/presentation/tasks_provider.dart';
 import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
 import 'package:disasteraid_app/core/theme/app_theme.dart';
+import 'package:disasteraid_app/models/goods_donation_model.dart';
+import 'package:disasteraid_app/providers/goods_donation_provider.dart';
 import 'package:disasteraid_app/widgets/empty_state.dart';
 import 'package:disasteraid_app/widgets/error_view.dart';
+import 'package:disasteraid_app/widgets/shimmer_card.dart';
 
 enum VolunteerTaskViewMode { list, map }
 
@@ -20,7 +24,9 @@ class TasksScreen extends ConsumerStatefulWidget {
   ConsumerState<TasksScreen> createState() => _TasksScreenState();
 }
 
-class _TasksScreenState extends ConsumerState<TasksScreen> {
+class _TasksScreenState extends ConsumerState<TasksScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
   VolunteerTaskViewMode _viewMode = VolunteerTaskViewMode.list;
   VolunteerTaskSort _sortMode = VolunteerTaskSort.recent;
   String _selectedCategory = 'All';
@@ -37,7 +43,14 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
   void dispose() {
+    _tabController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -123,8 +136,19 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             ],
           ),
         ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'Tasks'),
+            Tab(text: 'Goods Pickup'),
+          ],
+        ),
       ),
-      body: tasksAsync.when(
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // ── Tab 0: Regular tasks ──
+          tasksAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => ErrorView(
           message: 'Failed to load tasks',
@@ -199,6 +223,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             ],
           );
         },
+      ),
+          // ── Tab 1: Goods pickup tasks ──
+          const _GoodsPickupTab(),
+        ],
       ),
     );
   }
@@ -602,6 +630,183 @@ class _TaskCard extends StatelessWidget {
       case TaskStatus.coordinatorVerified: return 1.0;
       case TaskStatus.paid: return 1.0;
       default: return 0.0;
+    }
+  }
+}
+
+// ── Goods pickup tab ──────────────────────────────────────────────────────────
+
+class _GoodsPickupTab extends ConsumerWidget {
+  const _GoodsPickupTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(goodsPickupTasksProvider);
+    return async.when(
+      loading: () => const ShimmerList(count: 4, itemHeight: 100),
+      error: (e, _) => ErrorView(
+        message: 'Could not load goods pickup tasks.',
+        onRetry: () => ref.invalidate(goodsPickupTasksProvider),
+      ),
+      data: (tasks) {
+        final pending =
+            tasks.where((t) => t.isPending || t.isAssigned).toList();
+        if (pending.isEmpty) {
+          return const EmptyState(
+            icon: Icons.inventory_2_outlined,
+            title: 'No pickup tasks',
+            subtitle: 'Goods pickup tasks will appear here once donors submit donations.',
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: () async => ref.invalidate(goodsPickupTasksProvider),
+          child: ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: pending.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            itemBuilder: (_, i) => _PickupTaskCard(donation: pending[i]),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PickupTaskCard extends StatelessWidget {
+  final GoodsDonation donation;
+  const _PickupTaskCard({required this.donation});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final date = DateTime.tryParse(donation.submittedAt);
+    final dateLabel = date != null
+        ? DateFormat('MMM d').format(date.toLocal())
+        : '';
+
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () =>
+            context.push('/volunteer/goods-task/${donation.id}'),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.teal.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(_categoryIcon(donation.category),
+                    color: Colors.teal, size: 26),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            donation.itemName,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _StatusBadge(status: donation.status),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${_qtyLabel(donation.quantity)} ${donation.unit}  ·  ${donation.donorName}',
+                      style: TextStyle(
+                          fontSize: 12, color: cs.onSurfaceVariant),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.location_on_outlined,
+                            size: 12, color: cs.onSurfaceVariant),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            donation.pickupAddress,
+                            style: TextStyle(
+                                fontSize: 11, color: cs.onSurfaceVariant),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          dateLabel,
+                          style: TextStyle(
+                              fontSize: 11, color: cs.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _qtyLabel(double qty) =>
+      qty == qty.toInt() ? qty.toInt().toString() : qty.toString();
+
+  IconData _categoryIcon(String cat) {
+    switch (cat.toUpperCase()) {
+      case 'MEDICINES':
+        return Icons.medical_services_outlined;
+      case 'CLOTHES':
+        return Icons.checkroom_outlined;
+      case 'FOOD':
+        return Icons.rice_bowl_outlined;
+      case 'SHELTER':
+        return Icons.home_outlined;
+      default:
+        return Icons.inventory_2_outlined;
+    }
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String status;
+  const _StatusBadge({required this.status});
+
+  @override
+  Widget build(BuildContext context) {
+    final (bg, fg) = _colors(status);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+          color: bg, borderRadius: BorderRadius.circular(20)),
+      child: Text(status,
+          style: TextStyle(
+              fontSize: 10, fontWeight: FontWeight.w700, color: fg)),
+    );
+  }
+
+  (Color, Color) _colors(String s) {
+    switch (s.toUpperCase()) {
+      case 'PENDING':
+        return (Colors.orange.withValues(alpha: 0.15),
+            Colors.orange.shade700);
+      case 'ASSIGNED':
+        return (Colors.blue.withValues(alpha: 0.12), Colors.blue.shade700);
+      default:
+        return (Colors.grey.withValues(alpha: 0.12), Colors.grey.shade700);
     }
   }
 }

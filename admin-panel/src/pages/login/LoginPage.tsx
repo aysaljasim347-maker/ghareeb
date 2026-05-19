@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, Card, Typography, Layout } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { useAuthContext } from '../../auth/AuthContext';
+import { useAuthContext } from '../../auth/useAuthContext';
 import { useNavigate, Navigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
+
+interface LoginFormValues {
+  email?: string;
+  password?: string;
+}
 
 const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -16,7 +21,8 @@ const LoginPage: React.FC = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: LoginFormValues) => {
+    if (!values.email || !values.password) return;
     setLoading(true);
     try {
       await login(values.email, values.password);

@@ -1,5 +1,5 @@
 # 📡 API Documentation Audit: DisasterAid V2.1
-
+To resume this session: gemini --resume '10b11462-973e-4207-a13d-179a32a72f3e'    
 **Auditor:** Senior API Architect & Technical Auditor
 **Date:** May 13, 2026
 **Status:** 🔴 CRITICAL GAPS IDENTIFIED

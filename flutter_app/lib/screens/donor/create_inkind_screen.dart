@@ -219,186 +219,228 @@ class _CreateInKindScreenState extends ConsumerState<CreateInKindScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Donate an Item')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Photo picker
-              GestureDetector(
-                onTap: _uploadingPhoto ? null : _pickPhoto,
-                child: Container(
-                  width: double.infinity,
-                  height: 180,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: theme.colorScheme.outline.withAlpha(80)),
-                    image: _photoUrl != null
-                        ? DecorationImage(
-                            image: NetworkImage(_photoUrl!),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                  ),
-                  child: _uploadingPhoto
-                      ? const Center(child: CircularProgressIndicator())
-                      : _photoUrl == null
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add_photo_alternate_outlined,
-                                    size: 48, color: theme.colorScheme.primary),
-                                const SizedBox(height: 8),
-                                Text('Tap to add a photo',
-                                    style: TextStyle(color: theme.colorScheme.primary)),
-                              ],
-                            )
-                          : Align(
-                              alignment: Alignment.topRight,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8),
-                                child: CircleAvatar(
-                                  backgroundColor: Colors.black54,
-                                  radius: 16,
-                                  child: IconButton(
-                                    icon: const Icon(Icons.close, size: 16, color: Colors.white),
-                                    onPressed: () => setState(() => _photoUrl = null),
-                                    padding: EdgeInsets.zero,
-                                  ),
-                                ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Section 1: Item Details ──
+                    _SectionCard(
+                      title: 'Item Details',
+                      icon: Icons.inventory_2_outlined,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Photo picker
+                          GestureDetector(
+                            onTap: _uploadingPhoto ? null : _pickPhoto,
+                            child: Container(
+                              width: double.infinity,
+                              height: 160,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceContainerHighest,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: theme.colorScheme.outline
+                                        .withAlpha(80)),
+                                image: _photoUrl != null
+                                    ? DecorationImage(
+                                        image: NetworkImage(_photoUrl!),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
+                              ),
+                              child: _uploadingPhoto
+                                  ? const Center(
+                                      child: CircularProgressIndicator())
+                                  : _photoUrl == null
+                                      ? Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                                Icons
+                                                    .add_photo_alternate_outlined,
+                                                size: 40,
+                                                color:
+                                                    theme.colorScheme.primary),
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              'Add Photo (Optional)',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                color:
+                                                    theme.colorScheme.primary,
+                                              ),
+                                            ),
+                                            const Text(
+                                              'Helps donors trust your item',
+                                              style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey),
+                                            ),
+                                          ],
+                                        )
+                                      : Align(
+                                          alignment: Alignment.topRight,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8),
+                                            child: CircleAvatar(
+                                              backgroundColor: Colors.black54,
+                                              radius: 16,
+                                              child: IconButton(
+                                                icon: const Icon(Icons.close,
+                                                    size: 16,
+                                                    color: Colors.white),
+                                                onPressed: () => setState(
+                                                    () => _photoUrl = null),
+                                                padding: EdgeInsets.zero,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          TextFormField(
+                            controller: _titleCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'What are you donating? *',
+                              hintText: 'e.g. Winter blankets (3 pieces)',
+                              border: OutlineInputBorder(),
+                            ),
+                            validator: (v) => (v == null || v.trim().length < 3)
+                                ? 'Title must be at least 3 characters'
+                                : null,
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          TextFormField(
+                            controller: _descCtrl,
+                            decoration: const InputDecoration(
+                              labelText: 'Description (optional)',
+                              hintText: 'Add details (condition, quantity…)',
+                              border: OutlineInputBorder(),
+                            ),
+                            maxLines: 3,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // ── Section 2: Pickup Location ──
+                    _SectionCard(
+                      title: 'Pickup Location',
+                      icon: Icons.location_on_outlined,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed: _locatingGps ? null : _useGpsLocation,
+                              icon: _locatingGps
+                                  ? const SizedBox(
+                                      height: 18,
+                                      width: 18,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.my_location),
+                              label: Text(_locatingGps
+                                  ? 'Getting location…'
+                                  : 'Use Current Location'),
+                            ),
+                          ),
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Text(
+                                'or enter manually',
+                                style:
+                                    TextStyle(fontSize: 12, color: Colors.grey),
                               ),
                             ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              TextFormField(
-                controller: _titleCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Title *',
-                  hintText: 'e.g. Winter blankets (3 pieces)',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (v) => (v == null || v.trim().length < 3) ? 'Title must be at least 3 characters' : null,
-              ),
-
-              const SizedBox(height: 14),
-
-              TextFormField(
-                controller: _descCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Description (optional)',
-                  hintText: 'Condition, quantity, special notes…',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-              ),
-
-              const SizedBox(height: 20),
-
-              // Location section
-              Text('Pickup Location *', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 10),
-
-              FilledButton.tonalIcon(
-                onPressed: _locatingGps ? null : _useGpsLocation,
-                icon: _locatingGps
-                    ? const SizedBox(
-                        height: 18,
-                        width: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.my_location),
-                label: Text(_locatingGps ? 'Getting location…' : 'Use My Current Location'),
-              ),
-
-              const SizedBox(height: 10),
-
-              const Row(
-                children: [
-                  Expanded(child: Divider()),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: Text('or type manually', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                  ),
-                  Expanded(child: Divider()),
-                ],
-              ),
-
-              const SizedBox(height: 10),
-
-              TextFormField(
-                controller: _addressCtrl,
-                decoration: InputDecoration(
-                  labelText: 'Address',
-                  hintText: 'Start typing to search…',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: _lat != null
-                      ? const Icon(Icons.check_circle, color: Colors.green)
-                      : null,
-                ),
-                onChanged: _onAddressChanged,
-              ),
-
-              if (_showSuggestions && _suggestions.isNotEmpty)
-                Container(
-                  margin: const EdgeInsets.only(top: 4),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surface,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
-                  ),
-                  child: Column(
-                    children: _suggestions
-                        .map((s) => ListTile(
-                              dense: true,
-                              leading: const Icon(Icons.location_on_outlined, size: 18),
-                              title: Text(s.displayName, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13)),
-                              onTap: () => _selectSuggestion(s),
-                            ))
-                        .toList(),
-                  ),
-                ),
-
-              if (_lat != null) ...[
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(Icons.check_circle_outline, size: 16, color: Colors.green),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Location set (${_lat!.toStringAsFixed(5)}, ${_lng!.toStringAsFixed(5)})',
-                      style: const TextStyle(fontSize: 12, color: Colors.green),
+                          ),
+                          TextFormField(
+                            controller: _addressCtrl,
+                            decoration: InputDecoration(
+                              labelText: 'Pickup address',
+                              hintText: 'Start typing to search…',
+                              border: const OutlineInputBorder(),
+                              suffixIcon: _lat != null
+                                  ? const Icon(Icons.check_circle,
+                                      color: Colors.green)
+                                  : null,
+                            ),
+                            onChanged: _onAddressChanged,
+                          ),
+                          if (_showSuggestions && _suggestions.isNotEmpty)
+                            Container(
+                              margin: const EdgeInsets.only(top: 4),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surface,
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: const [
+                                  BoxShadow(
+                                      color: Colors.black12, blurRadius: 6)
+                                ],
+                              ),
+                              child: Column(
+                                children: _suggestions
+                                    .map((s) => ListTile(
+                                          dense: true,
+                                          leading: const Icon(
+                                              Icons.location_on_outlined,
+                                              size: 18),
+                                          title: Text(s.displayName,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: const TextStyle(
+                                                  fontSize: 13)),
+                                          onTap: () => _selectSuggestion(s),
+                                        ))
+                                    .toList(),
+                              ),
+                            ),
+                          if (_lat != null) ...[
+                            const SizedBox(height: 8),
+                            const Row(
+                              children: [
+                                Icon(Icons.check_circle_outline,
+                                    size: 16, color: Colors.green),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Location confirmed',
+                                  style: TextStyle(
+                                      color: Colors.green, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
+
+                    const SizedBox(height: 16),
                   ],
                 ),
-              ],
-
-              const SizedBox(height: 32),
-
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: FilledButton(
-                  onPressed: isLoading ? null : _submit,
-                  child: isLoading
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Text('Post Donation', style: TextStyle(fontSize: 16)),
-                ),
               ),
-
-              const SizedBox(height: 24),
-            ],
+            ),
           ),
-        ),
+          _StickySubmitButton(
+            isLoading: isLoading,
+            onPressed: _submit,
+          ),
+        ],
       ),
     );
   }
@@ -410,4 +452,84 @@ class _NominatimResult {
   final double lon;
 
   _NominatimResult({required this.displayName, required this.lat, required this.lon});
+}
+
+class _SectionCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Widget child;
+
+  const _SectionCard({
+    required this.title,
+    required this.icon,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 18, color: cs.primary),
+                const SizedBox(width: 6),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StickySubmitButton extends StatelessWidget {
+  final bool isLoading;
+  final VoidCallback onPressed;
+
+  const _StickySubmitButton({
+    required this.isLoading,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        boxShadow: const [
+          BoxShadow(color: Colors.black12, blurRadius: 6),
+        ],
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: FilledButton(
+          onPressed: isLoading ? null : onPressed,
+          child: isLoading
+              ? const SizedBox(
+                  height: 22,
+                  width: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                )
+              : const Text('Post Donation', style: TextStyle(fontSize: 16)),
+        ),
+      ),
+    );
+  }
 }
