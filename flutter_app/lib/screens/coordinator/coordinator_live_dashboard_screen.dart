@@ -46,19 +46,21 @@ class CoordinatorLiveDashboardScreen extends ConsumerWidget {
               ...intel.topVolunteers.map((v) {
                 final totalTasks = SafeParser.paramInt(v['total_tasks']);
                 final flags = SafeParser.paramInt(v['flags']);
-                return ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading:
-                        const CircleAvatar(child: Icon(Icons.person, size: 16)),
-                    title: Text(SafeParser.toStringSafe(v['name'], defaultValue: 'Unknown')),
+                final reliabilityPct = (100 - (flags * 20)).clamp(0, 100);
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: const CircleAvatar(child: Icon(Icons.person, size: 16)),
+                    title: Text(SafeParser.toStringSafe(v['name'], defaultValue: 'Unknown'),
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text('$totalTasks tasks performed'),
                     trailing: Text(
-                        '${(100 - (flags * 20)).clamp(0, 100)}% REL',
+                        '$reliabilityPct% REL',
                         style: TextStyle(
-                            color:
-                                flags > 0 ? Colors.orange : Colors.green,
+                            color: flags > 0 ? Colors.orange : Colors.green,
                             fontWeight: FontWeight.bold)),
-                  );
+                  ),
+                );
               }),
               const SizedBox(height: 40),
             ],

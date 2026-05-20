@@ -167,20 +167,22 @@ class _TaskDetailView extends ConsumerWidget {
           ],
 
           const SizedBox(height: 24),
-          const Divider(),
 
           // Status Timeline
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              'Progress Tracking',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          const _SectionHeader(title: 'Progress Tracking'),
+          const SizedBox(height: 8),
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.grey.shade100),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: TaskStatusTimeline(currentStatus: task.status),
             ),
           ),
-          TaskStatusTimeline(currentStatus: task.status),
-
-          const Divider(),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // Volunteer Info
           if (task.claimedByName != null) ...[
@@ -218,7 +220,7 @@ class _TaskDetailView extends ConsumerWidget {
                   ),
                 ),
               ),
-            const Divider(),
+            const SizedBox(height: 8),
           ],
 
           // Request Details
@@ -257,7 +259,6 @@ class _TaskDetailView extends ConsumerWidget {
           ],
 
           const SizedBox(height: 24),
-          const Divider(),
 
           // Delivery Proof
           deliveryAsync.when(
@@ -303,13 +304,13 @@ class _TaskDetailView extends ConsumerWidget {
                           size: 14, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
-                        'Submitted: ${DateFormat('MMM D, HH:mm').format(DateTime.parse(latest['submitted_at']))}',
+                        'Submitted: ${DateFormat('MMM d, HH:mm').format(DateTime.parse(latest['submitted_at']))}',
                         style:
                             const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ],
                   ),
-                  const Divider(),
+                  const SizedBox(height: 8),
                 ],
               );
             },
@@ -462,7 +463,12 @@ class _FeedbackSectionState extends ConsumerState<_FeedbackSection> {
         children: [
           const _SectionHeader(title: 'Your Confirmation'),
           Card(
+            elevation: 0,
             color: Colors.green.shade50,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.green.shade200),
+            ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -505,7 +511,7 @@ class _FeedbackSectionState extends ConsumerState<_FeedbackSection> {
               ),
             ),
           ),
-          const Divider(),
+          const SizedBox(height: 16),
         ],
       );
     }
@@ -521,7 +527,11 @@ class _FeedbackSectionState extends ConsumerState<_FeedbackSection> {
       children: [
         const _SectionHeader(title: 'Confirm Aid Receipt'),
         Card(
-          elevation: 2,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: Colors.grey.shade100),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -594,7 +604,7 @@ class _FeedbackSectionState extends ConsumerState<_FeedbackSection> {
             ),
           ),
         ),
-        const Divider(),
+        const SizedBox(height: 16),
       ],
     );
   }

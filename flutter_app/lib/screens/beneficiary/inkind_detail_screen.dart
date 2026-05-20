@@ -110,7 +110,7 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                color: theme.colorScheme.primaryContainer.withAlpha(80),
+                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.31),
               ),
               child: Icon(Icons.volunteer_activism,
                   size: 72, color: theme.colorScheme.primary),

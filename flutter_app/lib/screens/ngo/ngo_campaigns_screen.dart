@@ -99,7 +99,7 @@ class _CampaignReportTile extends StatelessWidget {
                           fontWeight: FontWeight.bold, fontSize: 12)),
                 ],
               ),
-              const Divider(height: 24),
+              const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disasteraid_app/providers/volunteer_reputation_provider.dart';
 import 'package:disasteraid_app/features/auth/presentation/auth_provider.dart';
+import 'package:disasteraid_app/core/theme/app_theme.dart';
 
 class VolunteerProfileScreen extends ConsumerWidget {
   const VolunteerProfileScreen({super.key});
@@ -13,156 +14,220 @@ class VolunteerProfileScreen extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            // ── User Header ──
-            CircleAvatar(
-              radius: 40,
-              backgroundColor: theme.colorScheme.primaryContainer,
-              child: Text(
-                user?.name[0].toUpperCase() ?? 'V',
-                style: theme.textTheme.headlineLarge?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 200,
+            pinned: true,
+            stretch: true,
+            flexibleSpace: FlexibleSpaceBar(
+              stretchModes: const [StretchMode.blurBackground],
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppTheme.primaryDark, AppTheme.primaryColor],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              user?.name ?? 'Volunteer',
-              style: theme.textTheme.titleLarge
-                  ?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            Text(
-              reputation.rankLabel,
-              style: TextStyle(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 32),
-
-            // ── Trust Score Card ──
-            Card(
-              elevation: 0,
-              color: theme.colorScheme.surfaceContainerHigh,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    const Text('Volunteer Trust Score',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 20),
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        SizedBox(
-                          width: 120,
-                          height: 120,
-                          child: CircularProgressIndicator(
-                            value: reputation.trustScore / 100,
-                            strokeWidth: 10,
-                            backgroundColor: Colors.grey.shade200,
-                            color: _getScoreColor(reputation.trustScore),
+                child: SafeArea(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 16),
+                      Container(
+                        width: 72,
+                        height: 72,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              width: 2),
+                        ),
+                        child: Center(
+                          child: Text(
+                            user?.name[0].toUpperCase() ?? 'V',
+                            style: theme.textTheme.headlineLarge?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        Column(
-                          children: [
-                            Text(
-                              '${reputation.trustScore}',
-                              style: theme.textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: _getScoreColor(reputation.trustScore),
-                              ),
-                            ),
-                            const Text('/ 100',
-                                style: TextStyle(
-                                    fontSize: 12, color: Colors.grey)),
-                          ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        user?.name ?? 'Volunteer',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _getTrendIcon(reputation.trend),
-                        const SizedBox(width: 8),
-                        Text(
-                          _getTrendText(reputation.trend),
-                          style: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w500),
+                      ),
+                      Text(
+                        reputation.rankLabel,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
                         ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
+              title: const Text('My Profile'),
+              centerTitle: true,
             ),
-            const SizedBox(height: 32),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── Trust Score Card ──
+                  Card(
+                    elevation: 0,
+                    color: theme.colorScheme.surfaceContainerHigh,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          Text(
+                            'Volunteer Trust Score',
+                            style: theme.textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 20),
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              SizedBox(
+                                width: 120,
+                                height: 120,
+                                child: CircularProgressIndicator(
+                                  value: reputation.trustScore / 100,
+                                  strokeWidth: 10,
+                                  backgroundColor: Colors.grey.shade200,
+                                  color: _getScoreColor(reputation.trustScore),
+                                ),
+                              ),
+                              Column(
+                                children: [
+                                  Text(
+                                    '${reputation.trustScore}',
+                                    style:
+                                        theme.textTheme.headlineMedium?.copyWith(
+                                      fontWeight: FontWeight.w900,
+                                      color:
+                                          _getScoreColor(reputation.trustScore),
+                                    ),
+                                  ),
+                                  const Text('/ 100',
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.grey)),
+                                ],
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _getTrendIcon(reputation.trend),
+                              const SizedBox(width: 8),
+                              Text(
+                                _getTrendText(reputation.trend),
+                                style: const TextStyle(
+                                    fontSize: 13, fontWeight: FontWeight.w500),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 28),
 
-            // ── Badge Showcase ──
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text('Unlocked Badges',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: reputation.badges.length,
-                itemBuilder: (context, index) {
-                  final badge = reputation.badges[index];
-                  return _BadgeItem(badge: badge);
-                },
+                  // ── Badge Showcase ──
+                  Text('Unlocked Badges',
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 100,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: reputation.badges.length,
+                      itemBuilder: (context, index) {
+                        final badge = reputation.badges[index];
+                        return _BadgeItem(badge: badge);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+
+                  // ── Performance Summary ──
+                  Text('Performance Summary',
+                      style: theme.textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(color: Colors.grey.shade100),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      child: Column(
+                        children: [
+                          _PerformanceRow(
+                            label: 'Verification Rate',
+                            value:
+                                '${(reputation.verificationRate * 100).toInt()}%',
+                            icon: Icons.verified_user_outlined,
+                          ),
+                          Divider(height: 1, color: Colors.grey.shade100),
+                          _PerformanceRow(
+                            label: 'Task Completion',
+                            value:
+                                '${(reputation.completionRate * 100).toInt()}%',
+                            icon: Icons.task_alt,
+                          ),
+                          Divider(height: 1, color: Colors.grey.shade100),
+                          _PerformanceRow(
+                            label: 'Flag Rate',
+                            value:
+                                '${((1 - reputation.verificationRate) * 100).toInt()}%',
+                            icon: Icons.flag_outlined,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  OutlinedButton.icon(
+                    onPressed: () => _showSignOutDialog(context, ref),
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Sign Out'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red,
+                      side: const BorderSide(color: Colors.red),
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                ],
               ),
             ),
-            const SizedBox(height: 32),
-
-            // ── Performance Summary ──
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text('Performance Summary',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            ),
-            const SizedBox(height: 12),
-            _PerformanceRow(
-              label: 'Verification Rate',
-              value: '${(reputation.verificationRate * 100).toInt()}%',
-              icon: Icons.verified_user_outlined,
-            ),
-            _PerformanceRow(
-              label: 'Task Completion',
-              value: '${(reputation.completionRate * 100).toInt()}%',
-              icon: Icons.task_alt,
-            ),
-            _PerformanceRow(
-              label: 'Flag Rate',
-              value: '${((1 - reputation.verificationRate) * 100).toInt()}%',
-              icon: Icons.flag_outlined,
-            ),
-
-            const SizedBox(height: 48),
-            OutlinedButton.icon(
-              onPressed: () => _showSignOutDialog(context, ref),
-              icon: const Icon(Icons.logout),
-              label: const Text('Sign Out'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.red,
-                side: const BorderSide(color: Colors.red),
-                minimumSize: const Size(double.infinity, 50),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -268,7 +333,7 @@ class _PerformanceRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
           Icon(icon, size: 20, color: Colors.grey),

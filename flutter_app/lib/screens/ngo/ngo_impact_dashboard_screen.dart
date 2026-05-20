@@ -36,7 +36,7 @@ class NgoImpactDashboardScreen extends ConsumerWidget {
             children: [
               _buildTransparencyHeader(context, impact.transparencyScore),
               const SizedBox(height: 24),
-              Text('Financial Summary', style: theme.textTheme.titleMedium),
+              Text('Financial Summary', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -62,7 +62,7 @@ class NgoImpactDashboardScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              Text('Operational Impact', style: theme.textTheme.titleMedium),
+              Text('Operational Impact', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               GridView.count(
                 crossAxisCount: 2,

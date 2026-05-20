@@ -498,9 +498,9 @@ class _ProofUploadScreenState extends ConsumerState<ProofUploadScreen> {
         child: Column(
           children: [
             _SummaryRow(label: 'Photos', value: '${_photos.length} captured'),
-            const Divider(),
+            const SizedBox(height: 8),
             const _SummaryRow(label: 'Location', value: 'GPS Data Ready'),
-            const Divider(),
+            const SizedBox(height: 8),
             _SummaryRow(
                 label: 'Notes',
                 value: _notesController.text.isEmpty

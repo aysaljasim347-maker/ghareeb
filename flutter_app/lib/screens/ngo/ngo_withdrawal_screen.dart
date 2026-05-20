@@ -134,72 +134,86 @@ class _NgoWithdrawalScreenState extends ConsumerState<NgoWithdrawalScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Request Form ──
-            Text('New Withdrawal Request',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'New Withdrawal Request',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 12),
             Form(
               key: _formKey,
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _amountController,
-                    decoration: const InputDecoration(
-                      labelText: 'Amount (PKR) *',
-                      prefixText: 'Rs ',
-                      hintText: 'e.g. 5000',
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey.shade100),
+                ),
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _amountController,
+                      decoration: const InputDecoration(
+                        labelText: 'Amount (PKR) *',
+                        prefixText: 'Rs ',
+                        hintText: 'e.g. 5000',
+                        prefixIcon: Icon(Icons.payments_outlined, size: 20),
+                      ),
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                      ],
+                      validator: (v) {
+                        final parsed = double.tryParse(v?.trim() ?? '');
+                        if (parsed == null || parsed <= 0) {
+                          return 'Please enter a valid amount';
+                        }
+                        return null;
+                      },
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
-                    ],
-                    validator: (v) {
-                      final parsed = double.tryParse(v?.trim() ?? '');
-                      if (parsed == null || parsed <= 0) {
-                        return 'Please enter a valid amount';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _bankController,
-                    decoration: const InputDecoration(
-                      labelText: 'Bank Account Details *',
-                      hintText: 'Account title, number, bank name',
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _bankController,
+                      decoration: const InputDecoration(
+                        labelText: 'Bank Account Details *',
+                        hintText: 'Account title, number, bank name',
+                        prefixIcon: Icon(Icons.account_balance_outlined, size: 20),
+                      ),
+                      maxLines: 2,
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Please enter your bank account details';
+                        }
+                        return null;
+                      },
                     ),
-                    maxLines: 2,
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Please enter your bank account details';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: FilledButton.icon(
-                      onPressed: _submitting ? null : _submit,
-                      icon: _submitting
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Icon(Icons.send_outlined),
-                      label: Text(_submitting ? 'Submitting...' : 'Request Withdrawal'),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: FilledButton.icon(
+                        onPressed: _submitting ? null : _submit,
+                        icon: _submitting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.send_outlined),
+                        label: Text(_submitting ? 'Submitting...' : 'Request Withdrawal'),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 32),
 
             // ── History ──
-            Text('My Requests',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              'My Requests',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 12),
             withdrawalsAsync.when(
               loading: () => const Center(

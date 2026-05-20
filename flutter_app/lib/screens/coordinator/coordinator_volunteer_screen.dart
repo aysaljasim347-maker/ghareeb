@@ -70,7 +70,7 @@ class CoordinatorVolunteerScreen extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      const Divider(),
+                      const SizedBox(height: 12),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [

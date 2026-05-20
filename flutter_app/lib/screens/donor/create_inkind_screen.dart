@@ -247,7 +247,7 @@ class _CreateInKindScreenState extends ConsumerState<CreateInKindScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                     color: theme.colorScheme.outline
-                                        .withAlpha(80)),
+                                        .withValues(alpha: 0.31)),
                                 image: _photoUrl != null
                                     ? DecorationImage(
                                         image: NetworkImage(_photoUrl!),

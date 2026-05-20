@@ -1,4 +1,5 @@
 import 'package:disasteraid_app/features/auth/domain/user_model.dart';
+import 'package:disasteraid_app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -37,7 +38,7 @@ class DashboardShell extends ConsumerWidget {
             behavior: SnackBarBehavior.floating,
             action: SnackBarAction(
               label: 'View',
-              onPressed: () => context.push('/beneficiary/task/${latest.taskId}'),
+              onPressed: () => _navigateToNotification(context, effectiveRole, latest),
             ),
           ),
         );
@@ -50,6 +51,34 @@ class DashboardShell extends ConsumerWidget {
           _buildNavBar(context, effectiveRole, loc, ref, authState),
       floatingActionButton: _buildFab(context, effectiveRole),
     );
+  }
+
+  void _navigateToNotification(
+    BuildContext context,
+    UserRole? role,
+    AppNotification notification,
+  ) {
+    switch (role) {
+      case UserRole.beneficiary:
+        if (notification.taskId > 0) {
+          context.push('/beneficiary/task/${notification.taskId}');
+        } else {
+          context.push('/beneficiary/notifications');
+        }
+        break;
+      case UserRole.coordinator:
+        context.push('/coordinator/notifications');
+        break;
+      case UserRole.volunteer:
+        if (notification.taskId > 0) {
+          context.push('/volunteer/task/${notification.taskId}');
+        } else {
+          context.push('/volunteer/activity');
+        }
+        break;
+      default:
+        break;
+    }
   }
 
   void _showLogoutDialog(BuildContext context, WidgetRef ref) {
@@ -85,7 +114,7 @@ class DashboardShell extends ConsumerWidget {
           onPressed: () => context.push('/beneficiary/create-task'),
           icon: const Icon(Icons.add),
           label: const Text('New Request'),
-          backgroundColor: const Color(0xFFFF6B35),
+          backgroundColor: AppTheme.accentColor,
           foregroundColor: Colors.white,
         );
       case UserRole.donor:
@@ -94,7 +123,7 @@ class DashboardShell extends ConsumerWidget {
           onPressed: () => context.push('/donor/inkind/create'),
           icon: const Icon(Icons.volunteer_activism),
           label: const Text('Donate Item'),
-          backgroundColor: const Color(0xFF2E7D32),
+          backgroundColor: AppTheme.primaryColor,
           foregroundColor: Colors.white,
         );
       default:

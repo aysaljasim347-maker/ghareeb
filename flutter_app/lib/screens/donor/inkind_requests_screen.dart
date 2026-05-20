@@ -4,6 +4,7 @@ import 'package:timeago/timeago.dart' as timeago;
 
 import 'package:disasteraid_app/models/inkind_model.dart';
 import 'package:disasteraid_app/providers/inkind_provider.dart';
+import 'package:disasteraid_app/widgets/empty_state.dart';
 import 'package:disasteraid_app/widgets/error_view.dart';
 
 class InKindRequestsScreen extends ConsumerWidget {
@@ -41,7 +42,11 @@ class InKindRequestsScreen extends ConsumerWidget {
           final donation = donationAsync.valueOrNull;
 
           if (requests.isEmpty) {
-            return const _EmptyState();
+            return const EmptyState(
+              icon: Icons.inbox_outlined,
+              title: 'No requests yet',
+              subtitle: 'Requests will appear here when people apply for this donation.',
+            );
           }
 
           return RefreshIndicator(

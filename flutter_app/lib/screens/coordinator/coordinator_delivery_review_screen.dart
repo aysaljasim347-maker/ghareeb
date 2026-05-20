@@ -92,10 +92,10 @@ class _CoordinatorDeliveryReviewScreenState extends ConsumerState<CoordinatorDel
                   Text('NGO: ${task.ngoName ?? 'Platform'}', style: const TextStyle(color: Colors.grey)),
                   const SizedBox(height: 12),
                   _DetailRow(label: 'Volunteer', value: task.claimedByName ?? 'Unknown'),
-                  _DetailRow(label: 'Submitted', value: DateFormat('MMM D, HH:mm').format(DateTime.parse(delivery['submitted_at']))),
-                  
-                  const Divider(height: 32),
-                  
+                  _DetailRow(label: 'Submitted', value: DateFormat('MMM d, HH:mm').format(DateTime.parse(delivery['submitted_at']))),
+
+                  const SizedBox(height: 20),
+
                   const _SectionHeader(title: 'Delivery Proof'),
                   if (delivery['photo_urls'] != null)
                     SizedBox(
@@ -119,7 +119,7 @@ class _CoordinatorDeliveryReviewScreenState extends ConsumerState<CoordinatorDel
                     const SizedBox(height: 16),
                   ],
 
-                  const Divider(height: 32),
+                  const SizedBox(height: 20),
 
                   const _SectionHeader(title: 'Operational Review'),
                   TextField(

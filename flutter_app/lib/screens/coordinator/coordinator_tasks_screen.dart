@@ -107,65 +107,93 @@ class _CoordinatorTasksScreenState extends ConsumerState<CoordinatorTasksScreen>
               itemCount: filtered.length,
               itemBuilder: (context, index) {
                 final task = filtered[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () => context.push('/coordinator/task/${task.id}'),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              StatusChip(status: task.status),
-                              const Spacer(),
-                              Text(
-                                task.urgency.value,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: _urgencyColor(task.urgency),
+                final cs = Theme.of(context).colorScheme;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Card(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () => context.push('/coordinator/task/${task.id}'),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                StatusChip(status: task.status),
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: _urgencyColor(task.urgency)
+                                        .withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    task.urgency.value.toUpperCase(),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: _urgencyColor(task.urgency),
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            task.title,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'NGO: ${task.ngoName ?? 'Unknown'}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey.shade600,
+                            const SizedBox(height: 10),
+                            Text(
+                              task.title,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          const Divider(height: 24),
-                          Row(
-                            children: [
-                              const Icon(Icons.person_outline, size: 14, color: Colors.grey),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Volunteer: ${task.claimedByName ?? 'Unassigned'}',
-                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            const SizedBox(height: 4),
+                            Text(
+                              'NGO: ${task.ngoName ?? 'Unknown'}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: cs.onSurfaceVariant,
                               ),
-                              const Spacer(),
-                              const Icon(Icons.location_on_outlined, size: 14, color: Colors.grey),
-                              const SizedBox(width: 4),
-                              Text(
-                                task.locationText ?? 'No location',
-                                style: const TextStyle(fontSize: 12, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Icon(Icons.person_outline,
+                                    size: 13,
+                                    color: cs.onSurfaceVariant),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    task.claimedByName ?? 'Unassigned',
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: cs.onSurfaceVariant),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Icon(Icons.location_on_outlined,
+                                    size: 13,
+                                    color: cs.onSurfaceVariant),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    task.locationText ?? 'No location',
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: cs.onSurfaceVariant),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

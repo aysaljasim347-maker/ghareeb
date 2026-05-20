@@ -177,7 +177,7 @@ class _AnomalyTile extends StatelessWidget {
             Text(detail,
                 style: TextStyle(
                     color: color, fontWeight: FontWeight.w600, fontSize: 13)),
-            const Divider(height: 24),
+            const SizedBox(height: 12),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [

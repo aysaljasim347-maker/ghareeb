@@ -86,11 +86,22 @@ class VolunteerDashboardScreen extends ConsumerWidget {
   }
 
   Widget _buildReputationCard(BuildContext context, VolunteerReputation rep) {
-    final theme = Theme.of(context);
-    return Card(
-      elevation: 0,
-      color: theme.colorScheme.surfaceContainerHigh,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppTheme.primaryColor, AppTheme.primaryColor.withValues(alpha: 0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryColor.withValues(alpha: 0.25),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
         onTap: () => context.push('/volunteer/profile'),
@@ -98,20 +109,33 @@ class VolunteerDashboardScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(20),
           child: Row(
             children: [
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  CircularProgressIndicator(
-                    value: rep.trustScore / 100,
-                    strokeWidth: 6,
-                    backgroundColor: Colors.grey.shade200,
-                    color: rep.trustScore > 70 ? Colors.green : Colors.blue,
-                  ),
-                  Text(
-                    '${rep.trustScore}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ],
+              SizedBox(
+                width: 64,
+                height: 64,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: rep.trustScore / 100,
+                      strokeWidth: 5,
+                      backgroundColor: Colors.white.withValues(alpha: 0.2),
+                      color: Colors.white,
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '${rep.trustScore}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -120,19 +144,31 @@ class VolunteerDashboardScreen extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Text('Trust Score', style: theme.textTheme.labelMedium),
+                        Text(
+                          'Trust Score',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                         const SizedBox(width: 4),
                         _getTrendIcon(rep.trend),
                       ],
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       rep.rankLabel,
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Colors.grey),
+              const Icon(Icons.chevron_right, color: Colors.white70, size: 20),
             ],
           ),
         ),
@@ -141,9 +177,9 @@ class VolunteerDashboardScreen extends ConsumerWidget {
   }
 
   Widget _getTrendIcon(String trend) {
-    if (trend == 'UP') return const Icon(Icons.trending_up, color: Colors.green, size: 16);
-    if (trend == 'DOWN') return const Icon(Icons.trending_down, color: Colors.red, size: 16);
-    return const Icon(Icons.trending_flat, color: Colors.blue, size: 16);
+    if (trend == 'UP') return const Icon(Icons.trending_up, color: Colors.white70, size: 14);
+    if (trend == 'DOWN') return const Icon(Icons.trending_down, color: Colors.white70, size: 14);
+    return const Icon(Icons.trending_flat, color: Colors.white70, size: 14);
   }
 
   void _exportSummary(BuildContext context, VolunteerImpactStats stats) {
@@ -253,22 +289,53 @@ Generated on ${DateFormat('MMM d, yyyy').format(DateTime.now())}
   }
 
   Widget _buildRecentTasks(BuildContext context, AsyncValue<List<TaskModel>> async) {
+    final cs = Theme.of(context).colorScheme;
     return async.when(
-      loading: () => const LinearProgressIndicator(),
-      error: (_, __) => const Text('Error loading activity'),
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: LinearProgressIndicator(),
+      ),
+      error: (_, __) => Text(
+        'Error loading activity',
+        style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
+      ),
       data: (tasks) {
-        if (tasks.isEmpty) return const Text('No recent activity');
-        return Column(
-          children: tasks.take(3).map((t) => ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: CircleAvatar(
-              backgroundColor: Colors.grey.shade100,
-              child: Icon(_getCategoryIcon(t.category), size: 18),
+        if (tasks.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(
+              'No recent activity',
+              style: TextStyle(color: cs.onSurfaceVariant, fontSize: 13),
             ),
-            title: Text(t.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            subtitle: Text(t.status.value, style: const TextStyle(fontSize: 12)),
-            trailing: const Icon(Icons.chevron_right, size: 18),
-            onTap: () => context.push('/volunteer/task/${t.id}'),
+          );
+        }
+        return Column(
+          children: tasks.take(3).map((t) => Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              leading: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(_getCategoryIcon(t.category), size: 18, color: cs.primary),
+              ),
+              title: Text(
+                t.title,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                t.status.value.replaceAll('_', ' '),
+                style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+              ),
+              trailing: Icon(Icons.chevron_right, size: 18, color: cs.onSurfaceVariant),
+              onTap: () => context.push('/volunteer/task/${t.id}'),
+            ),
           )).toList(),
         );
       },

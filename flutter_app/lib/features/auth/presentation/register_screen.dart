@@ -21,20 +21,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _usePhone = false;
   String _selectedRole = 'DONOR';
 
-  // No ADMIN role — per security requirements
-  static const _roles = [
-    ('DONOR', 'Donor', Icons.favorite, 'Support relief campaigns'),
-    ('BENEFICIARY', 'Beneficiary', Icons.person, 'Request aid assistance'),
-    ('VOLUNTEER', 'Volunteer', Icons.handshake, 'Deliver aid on ground'),
-    ('NGO', 'NGO', Icons.business, 'Manage campaigns & tasks'),
-    (
-      'COORDINATOR',
-      'Coordinator',
-      Icons.manage_accounts,
-      'Coordinate operations'
-    ),
-  ];
-
   @override
   void dispose() {
     _nameController.dispose();
@@ -53,15 +39,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           password: _passwordController.text,
           name: _nameController.text.trim(),
           role: _selectedRole,
-          cnic: _cnicController.text.isNotEmpty
-              ? _cnicController.text.trim()
-              : null,
+          cnic: _cnicController.text.isNotEmpty ? _cnicController.text.trim() : null,
         );
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final isLoading = authState.status == AuthStatus.loading;
 
     ref.listen<AuthState>(authProvider, (prev, next) {
       if (next.status == AuthStatus.authenticated) {
@@ -78,16 +63,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F7FA),
       appBar: AppBar(
         title: const Text('Create Account'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
           onPressed: () => context.go('/login'),
         ),
       ),
       body: SafeArea(
+        top: false,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: Column(
@@ -97,130 +84,123 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 Text(
                   'I am a...',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                 ),
                 const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _roles.map((role) {
-                    final isSelected = _selectedRole == role.$1;
-                    return ChoiceChip(
-                      label: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(role.$3, size: 16),
-                          const SizedBox(width: 4),
-                          Text(role.$2),
-                        ],
-                      ),
-                      selected: isSelected,
-                      selectedColor:
-                          AppTheme.primaryColor.withValues(alpha: 0.2),
-                      onSelected: (_) =>
-                          setState(() => _selectedRole = role.$1),
-                    );
-                  }).toList(),
+                _RoleSelector(
+                  selected: _selectedRole,
+                  onSelected: (r) => setState(() => _selectedRole = r),
                 ),
                 const SizedBox(height: 24),
 
-                // ── Name ──
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    prefixIcon: Icon(Icons.person_outline),
-                  ),
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Name is required' : null,
-                ),
-                const SizedBox(height: 16),
+                // ── Personal Info Card ──
+                _FormCard(
+                  title: 'Personal Information',
+                  children: [
+                    TextFormField(
+                      controller: _nameController,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'Full Name',
+                        prefixIcon: Icon(Icons.person_outline, size: 20),
+                      ),
+                      validator: (v) => (v == null || v.isEmpty) ? 'Name is required' : null,
+                    ),
+                    const SizedBox(height: 12),
 
-                // ── Email / Phone Toggle ──
-                SegmentedButton<bool>(
-                  segments: const [
-                    ButtonSegment(value: false, label: Text('Email')),
-                    ButtonSegment(value: true, label: Text('Phone')),
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType:
+                          _usePhone ? TextInputType.phone : TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      decoration: InputDecoration(
+                        labelText: _usePhone ? 'Phone Number' : 'Email Address',
+                        prefixIcon: Icon(
+                          _usePhone ? Icons.phone_outlined : Icons.email_outlined,
+                          size: 20,
+                        ),
+                        suffixIcon: TextButton(
+                          onPressed: () => setState(() {
+                            _usePhone = !_usePhone;
+                            _emailController.clear();
+                          }),
+                          child: Text(
+                            _usePhone ? 'Use Email' : 'Use Phone',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
+                      validator: (v) {
+                        if (v == null || v.isEmpty) {
+                          return _usePhone ? 'Phone is required' : 'Email is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    TextFormField(
+                      controller: _cnicController,
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.next,
+                      decoration: const InputDecoration(
+                        labelText: 'CNIC (Optional)',
+                        prefixIcon: Icon(Icons.badge_outlined, size: 20),
+                        hintText: '3520112345678',
+                      ),
+                    ),
                   ],
-                  selected: {_usePhone},
-                  onSelectionChanged: (v) =>
-                      setState(() => _usePhone = v.first),
-                ),
-                const SizedBox(height: 12),
-
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: _usePhone
-                      ? TextInputType.phone
-                      : TextInputType.emailAddress,
-                  decoration: InputDecoration(
-                    labelText: _usePhone ? 'Phone Number' : 'Email',
-                    prefixIcon: Icon(
-                      _usePhone ? Icons.phone : Icons.email_outlined,
-                    ),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) {
-                      return _usePhone
-                          ? 'Phone is required'
-                          : 'Email is required';
-                    }
-                    return null;
-                  },
                 ),
                 const SizedBox(height: 16),
 
-                // ── CNIC (Optional) ──
-                TextFormField(
-                  controller: _cnicController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'CNIC (Optional)',
-                    prefixIcon: Icon(Icons.badge_outlined),
-                    hintText: '3520112345678',
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // ── Password ──
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
+                // ── Security Card ──
+                _FormCard(
+                  title: 'Security',
+                  children: [
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => isLoading ? null : _handleRegister(),
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        prefixIcon: const Icon(Icons.lock_outline, size: 20),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            size: 20,
+                          ),
+                          onPressed: () =>
+                              setState(() => _obscurePassword = !_obscurePassword),
+                        ),
+                        helperText: 'Minimum 8 characters',
+                      ),
+                      validator: (v) {
+                        if (v == null || v.length < 8) {
+                          return 'Password must be at least 8 characters';
+                        }
+                        return null;
+                      },
                     ),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.length < 8) {
-                      return 'Password must be at least 8 characters';
-                    }
-                    return null;
-                  },
+                  ],
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
 
                 // ── Submit ──
                 SizedBox(
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: authState.status == AuthStatus.loading
-                        ? null
-                        : _handleRegister,
-                    child: authState.status == AuthStatus.loading
+                    onPressed: isLoading ? null : _handleRegister,
+                    child: isLoading
                         ? const SizedBox(
-                            width: 24,
-                            height: 24,
+                            width: 22,
+                            height: 22,
                             child: CircularProgressIndicator(
-                              strokeWidth: 2,
+                              strokeWidth: 2.5,
                               color: Colors.white,
                             ),
                           )
@@ -232,13 +212,125 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 Center(
                   child: TextButton(
                     onPressed: () => context.go('/login'),
-                    child: const Text('Already have an account? Sign In'),
+                    child: RichText(
+                      text: TextSpan(
+                        text: 'Already have an account? ',
+                        style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                        children: const [
+                          TextSpan(
+                            text: 'Sign In',
+                            style: TextStyle(
+                              color: AppTheme.primaryColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Role Selector ──────────────────────────────────────────────────────────────
+
+class _RoleSelector extends StatelessWidget {
+  final String selected;
+  final ValueChanged<String> onSelected;
+
+  const _RoleSelector({required this.selected, required this.onSelected});
+
+  static const _roles = [
+    ('DONOR', 'Donor', Icons.favorite_outline, AppTheme.accentColor),
+    ('BENEFICIARY', 'Beneficiary', Icons.person_outline, AppTheme.infoColor),
+    ('VOLUNTEER', 'Volunteer', Icons.handshake_outlined, AppTheme.successColor),
+    ('NGO', 'NGO', Icons.business_outlined, AppTheme.primaryColor),
+    ('COORDINATOR', 'Coordinator', Icons.manage_accounts_outlined, AppTheme.warningColor),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _roles.map((role) {
+        final isSelected = selected == role.$1;
+        return GestureDetector(
+          onTap: () => onSelected(role.$1),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? role.$4.withValues(alpha: 0.1) : Colors.white,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isSelected ? role.$4 : Colors.grey.shade200,
+                width: isSelected ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  role.$3,
+                  size: 16,
+                  color: isSelected ? role.$4 : Colors.grey.shade500,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  role.$2,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected ? role.$4 : Colors.grey.shade600,
                   ),
                 ),
               ],
             ),
           ),
-        ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+// ── Form Section Card ──────────────────────────────────────────────────────────
+
+class _FormCard extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+
+  const _FormCard({required this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: Colors.grey.shade500,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 12),
+          ...children,
+        ],
       ),
     );
   }

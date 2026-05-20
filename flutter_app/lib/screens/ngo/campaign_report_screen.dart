@@ -32,11 +32,11 @@ class CampaignReportScreen extends ConsumerWidget {
               const SizedBox(height: 24),
               _buildFinancialCard(context, report),
               const SizedBox(height: 24),
-              Text('Task Fulfillment', style: theme.textTheme.titleMedium),
+              Text('Task Fulfillment', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               _buildTaskStats(context, report),
               const SizedBox(height: 24),
-              Text('Transparency Rating', style: theme.textTheme.titleMedium),
+              Text('Transparency Rating', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               _buildTransparencyCard(context, report.transparencyScore),
               const SizedBox(height: 32),
@@ -182,15 +182,16 @@ class CampaignReportScreen extends ConsumerWidget {
         const Text('Linked Activities',
             style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
-        ...tasks.take(5).map((t) => ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading:
-                  const CircleAvatar(child: Icon(Icons.task_alt, size: 16)),
-              title: Text(t.title, style: const TextStyle(fontSize: 14)),
-              subtitle:
-                  Text(t.status.value, style: const TextStyle(fontSize: 12)),
-              trailing: Text('PKR ${t.budgetPkr.toInt()}',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+        ...tasks.take(5).map((t) => Card(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: ListTile(
+                leading:
+                    const CircleAvatar(child: Icon(Icons.task_alt, size: 16)),
+                title: Text(t.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                subtitle: Text(t.status.value.replaceAll('_', ' '), style: const TextStyle(fontSize: 12)),
+                trailing: Text('PKR ${t.budgetPkr.toInt()}',
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+              ),
             )),
       ],
     );

@@ -168,7 +168,7 @@ class CoordinatorIntelligenceDashboard extends ConsumerWidget {
                   Tag(label: '${tasks.length}', color: Colors.red),
               ],
             ),
-            const Divider(height: 24),
+            const SizedBox(height: 12),
             if (tasks.isEmpty)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 8),
@@ -223,12 +223,15 @@ class CoordinatorIntelligenceDashboard extends ConsumerWidget {
         ...ngos.take(5).map((n) {
           final totalTasks = SafeParser.paramInt(n['total_tasks']);
           final avgHours = SafeParser.toDouble(n['avg_completion_hours']);
-          
-          return ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(SafeParser.toStringSafe(n['org_name'], defaultValue: 'Unknown NGO')),
-            subtitle: Text('Tasks: $totalTasks'),
-            trailing: Text('${avgHours.toStringAsFixed(1)}h avg', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+
+          return Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: ListTile(
+              dense: true,
+              title: Text(SafeParser.toStringSafe(n['org_name'], defaultValue: 'Unknown NGO'), style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text('Tasks: $totalTasks'),
+              trailing: Text('${avgHours.toStringAsFixed(1)}h avg', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor)),
+            ),
           );
         }),
       ],

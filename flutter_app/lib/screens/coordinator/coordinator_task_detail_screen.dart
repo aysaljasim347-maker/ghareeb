@@ -82,19 +82,21 @@ class _CoordinatorTaskView extends ConsumerWidget {
           ),
 
           const SizedBox(height: 24),
-          const Divider(),
 
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              'Field Progress',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          const _SectionHeader(title: 'Field Progress'),
+          const SizedBox(height: 8),
+          Card(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.grey.shade100),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: TaskStatusTimeline(currentStatus: task.status),
             ),
           ),
-          TaskStatusTimeline(currentStatus: task.status),
-
-          const Divider(),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // Volunteer Info
           if (task.claimedByName != null) ...[
@@ -117,7 +119,7 @@ class _CoordinatorTaskView extends ConsumerWidget {
                 ),
               ),
             ),
-            const Divider(),
+            const SizedBox(height: 8),
           ],
 
           // Delivery Proof (Read-Only)
@@ -164,13 +166,13 @@ class _CoordinatorTaskView extends ConsumerWidget {
                           size: 14, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
-                        'Submitted: ${DateFormat('MMM D, HH:mm').format(DateTime.parse(latest['submitted_at']))}',
+                        'Submitted: ${DateFormat('MMM d, HH:mm').format(DateTime.parse(latest['submitted_at']))}',
                         style:
                             const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ],
                   ),
-                  const Divider(),
+                  const SizedBox(height: 8),
                 ],
               );
             },
@@ -187,7 +189,6 @@ class _CoordinatorTaskView extends ConsumerWidget {
           _DetailRow(label: 'Category', value: task.category ?? 'Relief'),
 
           const SizedBox(height: 24),
-          const Divider(),
 
           // Location
           const _SectionHeader(title: 'Field Location'),

@@ -8,6 +8,7 @@ import 'package:disasteraid_app/models/inkind_model.dart';
 import 'package:disasteraid_app/providers/inkind_provider.dart';
 import 'package:disasteraid_app/widgets/error_view.dart';
 import 'package:disasteraid_app/widgets/shimmer_card.dart';
+import 'package:disasteraid_app/widgets/empty_state.dart';
 
 class InKindBoardScreen extends ConsumerWidget {
   const InKindBoardScreen({super.key});
@@ -41,18 +42,10 @@ class InKindBoardScreen extends ConsumerWidget {
         ),
         data: (donations) {
           if (donations.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    'No donations available right now',
-                    style: TextStyle(color: Colors.grey, fontSize: 16),
-                  ),
-                ],
-              ),
+            return const EmptyState(
+              icon: Icons.inventory_2_outlined,
+              title: 'No donations available',
+              subtitle: 'Check back later — donors post items regularly.',
             );
           }
           return RefreshIndicator(
@@ -108,7 +101,7 @@ class _DonationCard extends StatelessWidget {
               Container(
                 height: 120,
                 width: double.infinity,
-                color: theme.colorScheme.primaryContainer.withAlpha(80),
+                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.31),
                 child: Icon(
                   Icons.volunteer_activism,
                   size: 56,

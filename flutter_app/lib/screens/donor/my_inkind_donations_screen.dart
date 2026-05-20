@@ -7,6 +7,7 @@ import 'package:disasteraid_app/models/inkind_model.dart';
 import 'package:disasteraid_app/providers/inkind_provider.dart';
 import 'package:disasteraid_app/widgets/error_view.dart';
 import 'package:disasteraid_app/widgets/shimmer_card.dart';
+import 'package:disasteraid_app/widgets/empty_state.dart';
 
 class MyInKindDonationsScreen extends ConsumerWidget {
   const MyInKindDonationsScreen({super.key});
@@ -42,7 +43,11 @@ class MyInKindDonationsScreen extends ConsumerWidget {
         ),
         data: (donations) {
           if (donations.isEmpty) {
-            return const _EmptyState();
+            return const EmptyState(
+              icon: Icons.inventory_2_outlined,
+              title: 'No in-kind donations yet',
+              subtitle: 'Post items you want to give away to people in need.',
+            );
           }
 
           return RefreshIndicator(
@@ -285,34 +290,3 @@ class _StatusPill extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.inventory_2_outlined, size: 72, color: cs.outline),
-            const SizedBox(height: 12),
-            Text(
-              'No in-kind donations yet',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Post items you want to give away to people in need.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: cs.onSurfaceVariant),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
