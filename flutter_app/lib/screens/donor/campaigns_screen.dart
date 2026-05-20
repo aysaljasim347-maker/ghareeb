@@ -2,13 +2,13 @@
 // import 'package:flutter/material.dart';
 // import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:go_router/go_router.dart';
-// import 'package:disasteraid_app/models/campaign_model.dart';
-// import 'package:disasteraid_app/models/goods_campaign_model.dart';
-// import 'package:disasteraid_app/providers/campaign_provider.dart';
-// import 'package:disasteraid_app/providers/goods_campaign_provider.dart';
-// import 'package:disasteraid_app/widgets/empty_state.dart';
-// import 'package:disasteraid_app/widgets/error_view.dart';
-// import 'package:disasteraid_app/widgets/shimmer_card.dart';
+// import 'package:reliefnet_app/models/campaign_model.dart';
+// import 'package:reliefnet_app/models/goods_campaign_model.dart';
+// import 'package:reliefnet_app/providers/campaign_provider.dart';
+// import 'package:reliefnet_app/providers/goods_campaign_provider.dart';
+// import 'package:reliefnet_app/widgets/empty_state.dart';
+// import 'package:reliefnet_app/widgets/error_view.dart';
+// import 'package:reliefnet_app/widgets/shimmer_card.dart';
 
 // // ── Filter / Sort enums ───────────────────────────────────────────────────────
 
@@ -940,13 +940,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:disasteraid_app/models/campaign_model.dart';
-import 'package:disasteraid_app/models/goods_campaign_model.dart';
-import 'package:disasteraid_app/providers/campaign_provider.dart';
-import 'package:disasteraid_app/providers/goods_campaign_provider.dart';
-import 'package:disasteraid_app/widgets/empty_state.dart';
-import 'package:disasteraid_app/widgets/error_view.dart';
-import 'package:disasteraid_app/widgets/shimmer_card.dart';
+import 'package:reliefnet_app/models/campaign_model.dart';
+import 'package:reliefnet_app/models/goods_campaign_model.dart';
+import 'package:reliefnet_app/providers/campaign_provider.dart';
+import 'package:reliefnet_app/providers/goods_campaign_provider.dart';
+import 'package:reliefnet_app/widgets/empty_state.dart';
+import 'package:reliefnet_app/widgets/error_view.dart';
+import 'package:reliefnet_app/widgets/shimmer_card.dart';
 
 // ── Filter / Sort enums ───────────────────────────────────────────────────────
 

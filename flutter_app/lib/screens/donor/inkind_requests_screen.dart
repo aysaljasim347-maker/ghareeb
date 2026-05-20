@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 
-import 'package:disasteraid_app/models/inkind_model.dart';
-import 'package:disasteraid_app/providers/inkind_provider.dart';
-import 'package:disasteraid_app/widgets/empty_state.dart';
-import 'package:disasteraid_app/widgets/error_view.dart';
-import 'package:disasteraid_app/screens/shared/chat_screen.dart';
+import 'package:reliefnet_app/models/inkind_model.dart';
+import 'package:reliefnet_app/providers/inkind_provider.dart';
+import 'package:reliefnet_app/widgets/empty_state.dart';
+import 'package:reliefnet_app/widgets/error_view.dart';
+import 'package:reliefnet_app/screens/shared/chat_screen.dart';
 
 class InKindRequestsScreen extends ConsumerWidget {
   final int donationId;

@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disasteraid_app/core/api/api_client.dart';
-import 'package:disasteraid_app/core/socket/socket_provider.dart';
-import 'package:disasteraid_app/core/storage/secure_storage.dart';
-import 'package:disasteraid_app/features/auth/data/auth_repository.dart';
-import 'package:disasteraid_app/features/auth/domain/user_model.dart';
+import 'package:reliefnet_app/core/api/api_client.dart';
+import 'package:reliefnet_app/core/socket/socket_provider.dart';
+import 'package:reliefnet_app/core/storage/secure_storage.dart';
+import 'package:reliefnet_app/features/auth/data/auth_repository.dart';
+import 'package:reliefnet_app/features/auth/domain/user_model.dart';
 
 // ── Repository provider ────────────────────────────────────────────────────────
 

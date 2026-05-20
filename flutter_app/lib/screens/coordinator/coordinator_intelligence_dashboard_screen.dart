@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:disasteraid_app/providers/coordinator_intelligence_provider.dart';
-import 'package:disasteraid_app/widgets/error_view.dart';
-import 'package:disasteraid_app/core/theme/app_theme.dart';
-import 'package:disasteraid_app/utils/safe_parser.dart';
+import 'package:reliefnet_app/providers/coordinator_intelligence_provider.dart';
+import 'package:reliefnet_app/widgets/error_view.dart';
+import 'package:reliefnet_app/core/theme/app_theme.dart';
+import 'package:reliefnet_app/utils/safe_parser.dart';
 
 class CoordinatorIntelligenceDashboard extends ConsumerWidget {
   const CoordinatorIntelligenceDashboard({super.key});

@@ -1,6 +1,6 @@
-import 'package:disasteraid_app/core/api/api_client.dart';
-import 'package:disasteraid_app/core/api/api_constants.dart';
-import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
+import 'package:reliefnet_app/core/api/api_client.dart';
+import 'package:reliefnet_app/core/api/api_constants.dart';
+import 'package:reliefnet_app/features/tasks/domain/task_model.dart';
 
 /// Tasks API data layer.
 class TasksRepository {

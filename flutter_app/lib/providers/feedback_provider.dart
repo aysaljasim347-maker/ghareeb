@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disasteraid_app/core/api/api_client.dart';
-import 'package:disasteraid_app/providers/beneficiary_task_provider.dart';
+import 'package:reliefnet_app/core/api/api_client.dart';
+import 'package:reliefnet_app/providers/beneficiary_task_provider.dart';
 
 class FeedbackRepository {
   final ApiClient _client;

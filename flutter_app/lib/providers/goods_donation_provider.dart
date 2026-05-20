@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disasteraid_app/core/api/api_client.dart';
-import 'package:disasteraid_app/core/api/api_constants.dart';
-import 'package:disasteraid_app/models/goods_donation_model.dart';
+import 'package:reliefnet_app/core/api/api_client.dart';
+import 'package:reliefnet_app/core/api/api_constants.dart';
+import 'package:reliefnet_app/models/goods_donation_model.dart';
 
 // ── Read providers ─────────────────────────────────────────────────────────────
 

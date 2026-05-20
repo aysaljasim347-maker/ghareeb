@@ -1,6 +1,6 @@
-import 'package:disasteraid_app/core/api/api_client.dart';
-import 'package:disasteraid_app/core/api/api_constants.dart';
-import 'package:disasteraid_app/features/auth/domain/user_model.dart';
+import 'package:reliefnet_app/core/api/api_client.dart';
+import 'package:reliefnet_app/core/api/api_constants.dart';
+import 'package:reliefnet_app/features/auth/domain/user_model.dart';
 
 /// Authentication API data layer.
 class AuthRepository {

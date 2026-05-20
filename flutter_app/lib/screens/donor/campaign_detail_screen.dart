@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:disasteraid_app/models/campaign_model.dart';
-import 'package:disasteraid_app/providers/campaign_provider.dart';
-import 'package:disasteraid_app/providers/campaign_donations_provider.dart';
-import 'package:disasteraid_app/providers/campaign_report_provider.dart';
-import 'package:disasteraid_app/providers/follow_provider.dart';
-import 'package:disasteraid_app/widgets/error_view.dart';
-import 'package:disasteraid_app/widgets/status_chip.dart';
-import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
+import 'package:reliefnet_app/models/campaign_model.dart';
+import 'package:reliefnet_app/providers/campaign_provider.dart';
+import 'package:reliefnet_app/providers/campaign_donations_provider.dart';
+import 'package:reliefnet_app/providers/campaign_report_provider.dart';
+import 'package:reliefnet_app/providers/follow_provider.dart';
+import 'package:reliefnet_app/widgets/error_view.dart';
+import 'package:reliefnet_app/widgets/status_chip.dart';
+import 'package:reliefnet_app/features/tasks/domain/task_model.dart';
 
 class CampaignDetailScreen extends ConsumerWidget {
   final int campaignId;

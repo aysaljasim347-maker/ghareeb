@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disasteraid_app/providers/coordinator_intelligence_provider.dart';
-import 'package:disasteraid_app/screens/coordinator/coordinator_tasks_screen.dart';
+import 'package:reliefnet_app/providers/coordinator_intelligence_provider.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_tasks_screen.dart';
 
 class CoordinatorBroadcastScreen extends ConsumerStatefulWidget {
   const CoordinatorBroadcastScreen({super.key});

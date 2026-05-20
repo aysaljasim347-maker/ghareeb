@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:disasteraid_app/providers/coordinator_intelligence_provider.dart';
-import 'package:disasteraid_app/widgets/empty_state.dart';
+import 'package:reliefnet_app/providers/coordinator_intelligence_provider.dart';
+import 'package:reliefnet_app/widgets/empty_state.dart';
 
 class CoordinatorEscalationHistoryScreen extends ConsumerWidget {
   const CoordinatorEscalationHistoryScreen({super.key});

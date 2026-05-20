@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:disasteraid_app/providers/campaign_provider.dart';
-import 'package:disasteraid_app/features/auth/presentation/auth_provider.dart';
-import 'package:disasteraid_app/models/campaign_model.dart';
-import 'package:disasteraid_app/widgets/error_view.dart';
-import 'package:disasteraid_app/widgets/empty_state.dart';
+import 'package:reliefnet_app/providers/campaign_provider.dart';
+import 'package:reliefnet_app/features/auth/presentation/auth_provider.dart';
+import 'package:reliefnet_app/models/campaign_model.dart';
+import 'package:reliefnet_app/widgets/error_view.dart';
+import 'package:reliefnet_app/widgets/empty_state.dart';
 
 class NgoCampaignsScreen extends ConsumerWidget {
   const NgoCampaignsScreen({super.key});

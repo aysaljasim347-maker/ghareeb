@@ -7,13 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:disasteraid_app/core/api/api_client.dart';
-import 'package:disasteraid_app/core/api/api_constants.dart';
-import 'package:disasteraid_app/models/goods_campaign_model.dart';
-import 'package:disasteraid_app/providers/goods_campaign_provider.dart';
-import 'package:disasteraid_app/providers/goods_donation_provider.dart';
-import 'package:disasteraid_app/widgets/error_view.dart';
-import 'package:disasteraid_app/widgets/shimmer_card.dart';
+import 'package:reliefnet_app/core/api/api_client.dart';
+import 'package:reliefnet_app/core/api/api_constants.dart';
+import 'package:reliefnet_app/models/goods_campaign_model.dart';
+import 'package:reliefnet_app/providers/goods_campaign_provider.dart';
+import 'package:reliefnet_app/providers/goods_donation_provider.dart';
+import 'package:reliefnet_app/widgets/error_view.dart';
+import 'package:reliefnet_app/widgets/shimmer_card.dart';
 
 class DonateItemScreen extends ConsumerStatefulWidget {
   final int campaignId;
@@ -46,7 +46,7 @@ class _DonateItemScreenState extends ConsumerState<DonateItemScreen> {
   final _nominatim = Dio(BaseOptions(
     baseUrl: 'https://nominatim.openstreetmap.org',
     headers: {
-      'User-Agent': 'DisasterAid/2.1 (workwithali786@gmail.com)',
+      'User-Agent': 'ReliefNet/2.1 (workwithali786@gmail.com)',
       'Accept-Language': 'en',
     },
   ));

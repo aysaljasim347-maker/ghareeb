@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disasteraid_app/core/socket/socket_provider.dart';
+import 'package:reliefnet_app/core/socket/socket_provider.dart';
 
 class AppNotification {
   final String title;

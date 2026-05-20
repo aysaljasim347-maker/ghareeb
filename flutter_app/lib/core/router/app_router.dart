@@ -1,75 +1,75 @@
-import 'package:disasteraid_app/features/auth/domain/user_model.dart';
+import 'package:reliefnet_app/features/auth/domain/user_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:disasteraid_app/features/auth/presentation/auth_provider.dart';
-import 'package:disasteraid_app/features/auth/presentation/login_screen.dart';
-import 'package:disasteraid_app/features/auth/presentation/register_screen.dart';
-import 'package:disasteraid_app/features/tasks/presentation/tasks_screen.dart';
-import 'package:disasteraid_app/core/shell/dashboard_shell.dart';
+import 'package:reliefnet_app/features/auth/presentation/auth_provider.dart';
+import 'package:reliefnet_app/features/auth/presentation/login_screen.dart';
+import 'package:reliefnet_app/features/auth/presentation/register_screen.dart';
+import 'package:reliefnet_app/features/tasks/presentation/tasks_screen.dart';
+import 'package:reliefnet_app/core/shell/dashboard_shell.dart';
 
 // ── Beneficiary screens ──
-import 'package:disasteraid_app/screens/beneficiary/create_task_screen.dart';
-import 'package:disasteraid_app/screens/beneficiary/my_tasks_screen.dart';
-import 'package:disasteraid_app/screens/beneficiary/task_detail_screen.dart';
-import 'package:disasteraid_app/screens/beneficiary/edit_task_screen.dart';
-import 'package:disasteraid_app/screens/beneficiary/emergency_request_screen.dart';
-import 'package:disasteraid_app/screens/beneficiary/notifications_screen.dart';
+import 'package:reliefnet_app/screens/beneficiary/create_task_screen.dart';
+import 'package:reliefnet_app/screens/beneficiary/my_tasks_screen.dart';
+import 'package:reliefnet_app/screens/beneficiary/task_detail_screen.dart';
+import 'package:reliefnet_app/screens/beneficiary/edit_task_screen.dart';
+import 'package:reliefnet_app/screens/beneficiary/emergency_request_screen.dart';
+import 'package:reliefnet_app/screens/beneficiary/notifications_screen.dart';
 
 // ── Donor screens ──
-import 'package:disasteraid_app/screens/donor/campaigns_screen.dart';
-import 'package:disasteraid_app/screens/donor/campaign_detail_screen.dart';
-import 'package:disasteraid_app/screens/donor/ngo_profile_screen.dart';
-import 'package:disasteraid_app/screens/donor/donation_history_screen.dart';
-import 'package:disasteraid_app/screens/donor/payment_screen.dart';
-import 'package:disasteraid_app/screens/donor/impact_dashboard_screen.dart';
-import 'package:disasteraid_app/screens/donor/activity_feed_screen.dart';
-import 'package:disasteraid_app/screens/donor/followed_campaigns_screen.dart';
-import 'package:disasteraid_app/screens/donor/goods_campaign_detail_screen.dart';
-import 'package:disasteraid_app/screens/donor/donate_item_screen.dart';
-import 'package:disasteraid_app/screens/donor/my_goods_donations_screen.dart';
-import 'package:disasteraid_app/screens/donor/goods_donation_detail_screen.dart';
+import 'package:reliefnet_app/screens/donor/campaigns_screen.dart';
+import 'package:reliefnet_app/screens/donor/campaign_detail_screen.dart';
+import 'package:reliefnet_app/screens/donor/ngo_profile_screen.dart';
+import 'package:reliefnet_app/screens/donor/donation_history_screen.dart';
+import 'package:reliefnet_app/screens/donor/payment_screen.dart';
+import 'package:reliefnet_app/screens/donor/impact_dashboard_screen.dart';
+import 'package:reliefnet_app/screens/donor/activity_feed_screen.dart';
+import 'package:reliefnet_app/screens/donor/followed_campaigns_screen.dart';
+import 'package:reliefnet_app/screens/donor/goods_campaign_detail_screen.dart';
+import 'package:reliefnet_app/screens/donor/donate_item_screen.dart';
+import 'package:reliefnet_app/screens/donor/my_goods_donations_screen.dart';
+import 'package:reliefnet_app/screens/donor/goods_donation_detail_screen.dart';
 
 // ── Volunteer screens ──
-import 'package:disasteraid_app/screens/volunteer/volunteer_dashboard_screen.dart';
-import 'package:disasteraid_app/screens/volunteer/activity_timeline_screen.dart';
-import 'package:disasteraid_app/screens/volunteer/volunteer_profile_screen.dart';
-import 'package:disasteraid_app/screens/volunteer/task_detail_screen.dart';
-import 'package:disasteraid_app/screens/volunteer/proof_upload_screen.dart';
-import 'package:disasteraid_app/screens/volunteer/goods_task_detail_screen.dart';
-import 'package:disasteraid_app/screens/volunteer/goods_proof_upload_screen.dart';
+import 'package:reliefnet_app/screens/volunteer/volunteer_dashboard_screen.dart';
+import 'package:reliefnet_app/screens/volunteer/activity_timeline_screen.dart';
+import 'package:reliefnet_app/screens/volunteer/volunteer_profile_screen.dart';
+import 'package:reliefnet_app/screens/volunteer/task_detail_screen.dart';
+import 'package:reliefnet_app/screens/volunteer/proof_upload_screen.dart';
+import 'package:reliefnet_app/screens/volunteer/goods_task_detail_screen.dart';
+import 'package:reliefnet_app/screens/volunteer/goods_proof_upload_screen.dart';
 
 // ── NGO screens ──
-import 'package:disasteraid_app/screens/ngo/ngo_dashboard_screen.dart';
-import 'package:disasteraid_app/screens/ngo/ngo_impact_dashboard_screen.dart';
-import 'package:disasteraid_app/screens/ngo/ngo_campaigns_screen.dart';
-import 'package:disasteraid_app/screens/ngo/campaign_report_screen.dart';
-import 'package:disasteraid_app/screens/ngo/ngo_withdrawal_screen.dart';
+import 'package:reliefnet_app/screens/ngo/ngo_dashboard_screen.dart';
+import 'package:reliefnet_app/screens/ngo/ngo_impact_dashboard_screen.dart';
+import 'package:reliefnet_app/screens/ngo/ngo_campaigns_screen.dart';
+import 'package:reliefnet_app/screens/ngo/campaign_report_screen.dart';
+import 'package:reliefnet_app/screens/ngo/ngo_withdrawal_screen.dart';
 
 // ── Coordinator screens ──
-import 'package:disasteraid_app/screens/coordinator/coordinator_goods_review_screen.dart';
-import 'package:disasteraid_app/screens/coordinator/coordinator_tasks_screen.dart';
-import 'package:disasteraid_app/screens/coordinator/coordinator_submitted_tasks_screen.dart';
-import 'package:disasteraid_app/screens/coordinator/coordinator_delivery_review_screen.dart';
-import 'package:disasteraid_app/screens/coordinator/coordinator_task_detail_screen.dart';
-import 'package:disasteraid_app/screens/coordinator/coordinator_map_screen.dart';
-import 'package:disasteraid_app/screens/coordinator/coordinator_volunteer_screen.dart';
-import 'package:disasteraid_app/screens/coordinator/coordinator_intelligence_dashboard_screen.dart';
-import 'package:disasteraid_app/screens/coordinator/coordinator_fraud_signals_screen.dart';
-import 'package:disasteraid_app/screens/coordinator/coordinator_escalation_history_screen.dart';
-import 'package:disasteraid_app/screens/coordinator/coordinator_notification_screen.dart';
-import 'package:disasteraid_app/screens/coordinator/coordinator_broadcast_screen.dart';
-import 'package:disasteraid_app/screens/coordinator/coordinator_live_dashboard_screen.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_goods_review_screen.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_tasks_screen.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_submitted_tasks_screen.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_delivery_review_screen.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_task_detail_screen.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_map_screen.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_volunteer_screen.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_intelligence_dashboard_screen.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_fraud_signals_screen.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_escalation_history_screen.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_notification_screen.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_broadcast_screen.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_live_dashboard_screen.dart';
 
 // ── InKind screens ──
-import 'package:disasteraid_app/screens/beneficiary/inkind_board_screen.dart';
-import 'package:disasteraid_app/screens/beneficiary/inkind_detail_screen.dart';
-import 'package:disasteraid_app/screens/donor/create_inkind_screen.dart';
-import 'package:disasteraid_app/screens/donor/my_inkind_donations_screen.dart';
-import 'package:disasteraid_app/screens/donor/inkind_requests_screen.dart';
+import 'package:reliefnet_app/screens/beneficiary/inkind_board_screen.dart';
+import 'package:reliefnet_app/screens/beneficiary/inkind_detail_screen.dart';
+import 'package:reliefnet_app/screens/donor/create_inkind_screen.dart';
+import 'package:reliefnet_app/screens/donor/my_inkind_donations_screen.dart';
+import 'package:reliefnet_app/screens/donor/inkind_requests_screen.dart';
 
 // ── Shared screens ──
-import 'package:disasteraid_app/screens/shared/chat_screen.dart';
+import 'package:reliefnet_app/screens/shared/chat_screen.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);

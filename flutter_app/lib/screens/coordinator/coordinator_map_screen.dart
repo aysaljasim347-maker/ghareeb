@@ -3,9 +3,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
-import 'package:disasteraid_app/screens/coordinator/coordinator_tasks_screen.dart';
-import 'package:disasteraid_app/core/theme/app_theme.dart';
+import 'package:reliefnet_app/features/tasks/domain/task_model.dart';
+import 'package:reliefnet_app/screens/coordinator/coordinator_tasks_screen.dart';
+import 'package:reliefnet_app/core/theme/app_theme.dart';
 
 class CoordinatorMapScreen extends ConsumerWidget {
   const CoordinatorMapScreen({super.key});
@@ -32,7 +32,7 @@ class CoordinatorMapScreen extends ConsumerWidget {
             children: [
               TileLayer(
                 urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.disasteraid.app',
+                userAgentPackageName: 'com.reliefnet.app',
               ),
               MarkerLayer(
                 markers: tasks

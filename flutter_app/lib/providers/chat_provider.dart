@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disasteraid_app/core/api/api_client.dart';
-import 'package:disasteraid_app/core/api/api_constants.dart';
-import 'package:disasteraid_app/core/socket/socket_provider.dart';
-import 'package:disasteraid_app/core/socket/socket_service.dart';
+import 'package:reliefnet_app/core/api/api_client.dart';
+import 'package:reliefnet_app/core/api/api_constants.dart';
+import 'package:reliefnet_app/core/socket/socket_provider.dart';
+import 'package:reliefnet_app/core/socket/socket_service.dart';
 
 // ── Domain models ──────────────────────────────────────────────────────────────
 

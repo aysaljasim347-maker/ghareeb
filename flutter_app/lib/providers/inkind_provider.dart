@@ -1,10 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:disasteraid_app/core/api/api_client.dart';
-import 'package:disasteraid_app/core/api/api_constants.dart';
-import 'package:disasteraid_app/models/inkind_model.dart';
-import 'package:disasteraid_app/providers/chat_provider.dart';
+import 'package:reliefnet_app/core/api/api_client.dart';
+import 'package:reliefnet_app/core/api/api_constants.dart';
+import 'package:reliefnet_app/models/inkind_model.dart';
+import 'package:reliefnet_app/providers/chat_provider.dart';
 
 // ── Board (beneficiary) ──────────────────────────────────────────────────────
 

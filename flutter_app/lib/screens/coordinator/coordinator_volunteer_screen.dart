@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:disasteraid_app/providers/coordinator_volunteers_provider.dart';
-import 'package:disasteraid_app/widgets/empty_state.dart';
-import 'package:disasteraid_app/widgets/error_view.dart';
+import 'package:reliefnet_app/providers/coordinator_volunteers_provider.dart';
+import 'package:reliefnet_app/widgets/empty_state.dart';
+import 'package:reliefnet_app/widgets/error_view.dart';
 
 class CoordinatorVolunteerScreen extends ConsumerWidget {
   const CoordinatorVolunteerScreen({super.key});

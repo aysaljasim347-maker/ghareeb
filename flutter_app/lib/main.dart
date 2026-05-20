@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:disasteraid_app/core/router/app_router.dart';
-import 'package:disasteraid_app/core/theme/app_theme.dart';
+import 'package:reliefnet_app/core/router/app_router.dart';
+import 'package:reliefnet_app/core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,12 +16,12 @@ void main() async {
 
   runApp(
     const ProviderScope(
-      child: DisasterAidApp(),
+      child: ReliefNetApp(),
     ),
   );
 }
 
-class DisasterAidApp extends ConsumerWidget {
+class ReliefNetApp extends ConsumerWidget {
   const DisasterAidApp({super.key});
 
   @override
@@ -29,7 +29,7 @@ class DisasterAidApp extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
-      title: 'DisasterAid',
+      title: 'ReliefNet',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

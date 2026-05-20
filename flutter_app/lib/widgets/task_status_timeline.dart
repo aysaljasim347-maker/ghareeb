@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
+import 'package:reliefnet_app/features/tasks/domain/task_model.dart';
 
 class TaskStatusTimeline extends StatelessWidget {
   final TaskStatus currentStatus;

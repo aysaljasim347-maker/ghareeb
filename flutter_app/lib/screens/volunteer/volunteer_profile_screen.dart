@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disasteraid_app/providers/volunteer_reputation_provider.dart';
-import 'package:disasteraid_app/features/auth/presentation/auth_provider.dart';
-import 'package:disasteraid_app/core/theme/app_theme.dart';
+import 'package:reliefnet_app/providers/volunteer_reputation_provider.dart';
+import 'package:reliefnet_app/features/auth/presentation/auth_provider.dart';
+import 'package:reliefnet_app/core/theme/app_theme.dart';
 
 class VolunteerProfileScreen extends ConsumerWidget {
   const VolunteerProfileScreen({super.key});

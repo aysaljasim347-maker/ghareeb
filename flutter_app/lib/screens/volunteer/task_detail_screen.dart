@@ -5,14 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:disasteraid_app/core/theme/app_theme.dart';
-import 'package:disasteraid_app/features/auth/presentation/auth_provider.dart';
-import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
-import 'package:disasteraid_app/features/tasks/presentation/tasks_provider.dart';
-import 'package:disasteraid_app/core/api/api_client.dart';
-import 'package:disasteraid_app/core/api/api_constants.dart';
-import 'package:disasteraid_app/widgets/error_view.dart';
-import 'package:disasteraid_app/widgets/status_chip.dart';
+import 'package:reliefnet_app/core/theme/app_theme.dart';
+import 'package:reliefnet_app/features/auth/presentation/auth_provider.dart';
+import 'package:reliefnet_app/features/tasks/domain/task_model.dart';
+import 'package:reliefnet_app/features/tasks/presentation/tasks_provider.dart';
+import 'package:reliefnet_app/core/api/api_client.dart';
+import 'package:reliefnet_app/core/api/api_constants.dart';
+import 'package:reliefnet_app/widgets/error_view.dart';
+import 'package:reliefnet_app/widgets/status_chip.dart';
 
 class VolunteerTaskDetailScreen extends ConsumerWidget {
   final int taskId;
@@ -199,7 +199,7 @@ class VolunteerTaskDetailScreen extends ConsumerWidget {
                               TileLayer(
                                 urlTemplate:
                                     'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                userAgentPackageName: 'com.disasteraid.app',
+                                userAgentPackageName: 'com.reliefnet.app',
                               ),
                               MarkerLayer(
                                 markers: [

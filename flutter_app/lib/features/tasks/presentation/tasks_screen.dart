@@ -4,14 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:disasteraid_app/features/tasks/presentation/tasks_provider.dart';
-import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
-import 'package:disasteraid_app/core/theme/app_theme.dart';
-import 'package:disasteraid_app/models/goods_donation_model.dart';
-import 'package:disasteraid_app/providers/goods_donation_provider.dart';
-import 'package:disasteraid_app/widgets/empty_state.dart';
-import 'package:disasteraid_app/widgets/error_view.dart';
-import 'package:disasteraid_app/widgets/shimmer_card.dart';
+import 'package:reliefnet_app/features/tasks/presentation/tasks_provider.dart';
+import 'package:reliefnet_app/features/tasks/domain/task_model.dart';
+import 'package:reliefnet_app/core/theme/app_theme.dart';
+import 'package:reliefnet_app/models/goods_donation_model.dart';
+import 'package:reliefnet_app/providers/goods_donation_provider.dart';
+import 'package:reliefnet_app/widgets/empty_state.dart';
+import 'package:reliefnet_app/widgets/error_view.dart';
+import 'package:reliefnet_app/widgets/shimmer_card.dart';
 
 enum VolunteerTaskViewMode { list, map }
 
@@ -399,7 +399,7 @@ class _TaskMapView extends StatelessWidget {
       children: [
         TileLayer(
           urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.disasteraid.app',
+          userAgentPackageName: 'com.reliefnet.app',
         ),
         MarkerLayer(
           markers: tasks

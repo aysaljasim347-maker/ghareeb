@@ -1,4 +1,4 @@
-import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
+import 'package:reliefnet_app/features/tasks/domain/task_model.dart';
 import 'package:flutter/material.dart';
 
 class StatusChip extends StatelessWidget {

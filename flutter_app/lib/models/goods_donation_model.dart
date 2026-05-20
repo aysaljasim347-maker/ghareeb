@@ -1,4 +1,4 @@
-import 'package:disasteraid_app/utils/safe_parser.dart';
+import 'package:reliefnet_app/utils/safe_parser.dart';
 
 // Status flow: PENDING → ASSIGNED → DELIVERED → APPROVED | REJECTED
 class GoodsDonation {

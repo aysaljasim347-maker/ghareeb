@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:disasteraid_app/providers/volunteer_impact_provider.dart';
-import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
-import 'package:disasteraid_app/widgets/empty_state.dart';
+import 'package:reliefnet_app/providers/volunteer_impact_provider.dart';
+import 'package:reliefnet_app/features/tasks/domain/task_model.dart';
+import 'package:reliefnet_app/widgets/empty_state.dart';
 
 class ActivityTimelineScreen extends ConsumerWidget {
   const ActivityTimelineScreen({super.key});

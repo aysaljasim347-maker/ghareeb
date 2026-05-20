@@ -1,5 +1,5 @@
-name: disasteraid_app
-description: DisasterAid.pk V2.1 — Humanitarian platform for disaster relief
+name: reliefnet_app
+description: ReliefNet — Humanitarian platform for disaster relief in Pakistan
 publish_to: "none"
 version: 2.1.0+1
 

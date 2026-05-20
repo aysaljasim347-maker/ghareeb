@@ -38,7 +38,8 @@
       "PowerShell(docker cp C:\\\\finalproject\\\\disasteraid-v2\\\\backend\\\\dist\\\\modules\\\\chat\\\\. disasteraid-api:/app/dist/modules/chat/)",
       "PowerShell(docker cp C:\\\\finalproject\\\\disasteraid-v2\\\\backend\\\\dist\\\\common\\\\mappers\\\\. disasteraid-api:/app/dist/common/mappers/)",
       "Bash(curl *)",
-      "PowerShell(docker exec disasteraid-db *)"
+      "PowerShell(docker exec disasteraid-db *)",
+      "PowerShell(Select-String *)"
     ]
   }
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:disasteraid_app/providers/campaign_report_provider.dart';
-import 'package:disasteraid_app/widgets/error_view.dart';
-import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
+import 'package:reliefnet_app/providers/campaign_report_provider.dart';
+import 'package:reliefnet_app/widgets/error_view.dart';
+import 'package:reliefnet_app/features/tasks/domain/task_model.dart';
 
 class CampaignReportScreen extends ConsumerWidget {
   final int campaignId;

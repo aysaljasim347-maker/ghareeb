@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:disasteraid_app/features/auth/presentation/auth_provider.dart';
-import 'package:disasteraid_app/providers/chat_provider.dart';
+import 'package:reliefnet_app/features/auth/presentation/auth_provider.dart';
+import 'package:reliefnet_app/providers/chat_provider.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final int taskId;

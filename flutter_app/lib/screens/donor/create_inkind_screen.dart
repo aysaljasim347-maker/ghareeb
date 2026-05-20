@@ -7,7 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:disasteraid_app/providers/inkind_provider.dart';
+import 'package:reliefnet_app/providers/inkind_provider.dart';
 
 class CreateInKindScreen extends ConsumerStatefulWidget {
   const CreateInKindScreen({super.key});
@@ -36,7 +36,7 @@ class _CreateInKindScreenState extends ConsumerState<CreateInKindScreen> {
   final _nominatim = Dio(BaseOptions(
     baseUrl: 'https://nominatim.openstreetmap.org',
     headers: {
-      'User-Agent': 'DisasterAid/2.1 (workwithali786@gmail.com)',
+      'User-Agent': 'ReliefNet/2.1 (workwithali786@gmail.com)',
       'Accept-Language': 'en',
     },
   ));

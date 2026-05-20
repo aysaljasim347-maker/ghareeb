@@ -9,9 +9,9 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:disasteraid_app/core/theme/app_theme.dart';
-import 'package:disasteraid_app/features/auth/presentation/auth_provider.dart';
-import 'package:disasteraid_app/providers/beneficiary_task_provider.dart';
+import 'package:reliefnet_app/core/theme/app_theme.dart';
+import 'package:reliefnet_app/features/auth/presentation/auth_provider.dart';
+import 'package:reliefnet_app/providers/beneficiary_task_provider.dart';
 
 class CreateTaskScreen extends ConsumerStatefulWidget {
   const CreateTaskScreen({super.key});
@@ -700,7 +700,7 @@ class _LocationPickerSheetState extends State<_LocationPickerSheet> {
                 TileLayer(
                   urlTemplate:
                       'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.disasteraid.app',
+                  userAgentPackageName: 'com.reliefnet.app',
                 ),
                 if (_hasSelection)
                   MarkerLayer(

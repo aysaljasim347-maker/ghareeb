@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disasteraid_app/providers/campaign_provider.dart';
-import 'package:disasteraid_app/providers/beneficiary_task_provider.dart';
-import 'package:disasteraid_app/models/campaign_model.dart';
-import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
-import 'package:disasteraid_app/features/auth/presentation/auth_provider.dart';
+import 'package:reliefnet_app/providers/campaign_provider.dart';
+import 'package:reliefnet_app/providers/beneficiary_task_provider.dart';
+import 'package:reliefnet_app/models/campaign_model.dart';
+import 'package:reliefnet_app/features/tasks/domain/task_model.dart';
+import 'package:reliefnet_app/features/auth/presentation/auth_provider.dart';
 
 class CampaignReport {
   final CampaignModel campaign;

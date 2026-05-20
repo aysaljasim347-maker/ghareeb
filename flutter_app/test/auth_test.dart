@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:disasteraid_app/features/auth/domain/user_model.dart';
+import 'package:reliefnet_app/features/auth/domain/user_model.dart';
 
 void main() {
   group('UserModel', () {

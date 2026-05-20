@@ -4,9 +4,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:disasteraid_app/models/inkind_model.dart';
-import 'package:disasteraid_app/providers/inkind_provider.dart';
-import 'package:disasteraid_app/widgets/error_view.dart';
+import 'package:reliefnet_app/models/inkind_model.dart';
+import 'package:reliefnet_app/providers/inkind_provider.dart';
+import 'package:reliefnet_app/widgets/error_view.dart';
 
 class InKindDetailScreen extends ConsumerWidget {
   final int donationId;
@@ -155,7 +155,7 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
                   children: [
                     TileLayer(
                       urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.disasteraid.app',
+                      userAgentPackageName: 'com.reliefnet.app',
                     ),
                     MarkerLayer(
                       markers: [

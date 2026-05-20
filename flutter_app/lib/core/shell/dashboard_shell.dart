@@ -1,11 +1,11 @@
-import 'package:disasteraid_app/features/auth/domain/user_model.dart';
-import 'package:disasteraid_app/core/theme/app_theme.dart';
+import 'package:reliefnet_app/features/auth/domain/user_model.dart';
+import 'package:reliefnet_app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:disasteraid_app/features/auth/presentation/auth_provider.dart';
-import 'package:disasteraid_app/providers/chat_provider.dart';
-import 'package:disasteraid_app/providers/notification_provider.dart';
+import 'package:reliefnet_app/features/auth/presentation/auth_provider.dart';
+import 'package:reliefnet_app/providers/chat_provider.dart';
+import 'package:reliefnet_app/providers/notification_provider.dart';
 
 /// Role-aware bottom navigation shell.
 class DashboardShell extends ConsumerWidget {

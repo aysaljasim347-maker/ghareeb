@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:disasteraid_app/models/goods_donation_model.dart';
-import 'package:disasteraid_app/providers/goods_donation_provider.dart';
-import 'package:disasteraid_app/widgets/error_view.dart';
+import 'package:reliefnet_app/models/goods_donation_model.dart';
+import 'package:reliefnet_app/providers/goods_donation_provider.dart';
+import 'package:reliefnet_app/widgets/error_view.dart';
 
 class GoodsDonationDetailScreen extends ConsumerWidget {
   final int donationId;

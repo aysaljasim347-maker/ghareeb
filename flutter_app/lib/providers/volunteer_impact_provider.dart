@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disasteraid_app/providers/chat_provider.dart';
-import 'package:disasteraid_app/features/tasks/presentation/tasks_provider.dart';
-import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
+import 'package:reliefnet_app/providers/chat_provider.dart';
+import 'package:reliefnet_app/features/tasks/presentation/tasks_provider.dart';
+import 'package:reliefnet_app/features/tasks/domain/task_model.dart';
 
 class VolunteerImpactStats {
   final int totalCompleted;

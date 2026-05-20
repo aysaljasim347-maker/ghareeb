@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:disasteraid_app/features/auth/presentation/auth_provider.dart';
-import 'package:disasteraid_app/core/theme/app_theme.dart';
+import 'package:reliefnet_app/features/auth/presentation/auth_provider.dart';
+import 'package:reliefnet_app/core/theme/app_theme.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -251,7 +251,7 @@ class _BrandHeader extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           const Text(
-            'DisasterAid',
+            'ReliefNet',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w800,

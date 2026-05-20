@@ -1,10 +1,10 @@
-import 'package:disasteraid_app/features/tasks/domain/task_model.dart';
+import 'package:reliefnet_app/features/tasks/domain/task_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:disasteraid_app/features/tasks/presentation/tasks_provider.dart';
-import 'package:disasteraid_app/features/auth/presentation/auth_provider.dart';
-import 'package:disasteraid_app/core/theme/app_theme.dart';
+import 'package:reliefnet_app/features/tasks/presentation/tasks_provider.dart';
+import 'package:reliefnet_app/features/auth/presentation/auth_provider.dart';
+import 'package:reliefnet_app/core/theme/app_theme.dart';
 
 class TaskDetailScreen extends ConsumerWidget {
   final int taskId;

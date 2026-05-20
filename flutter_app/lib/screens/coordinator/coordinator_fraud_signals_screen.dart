@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:disasteraid_app/providers/coordinator_intelligence_provider.dart';
-import 'package:disasteraid_app/widgets/empty_state.dart';
-import 'package:disasteraid_app/utils/safe_parser.dart';
+import 'package:reliefnet_app/providers/coordinator_intelligence_provider.dart';
+import 'package:reliefnet_app/widgets/empty_state.dart';
+import 'package:reliefnet_app/utils/safe_parser.dart';
 
 class CoordinatorFraudSignalsScreen extends ConsumerWidget {
   const CoordinatorFraudSignalsScreen({super.key});
