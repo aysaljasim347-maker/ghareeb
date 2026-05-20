@@ -15,14 +15,16 @@ class ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                color: cs.errorContainer,
-                shape: BoxShape.circle,
+            ExcludeSemantics(
+              child: Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  color: cs.errorContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.wifi_off_rounded, size: 48, color: cs.error),
               ),
-              child: Icon(Icons.wifi_off_rounded, size: 48, color: cs.error),
             ),
             const SizedBox(height: 20),
             Text(
@@ -41,8 +43,6 @@ class ErrorView extends StatelessWidget {
                   .bodyMedium
                   ?.copyWith(color: cs.onSurfaceVariant),
               textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 24),

@@ -167,6 +167,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         labelText: 'Password',
                         prefixIcon: const Icon(Icons.lock_outline, size: 20),
                         suffixIcon: IconButton(
+                          tooltip: _obscurePassword ? 'Show password' : 'Hide password',
                           icon: Icon(
                             _obscurePassword
                                 ? Icons.visibility_off_outlined
@@ -196,12 +197,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   child: ElevatedButton(
                     onPressed: isLoading ? null : _handleRegister,
                     child: isLoading
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
+                        ? const Semantics(
+                            label: 'Creating account, please wait',
+                            child: SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: Colors.white,
+                              ),
                             ),
                           )
                         : const Text('Create Account'),
@@ -262,37 +266,45 @@ class _RoleSelector extends StatelessWidget {
       runSpacing: 8,
       children: _roles.map((role) {
         final isSelected = selected == role.$1;
-        return GestureDetector(
-          onTap: () => onSelected(role.$1),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: isSelected ? role.$4.withValues(alpha: 0.1) : Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: isSelected ? role.$4 : Colors.grey.shade200,
-                width: isSelected ? 1.5 : 1,
+        return Semantics(
+          button: true,
+          selected: isSelected,
+          label: role.$2,
+          child: InkWell(
+            onTap: () => onSelected(role.$1),
+            borderRadius: BorderRadius.circular(10),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? role.$4.withValues(alpha: 0.1) : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isSelected ? role.$4 : Colors.grey.shade200,
+                  width: isSelected ? 1.5 : 1,
+                ),
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  role.$3,
-                  size: 16,
-                  color: isSelected ? role.$4 : Colors.grey.shade500,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  role.$2,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected ? role.$4 : Colors.grey.shade600,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ExcludeSemantics(
+                    child: Icon(
+                      role.$3,
+                      size: 16,
+                      color: isSelected ? role.$4 : Colors.grey.shade500,
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 6),
+                  Text(
+                    role.$2,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected ? role.$4 : Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );

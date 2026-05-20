@@ -22,6 +22,7 @@ class VolunteerDashboardScreen extends ConsumerWidget {
         title: const Text('My Impact'),
         actions: [
           IconButton(
+            tooltip: 'View profile',
             icon: const Icon(Icons.person_outline),
             onPressed: () => context.push('/volunteer/profile'),
           ),

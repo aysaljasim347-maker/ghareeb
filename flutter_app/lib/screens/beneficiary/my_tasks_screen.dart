@@ -137,10 +137,15 @@ class _MyTasksScreenState extends ConsumerState<MyTasksScreen> with SingleTicker
         title: const Text('My Requests'),
         actions: [
           IconButton(
-            icon: Badge(
-              isLabelVisible: notifications.isNotEmpty,
-              label: Text(notifications.length.toString()),
-              child: const Icon(Icons.notifications_outlined),
+            tooltip: notifications.isEmpty
+                ? 'Notifications'
+                : 'Notifications, ${notifications.length} unread',
+            icon: ExcludeSemantics(
+              child: Badge(
+                isLabelVisible: notifications.isNotEmpty,
+                label: Text(notifications.length.toString()),
+                child: const Icon(Icons.notifications_outlined),
+              ),
             ),
             onPressed: () => context.push('/beneficiary/notifications'),
           ),
@@ -319,12 +324,17 @@ class _TaskCard extends StatelessWidget {
                 children: [
                   StatusChip(status: task.status),
                   const SizedBox(width: 8),
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: _urgencyDotColor(),
-                      shape: BoxShape.circle,
+                  Semantics(
+                    label: '${task.urgency?.name ?? "normal"} urgency',
+                    child: ExcludeSemantics(
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: _urgencyDotColor(),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                     ),
                   ),
                   const Spacer(),
@@ -339,7 +349,12 @@ class _TaskCard extends StatelessWidget {
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Text(_categoryEmoji(), style: const TextStyle(fontSize: 18)),
+                  Semantics(
+                    label: 'Category: ${task.category ?? "General"}',
+                    child: ExcludeSemantics(
+                      child: Text(_categoryEmoji(), style: const TextStyle(fontSize: 18)),
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(

@@ -22,7 +22,11 @@
       "Bash(Get-ChildItem -Path \"C:\\\\finalproject\\\\disasteraid-v2\" -Directory)",
       "Bash(Select-Object Name)",
       "Bash(Get-ChildItem -Path \"C:\\\\finalproject\\\\disasteraid-v2\\\\flutter_app\\\\lib\" -Recurse -Filter \"*.dart\")",
-      "Bash(grep *)"
+      "Bash(grep *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\finalproject\\\\disasteraid-v2\\\\flutter_app\\\\lib\" -Recurse -Directory)",
+      "Bash(Sort-Object)",
+      "PowerShell(ls -Recurse \"C:\\\\finalproject\\\\disasteraid-v2\\\\flutter_app\\\\lib\" | Where-Object {$_.PSIsContainer -eq $true} | Select-Object FullName)",
+      "Bash(flutter --version)"
     ]
   }
 }

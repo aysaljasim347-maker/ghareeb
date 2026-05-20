@@ -32,6 +32,7 @@ class ShimmerCard extends StatelessWidget {
   }
 }
 
+
 class ShimmerList extends StatelessWidget {
   final int count;
   final double itemHeight;
@@ -40,10 +41,16 @@ class ShimmerList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: count,
-      itemBuilder: (_, __) => ShimmerCard(height: itemHeight),
+    return Semantics(
+      label: 'Loading',
+      liveRegion: true,
+      child: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: count,
+        itemBuilder: (_, __) => ExcludeSemantics(
+          child: ShimmerCard(height: itemHeight),
+        ),
+      ),
     );
   }
 }
@@ -63,22 +70,28 @@ class ShimmerGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        childAspectRatio: childAspectRatio,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemCount: count,
-      itemBuilder: (_, __) => Shimmer.fromColors(
-        baseColor: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
-        highlightColor: isDark ? Colors.grey.shade700 : Colors.grey.shade100,
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
+    return Semantics(
+      label: 'Loading',
+      liveRegion: true,
+      child: GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          childAspectRatio: childAspectRatio,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        itemCount: count,
+        itemBuilder: (_, __) => ExcludeSemantics(
+          child: Shimmer.fromColors(
+            baseColor: isDark ? Colors.grey.shade800 : Colors.grey.shade300,
+            highlightColor: isDark ? Colors.grey.shade700 : Colors.grey.shade100,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
           ),
         ),
       ),

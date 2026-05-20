@@ -401,31 +401,38 @@ class _GoodsCampaignCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: campaign.progressFraction,
-                  minHeight: 6,
-                  color: Colors.teal,
-                  backgroundColor:
-                      cs.surfaceContainerHighest,
+              Semantics(
+                label: '$pct% of goods goal collected: ${campaign.qtyReceived} of ${campaign.targetQty} ${campaign.unit}',
+                child: ExcludeSemantics(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: campaign.progressFraction,
+                          minHeight: 6,
+                          color: Colors.teal,
+                          backgroundColor: cs.surfaceContainerHighest,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${campaign.qtyReceived} / ${campaign.targetQty} ${campaign.unit}',
+                            style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
+                          ),
+                          Text(
+                            '$pct%',
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${campaign.qtyReceived} / ${campaign.targetQty} ${campaign.unit}',
-                    style:
-                        TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
-                  ),
-                  Text(
-                    '$pct%',
-                    style: const TextStyle(
-                        fontSize: 11, fontWeight: FontWeight.w600),
-                  ),
-                ],
               ),
               const SizedBox(height: 10),
               SizedBox(
@@ -550,74 +557,87 @@ class _UrgentCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final pct = (campaign.progressFraction * 100).round();
 
-    return GestureDetector(
-      onTap: () => context.push('/donor/campaign/${campaign.id}'),
-      child: Container(
-        width: width,
-        margin: const EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: cs.errorContainer,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.bolt, size: 16, color: Colors.orange),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    campaign.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 13,
-                        ),
+    return Semantics(
+      label: '${campaign.title}, $pct% funded, urgent campaign',
+      button: true,
+      child: InkWell(
+        onTap: () => context.push('/donor/campaign/${campaign.id}'),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: width,
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            color: cs.errorContainer,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const ExcludeSemantics(
+                    child: Icon(Icons.bolt, size: 16, color: Colors.orange),
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      campaign.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+              const Spacer(),
+              Semantics(
+                label: '$pct% funded',
+                child: ExcludeSemantics(
+                  child: LinearProgressIndicator(
+                    value: campaign.progressFraction,
+                    backgroundColor: cs.outline.withValues(alpha: 0.2),
+                    color: Colors.orange,
+                    borderRadius: BorderRadius.circular(4),
+                    minHeight: 6,
                   ),
                 ),
-              ],
-            ),
-            const Spacer(),
-            LinearProgressIndicator(
-              value: campaign.progressFraction,
-              backgroundColor: cs.outline.withValues(alpha: 0.2),
-              color: Colors.orange,
-              borderRadius: BorderRadius.circular(4),
-              minHeight: 6,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '$pct% funded',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w600,
               ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () =>
-                    context.push('/donor/payment/${campaign.id}'),
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              const SizedBox(height: 6),
+              ExcludeSemantics(
+                child: Text(
+                  '$pct% funded',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                child: const Text('Donate Now'),
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => context.push('/donor/payment/${campaign.id}'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.orange,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  ),
+                  child: const Text('Donate Now'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -647,17 +667,24 @@ class _CampaignCard extends StatelessWidget {
             AspectRatio(
               aspectRatio: 16 / 9,
               child: campaign.imageUrl != null
-                  ? CachedNetworkImage(
-                      imageUrl: campaign.imageUrl!,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(
-                        color: cs.primaryContainer,
-                        child:
-                            Icon(Icons.campaign, size: 40, color: cs.primary),
+                  ? Semantics(
+                      label: 'Campaign image for ${campaign.title}',
+                      image: true,
+                      child: CachedNetworkImage(
+                        imageUrl: campaign.imageUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) => ExcludeSemantics(
+                          child: Container(
+                            color: cs.primaryContainer,
+                            child: Icon(Icons.campaign, size: 40, color: cs.primary),
+                          ),
+                        ),
+                        errorWidget: (_, __, ___) => ExcludeSemantics(
+                          child: _PlaceholderImage(cs: cs),
+                        ),
                       ),
-                      errorWidget: (_, __, ___) => _PlaceholderImage(cs: cs),
                     )
-                  : _PlaceholderImage(cs: cs),
+                  : ExcludeSemantics(child: _PlaceholderImage(cs: cs)),
             ),
 
             // ── Content ──
@@ -687,12 +714,17 @@ class _CampaignCard extends StatelessWidget {
                           ),
                     ),
                     const SizedBox(height: 4),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(2),
-                      child: LinearProgressIndicator(
-                        value: campaign.progressFraction,
-                        backgroundColor: cs.surfaceContainerHighest,
-                        minHeight: 5,
+                    Semantics(
+                      label: '${(campaign.progressFraction * 100).round()}% of goal reached',
+                      child: ExcludeSemantics(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: LinearProgressIndicator(
+                            value: campaign.progressFraction,
+                            backgroundColor: cs.surfaceContainerHighest,
+                            minHeight: 5,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 4),
