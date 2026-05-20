@@ -106,6 +106,70 @@ class DashboardShell extends ConsumerWidget {
     });
   }
 
+  void _showMoreSheet(
+    BuildContext context,
+    WidgetRef ref,
+    AuthState authState,
+    UserRole? role,
+  ) {
+    final name = authState.user?.name ?? 'User';
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final roleLabel = role?.name.toUpperCase() ?? '';
+
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 4),
+            // drag handle
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 12),
+            ListTile(
+              leading: CircleAvatar(
+                backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.12),
+                child: Text(
+                  initial,
+                  style: const TextStyle(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+              title: Text(
+                name,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              subtitle: roleLabel.isNotEmpty
+                  ? Text(roleLabel, style: const TextStyle(fontSize: 12))
+                  : null,
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.logout_outlined, color: Colors.red),
+              title: const Text('Sign out',
+                  style: TextStyle(color: Colors.red, fontWeight: FontWeight.w500)),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _showLogoutDialog(context, ref);
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget? _buildFab(BuildContext context, UserRole? role) {
     switch (role) {
       case UserRole.beneficiary:
@@ -144,7 +208,7 @@ class DashboardShell extends ConsumerWidget {
           selectedIndex: _beneficiaryIndex(loc),
           onDestinationSelected: (i) {
             if (i == 2) {
-              _showLogoutDialog(context, ref);
+              _showMoreSheet(context, ref, authState, role);
             } else {
               _beneficiaryNav(context, i);
             }
@@ -161,9 +225,9 @@ class DashboardShell extends ConsumerWidget {
               label: 'InKind Board',
             ),
             NavigationDestination(
-              icon: Icon(Icons.logout_outlined),
-              selectedIcon: Icon(Icons.logout),
-              label: 'Sign out',
+              icon: Icon(Icons.more_horiz_outlined),
+              selectedIcon: Icon(Icons.more_horiz),
+              label: 'More',
             ),
           ],
         );
@@ -173,7 +237,7 @@ class DashboardShell extends ConsumerWidget {
           selectedIndex: _donorIndex(loc),
           onDestinationSelected: (i) {
             if (i == 4) {
-              _showLogoutDialog(context, ref);
+              _showMoreSheet(context, ref, authState, role);
             } else {
               _donorNav(context, i);
             }
@@ -200,9 +264,9 @@ class DashboardShell extends ConsumerWidget {
               label: 'Impact',
             ),
             NavigationDestination(
-              icon: Icon(Icons.logout_outlined),
-              selectedIcon: Icon(Icons.logout),
-              label: 'Sign out',
+              icon: Icon(Icons.more_horiz_outlined),
+              selectedIcon: Icon(Icons.more_horiz),
+              label: 'More',
             ),
           ],
         );
@@ -212,7 +276,7 @@ class DashboardShell extends ConsumerWidget {
           selectedIndex: _volunteerIndex(loc),
           onDestinationSelected: (i) {
             if (i == 4) {
-              _showLogoutDialog(context, ref);
+              _showMoreSheet(context, ref, authState, role);
             } else {
               _volunteerNav(context, i);
             }
@@ -239,9 +303,9 @@ class DashboardShell extends ConsumerWidget {
               label: 'Profile',
             ),
             NavigationDestination(
-              icon: Icon(Icons.logout_outlined),
-              selectedIcon: Icon(Icons.logout),
-              label: 'Sign out',
+              icon: Icon(Icons.more_horiz_outlined),
+              selectedIcon: Icon(Icons.more_horiz),
+              label: 'More',
             ),
           ],
         );
@@ -251,7 +315,7 @@ class DashboardShell extends ConsumerWidget {
           selectedIndex: _ngoIndex(loc),
           onDestinationSelected: (i) {
             if (i == 3) {
-              _showLogoutDialog(context, ref);
+              _showMoreSheet(context, ref, authState, role);
             } else {
               _ngoNav(context, i);
             }
@@ -273,9 +337,9 @@ class DashboardShell extends ConsumerWidget {
               label: 'Impact',
             ),
             NavigationDestination(
-              icon: Icon(Icons.logout_outlined),
-              selectedIcon: Icon(Icons.logout),
-              label: 'Sign out',
+              icon: Icon(Icons.more_horiz_outlined),
+              selectedIcon: Icon(Icons.more_horiz),
+              label: 'More',
             ),
           ],
         );
@@ -284,8 +348,8 @@ class DashboardShell extends ConsumerWidget {
         return NavigationBar(
           selectedIndex: _coordinatorIndex(loc),
           onDestinationSelected: (i) {
-            if (i == 5) {
-              _showLogoutDialog(context, ref);
+            if (i == 4) {
+              _showMoreSheet(context, ref, authState, role);
             } else {
               _coordinatorNav(context, i);
             }
@@ -304,12 +368,7 @@ class DashboardShell extends ConsumerWidget {
             NavigationDestination(
               icon: Icon(Icons.insights_outlined),
               selectedIcon: Icon(Icons.insights),
-              label: 'Coordinate',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.map_outlined),
-              selectedIcon: Icon(Icons.map),
-              label: 'Map',
+              label: 'Intelligence',
             ),
             NavigationDestination(
               icon: Icon(Icons.people_outline),
@@ -317,9 +376,9 @@ class DashboardShell extends ConsumerWidget {
               label: 'Volunteers',
             ),
             NavigationDestination(
-              icon: Icon(Icons.logout_outlined),
-              selectedIcon: Icon(Icons.logout),
-              label: 'Sign out',
+              icon: Icon(Icons.more_horiz_outlined),
+              selectedIcon: Icon(Icons.more_horiz),
+              label: 'More',
             ),
           ],
         );
@@ -328,7 +387,7 @@ class DashboardShell extends ConsumerWidget {
         return NavigationBar(
           selectedIndex: 0,
           onDestinationSelected: (i) {
-            if (i == 1) _showLogoutDialog(context, ref);
+            if (i == 1) _showMoreSheet(context, ref, authState, role);
           },
           destinations: [
             NavigationDestination(
@@ -337,9 +396,9 @@ class DashboardShell extends ConsumerWidget {
               label: authState.user?.name ?? 'Home',
             ),
             const NavigationDestination(
-              icon: Icon(Icons.logout_outlined),
-              selectedIcon: Icon(Icons.logout),
-              label: 'Sign out',
+              icon: Icon(Icons.more_horiz_outlined),
+              selectedIcon: Icon(Icons.more_horiz),
+              label: 'More',
             ),
           ],
         );
@@ -381,8 +440,7 @@ class DashboardShell extends ConsumerWidget {
     if (loc.startsWith('/coordinator/tasks')) return 0;
     if (loc.startsWith('/coordinator/review')) return 1;
     if (loc.startsWith('/coordinator/intelligence')) return 2;
-    if (loc.startsWith('/coordinator/map')) return 3;
-    if (loc.startsWith('/coordinator/volunteers')) return 4;
+    if (loc.startsWith('/coordinator/volunteers')) return 3;
     return 0;
   }
 
@@ -459,9 +517,6 @@ class DashboardShell extends ConsumerWidget {
         context.go('/coordinator/intelligence');
         break;
       case 3:
-        context.go('/coordinator/map');
-        break;
-      case 4:
         context.go('/coordinator/volunteers');
         break;
     }

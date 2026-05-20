@@ -47,7 +47,8 @@ final volunteerImpactProvider = FutureProvider<VolunteerImpactStats>((ref) async
       // This ensures we only count tasks the volunteer actually claimed (rooms are auto-created on claim)
       for (final room in rooms) {
         try {
-          final task = await repo.getTaskById(room.taskId);
+          if (room.taskId == null) continue;
+          final task = await repo.getTaskById(room.taskId!);
           tasks.add(task);
         } catch (_) {
           // Skip if task details can't be fetched
@@ -95,7 +96,8 @@ final volunteerTasksHistoryProvider = FutureProvider<List<TaskModel>>((ref) asyn
       final repo = ref.read(tasksRepositoryProvider);
       for (final room in rooms) {
         try {
-          final task = await repo.getTaskById(room.taskId);
+          if (room.taskId == null) continue;
+          final task = await repo.getTaskById(room.taskId!);
           tasks.add(task);
         } catch (_) {}
       }

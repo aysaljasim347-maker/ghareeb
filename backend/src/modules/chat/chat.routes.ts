@@ -35,6 +35,16 @@ router.get(
 );
 
 /**
+ * GET /api/chat/rooms/inkind/:requestId
+ * Get or create a chat room for an inkind request (donor ↔ beneficiary).
+ */
+router.get(
+  '/rooms/inkind/:requestId',
+  authenticate,
+  (req, res, next) => chatController.getInKindRoom(req, res, next)
+);
+
+/**
  * POST /api/chat/rooms/:roomId/messages
  * Send a message.
  */

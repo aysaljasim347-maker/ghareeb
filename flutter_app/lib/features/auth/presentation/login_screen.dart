@@ -38,7 +38,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final size = MediaQuery.of(context).size;
     final isLoading = authState.status == AuthStatus.loading;
 
     ref.listen<AuthState>(authProvider, (prev, next) {
@@ -58,28 +57,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: size.height - MediaQuery.of(context).padding.top),
-            child: IntrinsicHeight(
-              child: Column(
-                children: [
-                  // ── Brand Header ──
-                  _BrandHeader(),
+        child: Column(
+          children: [
+            // ── Brand Header ──
+            _BrandHeader(),
 
-                  // ── Form Card ──
-                  Expanded(
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                      ),
-                      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+            // ── Form Card ──
+            Expanded(
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                ),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                             Text(
                               'Welcome back',
                               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -211,13 +207,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ),
-      ),
-    );
+        );
   }
 }
 

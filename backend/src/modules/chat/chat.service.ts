@@ -101,11 +101,18 @@ export class ChatService {
    * Send a message in a chat room.
    */
   async sendMessage(roomId: number, senderId: number, text: string) {
-    // SECURITY: Verify room exists and user has access
+    // SECURITY: Verify room exists and user has access (task rooms OR inkind rooms)
     const roomResult = await pool.query(
       `SELECT cr.id FROM chat_rooms cr
-       JOIN tasks t ON t.id = cr.task_id
-       WHERE cr.id = $1 AND (t.created_by = $2 OR t.claimed_by = $2 OR t.coordinator_id = $2 OR cr.created_by = $2)`,
+       LEFT JOIN tasks t ON t.id = cr.task_id
+       LEFT JOIN inkind_requests ir ON ir.id = cr.inkind_request_id
+       LEFT JOIN inkind_donations ikd ON ikd.id = ir.donation_id
+       WHERE cr.id = $1 AND (
+         t.created_by = $2 OR t.claimed_by = $2 OR t.coordinator_id = $2
+         OR cr.created_by = $2
+         OR ir.beneficiary_id = $2
+         OR ikd.donor_id = $2
+       )`,
       [roomId, senderId]
     );
 
@@ -127,11 +134,18 @@ export class ChatService {
    * Get messages for a chat room.
    */
   async getMessages(roomId: number, userId: number, limit: number = 50, offset: number = 0) {
-    // SECURITY: Verify user has access to this room
+    // SECURITY: Verify user has access (task rooms OR inkind rooms)
     const accessCheck = await pool.query(
       `SELECT 1 FROM chat_rooms cr
-       JOIN tasks t ON t.id = cr.task_id
-       WHERE cr.id = $1 AND (t.created_by = $2 OR t.claimed_by = $2 OR t.coordinator_id = $2 OR cr.created_by = $2)`,
+       LEFT JOIN tasks t ON t.id = cr.task_id
+       LEFT JOIN inkind_requests ir ON ir.id = cr.inkind_request_id
+       LEFT JOIN inkind_donations ikd ON ikd.id = ir.donation_id
+       WHERE cr.id = $1 AND (
+         t.created_by = $2 OR t.claimed_by = $2 OR t.coordinator_id = $2
+         OR cr.created_by = $2
+         OR ir.beneficiary_id = $2
+         OR ikd.donor_id = $2
+       )`,
       [roomId, userId]
     );
 
@@ -149,6 +163,52 @@ export class ChatService {
       [roomId, limit, offset]
     );
     return result.rows;
+  }
+
+  /**
+   * Get or create a chat room for an inkind request (donor ↔ beneficiary).
+   */
+  async ensureInKindRoom(requestId: number, userId: number) {
+    const reqResult = await pool.query(
+      `SELECT ir.id, ir.beneficiary_id, ir.donation_id, d.donor_id
+       FROM inkind_requests ir
+       JOIN inkind_donations d ON d.id = ir.donation_id
+       WHERE ir.id = $1`,
+      [requestId]
+    );
+    if (reqResult.rows.length === 0) throw createError('InKind request not found', 404);
+    const row = reqResult.rows[0];
+    if (row.donor_id !== userId && row.beneficiary_id !== userId) {
+      throw createError('Only donation participants can access this chat', 403);
+    }
+
+    const roomQuery = `
+      SELECT cr.id, cr.inkind_request_id, cr.created_at,
+             d.title AS task_title, d.status AS task_status,
+             donor.name AS creator_name,
+             bene.name  AS claimer_name
+      FROM chat_rooms cr
+      JOIN inkind_requests ir ON ir.id = cr.inkind_request_id
+      JOIN inkind_donations d ON d.id = ir.donation_id
+      JOIN users donor ON donor.id = d.donor_id
+      JOIN users bene  ON bene.id = ir.beneficiary_id
+      WHERE cr.inkind_request_id = $1`;
+
+    const existing = await pool.query(roomQuery, [requestId]);
+    if (existing.rows.length > 0) return existing.rows[0];
+
+    const insert = await pool.query(
+      `INSERT INTO chat_rooms (inkind_request_id, created_by)
+       VALUES ($1, $2)
+       RETURNING id`,
+      [requestId, userId]
+    );
+    await pool.query(
+      `UPDATE inkind_requests SET chat_room_id = $1 WHERE id = $2`,
+      [insert.rows[0].id, requestId]
+    );
+    const full = await pool.query(roomQuery, [requestId]);
+    return full.rows[0];
   }
 
   /**

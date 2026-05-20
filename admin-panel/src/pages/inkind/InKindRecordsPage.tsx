@@ -11,12 +11,15 @@ interface InKindRecord {
   title: string;
   photo_url: string | null;
   address_text: string;
-  accepted_at: string;
+  accepted_at: string | null;
+  donation_status: string;
+  request_status: string;
   donor_name: string;
   donor_shared_phone: string | null;
   beneficiary_name: string;
   beneficiary_phone: string;
   beneficiary_email: string | null;
+  chat_room_id: number | null;
 }
 
 const InKindRecordsPage: React.FC = () => {
@@ -104,15 +107,18 @@ const InKindRecordsPage: React.FC = () => {
     {
       title: 'Status',
       key: 'status',
-      width: 100,
-      render: () => <Tag color="green">COMPLETED</Tag>,
+      width: 110,
+      render: (_: unknown, record: InKindRecord) => {
+        const color = record.donation_status === 'ACCEPTED' ? 'blue' : 'green';
+        return <Tag color={color}>{record.donation_status}</Tag>;
+      },
     },
     {
       title: 'Accepted',
       dataIndex: 'accepted_at',
       key: 'accepted_at',
       width: 160,
-      render: (date: string) => dayjs(date).format('MMM D, YYYY HH:mm'),
+      render: (date: string | null) => date ? dayjs(date).format('MMM D, YYYY HH:mm') : '—',
     },
   ];
 

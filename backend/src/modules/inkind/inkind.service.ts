@@ -10,15 +10,15 @@ export class InKindService {
   async createDonation(input: CreateInKindDonationInput, donorId: number) {
     const result = await pool.query(
       `INSERT INTO inkind_donations
-         (donor_id, title, description, storage_key, address_text, latitude, longitude)
+         (donor_id, title, description, photo_url, address_text, latitude, longitude)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING id, donor_id, title, description, storage_key, address_text,
+       RETURNING id, donor_id, title, description, photo_url, address_text,
                  latitude, longitude, status, created_at, updated_at`,
       [
         donorId,
         input.title,
         input.description ?? null,
-        input.storage_key ?? null,
+        input.photo_url ?? null,
         input.address_text,
         input.latitude,
         input.longitude,
@@ -29,7 +29,7 @@ export class InKindService {
 
   async getBoard() {
     const result = await pool.query(
-      `SELECT d.id, d.title, d.description, d.storage_key, d.address_text,
+      `SELECT d.id, d.title, d.description, d.photo_url, d.address_text,
               d.latitude, d.longitude, d.status, d.created_at,
               u.name AS donor_name
        FROM inkind_donations d
@@ -42,7 +42,7 @@ export class InKindService {
 
   async getMyDonations(donorId: number) {
     const result = await pool.query(
-      `SELECT d.id, d.title, d.description, d.storage_key, d.address_text,
+      `SELECT d.id, d.title, d.description, d.photo_url, d.address_text,
               d.latitude, d.longitude, d.status, d.created_at,
               COUNT(r.id)                                       AS request_count,
               COUNT(r.id) FILTER (WHERE r.status = 'PENDING')  AS pending_count
@@ -58,7 +58,7 @@ export class InKindService {
 
   async getDonationById(donationId: number) {
     const result = await pool.query(
-      `SELECT d.id, d.title, d.description, d.storage_key, d.address_text,
+      `SELECT d.id, d.title, d.description, d.photo_url, d.address_text,
               d.latitude, d.longitude, d.status, d.created_at,
               u.name AS donor_name
        FROM inkind_donations d
@@ -160,8 +160,38 @@ export class InKindService {
         [donationId, requestId]
       );
 
+      // Auto-create a chat room between donor and beneficiary
+      const roomResult = await client.query(
+        `INSERT INTO chat_rooms (inkind_request_id, created_by)
+         VALUES ($1, $2)
+         ON CONFLICT DO NOTHING
+         RETURNING id`,
+        [requestId, donorId]
+      );
+      let chatRoomId: number | null = null;
+      if (roomResult.rows.length > 0) {
+        chatRoomId = roomResult.rows[0].id;
+      } else {
+        const existingRoom = await client.query(
+          `SELECT id FROM chat_rooms WHERE inkind_request_id = $1`,
+          [requestId]
+        );
+        chatRoomId = existingRoom.rows[0]?.id ?? null;
+      }
+      if (chatRoomId) {
+        await client.query(
+          `UPDATE inkind_requests SET chat_room_id = $1 WHERE id = $2`,
+          [chatRoomId, requestId]
+        );
+      }
+
       await client.query('COMMIT');
-      return { ...row, status: 'ACCEPTED', donor_shared_phone: input.donor_shared_phone ?? null };
+      return {
+        ...row,
+        status: 'ACCEPTED',
+        donor_shared_phone: input.donor_shared_phone ?? null,
+        chat_room_id: chatRoomId,
+      };
     } catch (err) {
       await client.query('ROLLBACK');
       throw err;
@@ -204,25 +234,50 @@ export class InKindService {
     }
   }
 
+  async getMyRequests(beneficiaryId: number) {
+    const result = await pool.query(
+      `SELECT
+         r.id, r.donation_id, r.status, r.message, r.phone, r.email,
+         r.donor_shared_phone, r.accepted_at, r.created_at, r.chat_room_id,
+         d.title        AS donation_title,
+         d.description  AS donation_description,
+         d.photo_url    AS donation_photo_url,
+         d.address_text AS donation_address,
+         d.status       AS donation_status,
+         u.name         AS donor_name,
+         d.donor_id
+       FROM inkind_requests r
+       JOIN inkind_donations d ON d.id = r.donation_id
+       JOIN users u ON u.id = d.donor_id
+       WHERE r.beneficiary_id = $1
+       ORDER BY r.created_at DESC`,
+      [beneficiaryId]
+    );
+    return result.rows;
+  }
+
   async getAdminRecords() {
     const result = await pool.query(
       `SELECT
          d.id           AS donation_id,
          d.title,
-         d.storage_key,
+         d.photo_url,
          d.address_text,
-         d.updated_at   AS accepted_at,
+         d.status       AS donation_status,
+         r.status       AS request_status,
+         r.accepted_at,
          donor.name     AS donor_name,
          r.donor_shared_phone,
          bene.name      AS beneficiary_name,
          r.phone        AS beneficiary_phone,
-         r.email        AS beneficiary_email
+         r.email        AS beneficiary_email,
+         r.chat_room_id
        FROM inkind_donations d
        JOIN inkind_requests r   ON r.donation_id = d.id AND r.status = 'ACCEPTED'
        JOIN users donor         ON donor.id = d.donor_id
        JOIN users bene          ON bene.id = r.beneficiary_id
-       WHERE d.status = 'ACCEPTED'
-       ORDER BY d.updated_at DESC`
+       WHERE d.status IN ('ACCEPTED', 'COMPLETED')
+       ORDER BY r.accepted_at DESC NULLS LAST, d.updated_at DESC`
     );
     return result.rows;
   }

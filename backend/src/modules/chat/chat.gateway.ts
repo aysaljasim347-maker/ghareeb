@@ -51,11 +51,18 @@ export function initializeChatGateway(io: SocketIOServer): void {
       if (!socket.userId) return;
 
       try {
-        // SECURITY: Verify user has access to this room before allowing them to join the socket room
+        // SECURITY: Verify access — task rooms OR inkind donor-beneficiary rooms
         const accessCheck = await pool.query(
           `SELECT 1 FROM chat_rooms cr
-           JOIN tasks t ON t.id = cr.task_id
-           WHERE cr.id = $1 AND (t.created_by = $2 OR t.claimed_by = $2 OR t.coordinator_id = $2)`,
+           LEFT JOIN tasks t ON t.id = cr.task_id
+           LEFT JOIN inkind_requests ir ON ir.id = cr.inkind_request_id
+           LEFT JOIN inkind_donations ikd ON ikd.id = ir.donation_id
+           WHERE cr.id = $1 AND (
+             t.created_by = $2 OR t.claimed_by = $2 OR t.coordinator_id = $2
+             OR cr.created_by = $2
+             OR ir.beneficiary_id = $2
+             OR ikd.donor_id = $2
+           )`,
           [roomId, socket.userId]
         );
 

@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const createInKindDonationSchema = z.object({
   title:        z.string().min(3).max(255),
   description:  z.string().max(1000).optional(),
-  storage_key:  z.string().min(1).optional(),
+  photo_url:    z.string().min(1).optional(),
   address_text: z.string().min(3),
   latitude:     z.number().min(-90).max(90),
   longitude:    z.number().min(-180).max(180),

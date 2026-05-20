@@ -18,6 +18,11 @@ class CoordinatorIntelligenceDashboard extends ConsumerWidget {
         title: const Text('Field Intelligence'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.map_outlined),
+            onPressed: () => context.push('/coordinator/map'),
+            tooltip: 'Field Map',
+          ),
+          IconButton(
             icon: const Icon(Icons.report_problem, color: Colors.red),
             onPressed: () => _showEmergencyDialog(context, ref),
             tooltip: 'Emergency Escalation',

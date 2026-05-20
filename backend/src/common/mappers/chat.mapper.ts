@@ -4,7 +4,8 @@
 
 interface ChatRoomRow {
   id: string | number;
-  task_id: string | number;
+  task_id?: string | number | null;
+  inkind_request_id?: string | number | null;
   task_title?: string | null;
   task_status?: string | null;
   creator_name?: string | null;
@@ -26,7 +27,8 @@ interface ChatMessageRow {
 export const mapChatRoom = (raw: ChatRoomRow) => {
   return {
     id: Number(raw.id),
-    task_id: Number(raw.task_id),
+    task_id: raw.task_id != null ? Number(raw.task_id) : null,
+    inkind_request_id: raw.inkind_request_id != null ? Number(raw.inkind_request_id) : null,
     task_title: raw.task_title || null,
     task_status: raw.task_status || null,
     creator_name: raw.creator_name || null,

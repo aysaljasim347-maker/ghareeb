@@ -154,6 +154,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                       _PaymentDetails(
                         referenceController: _referenceController,
                         receiptController: _receiptController,
+                        onReferenceChanged: () => setState(() {}),
                       ),
                     const SizedBox(height: 100),
                   ],
@@ -370,10 +371,12 @@ class _AmountSelector extends StatelessWidget {
 class _PaymentDetails extends StatelessWidget {
   final TextEditingController referenceController;
   final TextEditingController receiptController;
+  final VoidCallback onReferenceChanged;
 
   const _PaymentDetails({
     required this.referenceController,
     required this.receiptController,
+    required this.onReferenceChanged,
   });
 
   @override
@@ -414,6 +417,7 @@ class _PaymentDetails extends StatelessWidget {
         TextFormField(
           controller: referenceController,
           textCapitalization: TextCapitalization.characters,
+          onChanged: (_) => onReferenceChanged(),
           decoration: InputDecoration(
             labelText: "Transaction reference *",
             hintText: "e.g. TXN123456789",

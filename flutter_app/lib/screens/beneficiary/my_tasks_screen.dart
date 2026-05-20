@@ -155,11 +155,6 @@ class _MyTasksScreenState extends ConsumerState<MyTasksScreen> with SingleTicker
             tooltip: 'Filter',
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: _tabs.map((t) => Tab(text: t)).toList(),
-          isScrollable: false,
-        ),
       ),
       body: tasksAsync.when(
         loading: () => const ShimmerList(count: 3, itemHeight: 150),

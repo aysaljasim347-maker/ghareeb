@@ -6,6 +6,7 @@ import 'package:disasteraid_app/models/inkind_model.dart';
 import 'package:disasteraid_app/providers/inkind_provider.dart';
 import 'package:disasteraid_app/widgets/empty_state.dart';
 import 'package:disasteraid_app/widgets/error_view.dart';
+import 'package:disasteraid_app/screens/shared/chat_screen.dart';
 
 class InKindRequestsScreen extends ConsumerWidget {
   final int donationId;
@@ -85,6 +86,27 @@ class _RequestCard extends ConsumerStatefulWidget {
 
 class _RequestCardState extends ConsumerState<_RequestCard> {
   bool expanded = false;
+  bool _openingChat = false;
+
+  Future<void> _openChat() async {
+    setState(() => _openingChat = true);
+    try {
+      await Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => ChatScreen(
+          taskId: 0,
+          inkindRequestId: widget.request.id,
+        ),
+      ));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open chat: $e'), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _openingChat = false);
+    }
+  }
 
   Color _statusColor(String status) {
     switch (status) {
@@ -337,6 +359,19 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
                     ),
                   ],
                 ),
+              if (r.isAccepted) ...[
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _openingChat ? null : _openChat,
+                    icon: _openingChat
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.chat_outlined),
+                    label: const Text('Chat with Beneficiary'),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

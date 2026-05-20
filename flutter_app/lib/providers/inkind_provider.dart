@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:disasteraid_app/core/api/api_client.dart';
 import 'package:disasteraid_app/core/api/api_constants.dart';
 import 'package:disasteraid_app/models/inkind_model.dart';
+import 'package:disasteraid_app/providers/chat_provider.dart';
 
 // ── Board (beneficiary) ──────────────────────────────────────────────────────
 
@@ -38,6 +39,15 @@ final inKindRequestsProvider =
   final client = ref.read(apiClientProvider);
   final res = await client.get(ApiConstants.inKindRequests(donationId));
   return (res.data as List).map((e) => InKindRequest.fromJson(e)).toList();
+});
+
+// ── My Requests (beneficiary) ────────────────────────────────────────────────
+
+final myInKindRequestsProvider =
+    FutureProvider.autoDispose<List<MyInKindRequest>>((ref) async {
+  final client = ref.read(apiClientProvider);
+  final res = await client.get(ApiConstants.inKindMyRequests);
+  return (res.data as List).map((e) => MyInKindRequest.fromJson(e)).toList();
 });
 
 // ── Admin records ────────────────────────────────────────────────────────────
@@ -135,6 +145,13 @@ class InKindNotifier extends Notifier<AsyncValue<void>> {
       state = AsyncValue.error(e, st);
       rethrow;
     }
+  }
+
+  /// Opens or creates a chat room for an inkind request.
+  Future<ChatRoom> openInKindChat(int requestId) async {
+    final res = await _client.get(ApiConstants.inKindChatRoom(requestId));
+    final data = res.data as Map<String, dynamic>;
+    return ChatRoom.fromJson(data['room'] as Map<String, dynamic>? ?? data);
   }
 }
 

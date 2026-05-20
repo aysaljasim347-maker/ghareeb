@@ -38,12 +38,9 @@ class VolunteerDashboardScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildReputationCard(context, reputation),
+              _buildHeroCard(context, reputation, impactAsync),
               const SizedBox(height: 24),
-              
-              _buildImpactHeader(context, impactAsync),
-              const SizedBox(height: 24),
-              
+
               Text('Impact Summary', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               _buildStatsGrid(context, impactAsync),
@@ -86,11 +83,16 @@ class VolunteerDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildReputationCard(BuildContext context, VolunteerReputation rep) {
+  /// Single hero card merging trust score ring + lives impacted counter.
+  Widget _buildHeroCard(
+    BuildContext context,
+    VolunteerReputation rep,
+    AsyncValue<VolunteerImpactStats> impactAsync,
+  ) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primaryColor, AppTheme.primaryColor.withValues(alpha: 0.8)],
+          colors: [AppTheme.primaryColor, AppTheme.primaryColor.withValues(alpha: 0.78)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -107,12 +109,13 @@ class VolunteerDashboardScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(20),
         onTap: () => context.push('/volunteer/profile'),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           child: Row(
             children: [
+              // Trust score ring
               SizedBox(
-                width: 64,
-                height: 64,
+                width: 60,
+                height: 60,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -122,23 +125,19 @@ class VolunteerDashboardScreen extends ConsumerWidget {
                       backgroundColor: Colors.white.withValues(alpha: 0.2),
                       color: Colors.white,
                     ),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '${rep.trustScore}',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      '${rep.trustScore}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 14),
+              // Rank + trust label
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,7 +147,7 @@ class VolunteerDashboardScreen extends ConsumerWidget {
                         Text(
                           'Trust Score',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: Colors.white.withValues(alpha: 0.7),
                             fontWeight: FontWeight.w500,
                           ),
@@ -161,7 +160,7 @@ class VolunteerDashboardScreen extends ConsumerWidget {
                     Text(
                       rep.rankLabel,
                       style: const TextStyle(
-                        fontSize: 17,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
@@ -169,7 +168,34 @@ class VolunteerDashboardScreen extends ConsumerWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Colors.white70, size: 20),
+              // Lives impacted counter
+              impactAsync.when(
+                loading: () => const SizedBox(width: 56),
+                error: (_, __) => const SizedBox.shrink(),
+                data: (stats) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${stats.peopleHelped}',
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        height: 1,
+                      ),
+                    ),
+                    Text(
+                      'HELPED',
+                      style: TextStyle(
+                        fontSize: 9,
+                        letterSpacing: 1.5,
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -198,51 +224,6 @@ Generated on ${DateFormat('MMM d, yyyy').format(DateTime.now())}
     Clipboard.setData(ClipboardData(text: summary));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Impact summary copied to clipboard!')),
-    );
-  }
-
-  Widget _buildImpactHeader(BuildContext context, AsyncValue<VolunteerImpactStats> async) {
-    return async.when(
-      loading: () => const _HeaderSkeleton(),
-      error: (_, __) => const SizedBox.shrink(),
-      data: (stats) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppTheme.primaryColor, AppTheme.primaryColor.withValues(alpha: 0.8)],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: AppTheme.primaryColor.withValues(alpha: 0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Text(
-              '${stats.peopleHelped}',
-              style: const TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
-            const Text(
-              'LIVES IMPACTED',
-              style: TextStyle(
-                fontSize: 12,
-                letterSpacing: 2,
-                fontWeight: FontWeight.bold,
-                color: Colors.white70,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -408,21 +389,6 @@ class _ImpactBadge extends StatelessWidget {
         const SizedBox(height: 4),
         Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
       ],
-    );
-  }
-}
-
-class _HeaderSkeleton extends StatelessWidget {
-  const _HeaderSkeleton();
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 180,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(20),
-      ),
     );
   }
 }

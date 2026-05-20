@@ -67,6 +67,7 @@ class InKindRequest {
   final String? donorSharedPhone;
   final String? acceptedAt;
   final String createdAt;
+  final int? chatRoomId;
 
   const InKindRequest({
     required this.id,
@@ -80,6 +81,7 @@ class InKindRequest {
     this.donorSharedPhone,
     this.acceptedAt,
     required this.createdAt,
+    this.chatRoomId,
   });
 
   bool get isPending  => status == 'PENDING';
@@ -98,6 +100,72 @@ class InKindRequest {
         donorSharedPhone: j['donor_shared_phone'] != null ? SafeParser.toStringSafe(j['donor_shared_phone']) : null,
         acceptedAt: j['accepted_at'] != null ? SafeParser.toStringSafe(j['accepted_at']) : null,
         createdAt: SafeParser.toStringSafe(j['created_at']),
+        chatRoomId: j['chat_room_id'] != null ? SafeParser.paramInt(j['chat_room_id']) : null,
+      );
+}
+
+/// Beneficiary's own inkind request with full donation context.
+class MyInKindRequest {
+  final int id;
+  final int donationId;
+  final String status;
+  final String? message;
+  final String phone;
+  final String? email;
+  final String? donorSharedPhone;
+  final String? acceptedAt;
+  final String createdAt;
+  final int? chatRoomId;
+  final String donationTitle;
+  final String? donationDescription;
+  final String? donationPhotoUrl;
+  final String donationAddress;
+  final String donationStatus;
+  final String donorName;
+  final int donorId;
+
+  const MyInKindRequest({
+    required this.id,
+    required this.donationId,
+    required this.status,
+    this.message,
+    required this.phone,
+    this.email,
+    this.donorSharedPhone,
+    this.acceptedAt,
+    required this.createdAt,
+    this.chatRoomId,
+    required this.donationTitle,
+    this.donationDescription,
+    this.donationPhotoUrl,
+    required this.donationAddress,
+    required this.donationStatus,
+    required this.donorName,
+    required this.donorId,
+  });
+
+  bool get isPending  => status == 'PENDING';
+  bool get isAccepted => status == 'ACCEPTED';
+  bool get isRejected => status == 'REJECTED';
+
+  factory MyInKindRequest.fromJson(Map<String, dynamic> j) => MyInKindRequest(
+        id: SafeParser.paramInt(j['id']),
+        donationId: SafeParser.paramInt(j['donation_id']),
+        status: SafeParser.toStringSafe(j['status']),
+        message: j['message'] != null ? SafeParser.toStringSafe(j['message']) : null,
+        phone: SafeParser.toStringSafe(j['phone']),
+        email: j['email'] != null ? SafeParser.toStringSafe(j['email']) : null,
+        donorSharedPhone: j['donor_shared_phone'] != null ? SafeParser.toStringSafe(j['donor_shared_phone']) : null,
+        acceptedAt: j['accepted_at'] != null ? SafeParser.toStringSafe(j['accepted_at']) : null,
+        createdAt: SafeParser.toStringSafe(j['created_at']),
+        chatRoomId: j['chat_room_id'] != null ? SafeParser.paramInt(j['chat_room_id']) : null,
+        donationTitle: SafeParser.toStringSafe(j['donation_title']),
+        donationDescription: j['donation_description'] != null ? SafeParser.toStringSafe(j['donation_description']) : null,
+        donationPhotoUrl: j['donation_photo_url'] != null ? SafeParser.toStringSafe(j['donation_photo_url']) : null,
+        donationAddress: SafeParser.toStringSafe(j['donation_address']),
+        donationStatus: SafeParser.toStringSafe(j['donation_status']),
+        donorName: SafeParser.toStringSafe(j['donor_name']),
+        donorId: SafeParser.paramInt(j['donor_id']),
       );
 }
 

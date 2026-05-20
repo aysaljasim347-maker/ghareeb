@@ -29,6 +29,14 @@ router.get(
   (req, res, next) => inKindController.getBoard(req, res, next)
 );
 
+// Beneficiary: view their own requests (including accepted ones with chat room)
+router.get(
+  '/my-requests',
+  authenticate,
+  authorize('BENEFICIARY'),
+  (req, res, next) => inKindController.getMyRequests(req, res, next)
+);
+
 // Donor: list their own donations
 router.get(
   '/mine',

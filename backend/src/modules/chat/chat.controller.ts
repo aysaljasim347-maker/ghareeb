@@ -58,6 +58,19 @@ export class ChatController {
       res.json(mapChatRoom(room));
     } catch (err) { next(err); }
   }
+
+  async getInKindRoom(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+    try {
+      if (!req.user) { res.status(401).json({ error: 'Auth required' }); return; }
+      const requestId = parseInt(req.params.requestId as string, 10);
+      if (isNaN(requestId)) {
+        res.status(400).json({ error: 'Invalid request ID' });
+        return;
+      }
+      const room = await chatService.ensureInKindRoom(requestId, req.user.id);
+      res.json(mapChatRoom(room));
+    } catch (err) { next(err); }
+  }
 }
 
 export const chatController = new ChatController();

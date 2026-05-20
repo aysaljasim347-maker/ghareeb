@@ -63,6 +63,8 @@ class ApiConstants {
   static String inKindRequest(int id)          => '/inkind/$id/request';
   static String inKindAccept(int requestId)    => '/inkind/requests/$requestId/accept';
   static String inKindReject(int requestId)    => '/inkind/requests/$requestId/reject';
+  static const String inKindMyRequests         = '/inkind/my-requests';
+  static String inKindChatRoom(int requestId)  => '/chat/rooms/inkind/$requestId';
 
   // ── Goods Campaigns ──
   static const String goodsCampaigns         = '/goods-campaigns';

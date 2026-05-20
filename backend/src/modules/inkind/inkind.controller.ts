@@ -83,6 +83,15 @@ export class InKindController {
     }
   }
 
+  async getMyRequests(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const requests = await inKindService.getMyRequests(req.user!.id);
+      res.json(requests);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async getAdminRecords(_req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const records = await inKindService.getAdminRecords();

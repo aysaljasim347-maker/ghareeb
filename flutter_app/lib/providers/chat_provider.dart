@@ -39,7 +39,8 @@ class ChatMessage {
 
 class ChatRoom {
   final int id;
-  final int taskId;
+  final int? taskId;
+  final int? inkindRequestId;
   final String taskTitle;
   final String taskStatus;
   final String? creatorName;
@@ -50,7 +51,8 @@ class ChatRoom {
 
   const ChatRoom({
     required this.id,
-    required this.taskId,
+    this.taskId,
+    this.inkindRequestId,
     required this.taskTitle,
     this.taskStatus = 'OPEN',
     this.creatorName,
@@ -60,10 +62,15 @@ class ChatRoom {
     this.createdAt,
   });
 
+  bool get isInKindRoom => inkindRequestId != null;
+
   factory ChatRoom.fromJson(Map<String, dynamic> json) => ChatRoom(
-        id: json['id'] as int,
-        taskId: json['task_id'] as int,
-        taskTitle: (json['task_title'] as String?) ?? 'Task',
+        id: (json['id'] as num).toInt(),
+        taskId: json['task_id'] != null ? (json['task_id'] as num).toInt() : null,
+        inkindRequestId: json['inkind_request_id'] != null
+            ? (json['inkind_request_id'] as num).toInt()
+            : null,
+        taskTitle: (json['task_title'] as String?) ?? 'Item Donation',
         taskStatus: (json['task_status'] as String?) ?? 'OPEN',
         creatorName: json['creator_name'] as String?,
         claimerName: json['claimer_name'] as String?,
@@ -98,6 +105,14 @@ class ChatRepository {
   Future<ChatRoom> ensureRoom(int taskId) async {
     final response =
         await _client.get(ApiConstants.roomByTaskId(taskId));
+    final data = response.data as Map<String, dynamic>;
+    return ChatRoom.fromJson(
+        data['room'] as Map<String, dynamic>? ?? data);
+  }
+
+  Future<ChatRoom> ensureInKindRoom(int requestId) async {
+    final response =
+        await _client.get(ApiConstants.inKindChatRoom(requestId));
     final data = response.data as Map<String, dynamic>;
     return ChatRoom.fromJson(
         data['room'] as Map<String, dynamic>? ?? data);

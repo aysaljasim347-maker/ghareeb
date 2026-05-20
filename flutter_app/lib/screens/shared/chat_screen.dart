@@ -9,8 +9,10 @@ import 'package:disasteraid_app/providers/chat_provider.dart';
 class ChatScreen extends ConsumerStatefulWidget {
   final int taskId;
   final String? taskTitle;
+  /// When set, opens a donor-beneficiary chat for an inkind request instead.
+  final int? inkindRequestId;
 
-  const ChatScreen({super.key, required this.taskId, this.taskTitle});
+  const ChatScreen({super.key, required this.taskId, this.taskTitle, this.inkindRequestId});
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -38,6 +40,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _ensureRoom() async {
+    final repo = ref.read(chatRepoProvider);
+    // Inkind request chat takes priority
+    if (widget.inkindRequestId != null) {
+      try {
+        final room = await repo.ensureInKindRoom(widget.inkindRequestId!);
+        if (mounted) setState(() { _room = room; _initializingRoom = false; });
+      } catch (e) {
+        if (mounted) setState(() { _chatError = 'Failed to open chat. Please try again.'; _initializingRoom = false; });
+      }
+      return;
+    }
     if (widget.taskId == 0) {
       if (mounted) {
         setState(() {
@@ -48,7 +61,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       return;
     }
     try {
-      final repo = ref.read(chatRepoProvider);
       final room = await repo.ensureRoom(widget.taskId);
       if (mounted) {
         setState(() {
@@ -134,7 +146,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId = ref.watch(authProvider).user?.id;
+    final currentUserId = ref.watch(authProvider).user?.id ?? -1;
 
     if (_initializingRoom) {
       return Scaffold(
@@ -382,7 +394,9 @@ class _MessageBubble extends StatelessWidget {
                 ),
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: isMe
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
                 children: [
                   if (!isMe)
                     Padding(
@@ -392,7 +406,7 @@ class _MessageBubble extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: isMe ? cs.onPrimary : cs.primary,
+                          color: cs.primary,
                         ),
                       ),
                     ),
