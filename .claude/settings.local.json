@@ -26,7 +26,11 @@
       "Bash(Get-ChildItem -Path \"C:\\\\finalproject\\\\disasteraid-v2\\\\flutter_app\\\\lib\" -Recurse -Directory)",
       "Bash(Sort-Object)",
       "PowerShell(ls -Recurse \"C:\\\\finalproject\\\\disasteraid-v2\\\\flutter_app\\\\lib\" | Where-Object {$_.PSIsContainer -eq $true} | Select-Object FullName)",
-      "Bash(flutter --version)"
+      "Bash(flutter --version)",
+      "Bash(mkdir -p \"C:\\\\finalproject\\\\disasteraid-v2\\\\backend\\\\migrations\")",
+      "Bash(mkdir -p \"C:\\\\finalproject\\\\disasteraid-v2\\\\backend\\\\src\\\\constants\")",
+      "Bash(mkdir -p \"C:\\\\finalproject\\\\disasteraid-v2\\\\backend\\\\tests\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\finalproject\\\\disasteraid-v2\\\\backend\\\\src\" -Recurse -File)"
     ]
   }
 }

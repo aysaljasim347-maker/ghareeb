@@ -136,13 +136,22 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
             ],
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Tasks'),
-            Tab(text: 'Goods Pickup'),
-          ],
-        ),
+bottom: TabBar(
+  controller: _tabController,
+  indicatorWeight: 3,
+  labelStyle: const TextStyle(
+    fontWeight: FontWeight.w700,
+    fontSize: 14,
+  ),
+  unselectedLabelStyle: const TextStyle(
+    fontWeight: FontWeight.w500,
+    fontSize: 14,
+  ),
+  tabs: const [
+    Tab(text: 'Tasks'),
+    Tab(text: 'Goods Pickup'),
+  ],
+),
       ),
       body: TabBarView(
         controller: _tabController,

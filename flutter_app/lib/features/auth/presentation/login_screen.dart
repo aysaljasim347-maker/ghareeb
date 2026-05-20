@@ -166,9 +166,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: ElevatedButton(
                                 onPressed: isLoading ? null : _handleLogin,
                                 child: isLoading
-                                    ? const Semantics(
+                                    ? Semantics(
                                         label: 'Signing in, please wait',
-                                        child: SizedBox(
+                                        child: const SizedBox(
                                           width: 22,
                                           height: 22,
                                           child: CircularProgressIndicator(

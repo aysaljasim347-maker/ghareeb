@@ -10,14 +10,15 @@ export class InKindService {
   async createDonation(input: CreateInKindDonationInput, donorId: number) {
     const result = await pool.query(
       `INSERT INTO inkind_donations
-         (donor_id, title, description, photo_url, address_text, latitude, longitude)
+         (donor_id, title, description, storage_key, address_text, latitude, longitude)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING *`,
+       RETURNING id, donor_id, title, description, storage_key, address_text,
+                 latitude, longitude, status, created_at, updated_at`,
       [
         donorId,
         input.title,
         input.description ?? null,
-        input.photo_url ?? null,
+        input.storage_key ?? null,
         input.address_text,
         input.latitude,
         input.longitude,
@@ -28,7 +29,9 @@ export class InKindService {
 
   async getBoard() {
     const result = await pool.query(
-      `SELECT d.*, u.name AS donor_name
+      `SELECT d.id, d.title, d.description, d.storage_key, d.address_text,
+              d.latitude, d.longitude, d.status, d.created_at,
+              u.name AS donor_name
        FROM inkind_donations d
        JOIN users u ON u.id = d.donor_id
        WHERE d.status = 'AVAILABLE'
@@ -39,9 +42,10 @@ export class InKindService {
 
   async getMyDonations(donorId: number) {
     const result = await pool.query(
-      `SELECT d.*,
-              COUNT(r.id)                                        AS request_count,
-              COUNT(r.id) FILTER (WHERE r.status = 'PENDING')   AS pending_count
+      `SELECT d.id, d.title, d.description, d.storage_key, d.address_text,
+              d.latitude, d.longitude, d.status, d.created_at,
+              COUNT(r.id)                                       AS request_count,
+              COUNT(r.id) FILTER (WHERE r.status = 'PENDING')  AS pending_count
        FROM inkind_donations d
        LEFT JOIN inkind_requests r ON r.donation_id = d.id
        WHERE d.donor_id = $1
@@ -54,7 +58,9 @@ export class InKindService {
 
   async getDonationById(donationId: number) {
     const result = await pool.query(
-      `SELECT d.*, u.name AS donor_name
+      `SELECT d.id, d.title, d.description, d.storage_key, d.address_text,
+              d.latitude, d.longitude, d.status, d.created_at,
+              u.name AS donor_name
        FROM inkind_donations d
        JOIN users u ON u.id = d.donor_id
        WHERE d.id = $1`,
@@ -98,7 +104,9 @@ export class InKindService {
     if (donation.rows[0].donor_id !== donorId) throw createError('Forbidden', 403);
 
     const result = await pool.query(
-      `SELECT r.*, u.name AS beneficiary_name
+      `SELECT r.id, r.donation_id, r.beneficiary_id, r.message, r.phone, r.email,
+              r.status, r.donor_shared_phone, r.accepted_at, r.created_at,
+              u.name AS beneficiary_name
        FROM inkind_requests r
        JOIN users u ON u.id = r.beneficiary_id
        WHERE r.donation_id = $1
@@ -113,9 +121,9 @@ export class InKindService {
     try {
       await client.query('BEGIN');
 
-      // Lock the request row and verify ownership
       const reqResult = await client.query(
-        `SELECT r.*, d.donor_id, d.status AS donation_status
+        `SELECT r.id, r.donation_id, r.beneficiary_id, r.status,
+                d.donor_id, d.status AS donation_status
          FROM inkind_requests r
          JOIN inkind_donations d ON d.id = r.donation_id
          WHERE r.id = $1
@@ -132,7 +140,6 @@ export class InKindService {
 
       const donationId = row.donation_id;
 
-      // Accept this request
       await client.query(
         `UPDATE inkind_requests
          SET status = 'ACCEPTED', donor_shared_phone = $2, accepted_at = NOW()
@@ -140,13 +147,12 @@ export class InKindService {
         [requestId, input.donor_shared_phone ?? null]
       );
 
-      // Close the donation
+      // updated_at maintained by trigger on inkind_donations
       await client.query(
-        `UPDATE inkind_donations SET status = 'ACCEPTED', updated_at = NOW() WHERE id = $1`,
+        `UPDATE inkind_donations SET status = 'ACCEPTED' WHERE id = $1`,
         [donationId]
       );
 
-      // Auto-reject all other pending requests on this donation
       await client.query(
         `UPDATE inkind_requests
          SET status = 'REJECTED'
@@ -170,7 +176,7 @@ export class InKindService {
       await client.query('BEGIN');
 
       const reqResult = await client.query(
-        `SELECT r.*, d.donor_id
+        `SELECT r.id, r.donation_id, r.status, d.donor_id
          FROM inkind_requests r
          JOIN inkind_donations d ON d.id = r.donation_id
          WHERE r.id = $1
@@ -203,7 +209,7 @@ export class InKindService {
       `SELECT
          d.id           AS donation_id,
          d.title,
-         d.photo_url,
+         d.storage_key,
          d.address_text,
          d.updated_at   AS accepted_at,
          donor.name     AS donor_name,

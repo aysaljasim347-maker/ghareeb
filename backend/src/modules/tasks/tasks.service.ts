@@ -415,7 +415,7 @@ export class TasksService {
     if (!taskId) throw createError('Invalid task_id', 400);
     const result = await pool.query<TaskRow>(
       `UPDATE tasks
-       SET status = 'IN_PROGRESS', updated_at = NOW()
+       SET status = 'IN_PROGRESS'
        WHERE id = $1 AND claimed_by = $2 AND status = 'CLAIMED'
        RETURNING *`,
       [taskId, volunteerId]
@@ -474,7 +474,7 @@ export class TasksService {
 
       const updateResult = await client.query<TaskRow>(
         `UPDATE tasks
-         SET status = 'OPEN', claimed_by = NULL, claimed_at = NULL, updated_at = NOW()
+         SET status = 'OPEN', claimed_by = NULL, claimed_at = NULL
          WHERE id = $1
          RETURNING *`,
         [taskId]

@@ -187,7 +187,7 @@ class DashboardShell extends ConsumerWidget {
             NavigationDestination(
               icon: Icon(Icons.history_outlined),
               selectedIcon: Icon(Icons.history),
-              label: 'My Donations',
+              label: 'Donations',
             ),
             NavigationDestination(
               icon: Icon(Icons.volunteer_activism_outlined),
@@ -210,7 +210,13 @@ class DashboardShell extends ConsumerWidget {
       case UserRole.volunteer:
         return NavigationBar(
           selectedIndex: _volunteerIndex(loc),
-          onDestinationSelected: (i) => _volunteerNav(context, i),
+          onDestinationSelected: (i) {
+            if (i == 4) {
+              _showLogoutDialog(context, ref);
+            } else {
+              _volunteerNav(context, i);
+            }
+          },
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.dashboard_outlined),
@@ -231,6 +237,11 @@ class DashboardShell extends ConsumerWidget {
               icon: Icon(Icons.person_outline),
               selectedIcon: Icon(Icons.person),
               label: 'Profile',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.logout_outlined),
+              selectedIcon: Icon(Icons.logout),
+              label: 'Sign out',
             ),
           ],
         );
@@ -272,7 +283,13 @@ class DashboardShell extends ConsumerWidget {
       case UserRole.coordinator:
         return NavigationBar(
           selectedIndex: _coordinatorIndex(loc),
-          onDestinationSelected: (i) => _coordinatorNav(context, i),
+          onDestinationSelected: (i) {
+            if (i == 5) {
+              _showLogoutDialog(context, ref);
+            } else {
+              _coordinatorNav(context, i);
+            }
+          },
           destinations: const [
             NavigationDestination(
               icon: Icon(Icons.assignment_ind_outlined),
@@ -287,7 +304,7 @@ class DashboardShell extends ConsumerWidget {
             NavigationDestination(
               icon: Icon(Icons.insights_outlined),
               selectedIcon: Icon(Icons.insights),
-              label: 'Coordination',
+              label: 'Coordinate',
             ),
             NavigationDestination(
               icon: Icon(Icons.map_outlined),
@@ -298,6 +315,11 @@ class DashboardShell extends ConsumerWidget {
               icon: Icon(Icons.people_outline),
               selectedIcon: Icon(Icons.people),
               label: 'Volunteers',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.logout_outlined),
+              selectedIcon: Icon(Icons.logout),
+              label: 'Sign out',
             ),
           ],
         );

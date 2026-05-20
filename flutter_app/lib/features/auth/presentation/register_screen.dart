@@ -197,9 +197,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   child: ElevatedButton(
                     onPressed: isLoading ? null : _handleRegister,
                     child: isLoading
-                        ? const Semantics(
+                        ? Semantics(
                             label: 'Creating account, please wait',
-                            child: SizedBox(
+                            child: const SizedBox(
                               width: 22,
                               height: 22,
                               child: CircularProgressIndicator(

@@ -325,7 +325,7 @@ class _TaskCard extends StatelessWidget {
                   StatusChip(status: task.status),
                   const SizedBox(width: 8),
                   Semantics(
-                    label: '${task.urgency?.name ?? "normal"} urgency',
+                    label: '${task.urgency.name} urgency',
                     child: ExcludeSemantics(
                       child: Container(
                         width: 8,

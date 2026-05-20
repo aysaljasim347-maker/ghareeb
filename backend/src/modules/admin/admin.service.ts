@@ -68,19 +68,20 @@ export class AdminService {
 
   async getCampaignStats() {
     const result = await pool.query(`
-      SELECT 
+      SELECT
         COUNT(*) as total_count,
         COUNT(*) FILTER (WHERE status = 'ACTIVE') as active_count,
         SUM(raised_pkr) as total_raised,
         SUM(goal_pkr) as total_target
       FROM campaigns
+      WHERE deleted_at IS NULL
     `);
     return result.rows[0];
   }
 
   async getUserStats() {
     const result = await pool.query(`
-      SELECT 
+      SELECT
         COUNT(*) as total_count,
         COUNT(*) FILTER (WHERE role_id = (SELECT id FROM roles WHERE name = 'ADMIN')) as admin_count,
         COUNT(*) FILTER (WHERE role_id = (SELECT id FROM roles WHERE name = 'NGO')) as ngo_count,
@@ -88,8 +89,9 @@ export class AdminService {
         COUNT(*) FILTER (WHERE role_id = (SELECT id FROM roles WHERE name = 'COORDINATOR')) as coordinator_count,
         COUNT(*) FILTER (WHERE role_id = (SELECT id FROM roles WHERE name = 'DONOR')) as donor_count,
         COUNT(*) FILTER (WHERE role_id = (SELECT id FROM roles WHERE name = 'BENEFICIARY')) as beneficiary_count,
-        (SELECT COUNT(*) FROM ngo_profiles WHERE status = 'PENDING') as pending_ngo_count
+        (SELECT COUNT(*) FROM ngo_profiles WHERE status = 'PENDING' AND deleted_at IS NULL) as pending_ngo_count
       FROM users
+      WHERE deleted_at IS NULL
     `);
     return result.rows[0];
   }
@@ -143,15 +145,18 @@ export class AdminService {
 
   async getAllCampaigns(options: PaginationOptions = {}) {
     const baseQuery = `
-      SELECT c.*, np.org_name as ngo_name, u.name as created_by_name
+      SELECT c.id, c.ngo_id, c.created_by, c.title, c.description,
+             c.goal_pkr, c.raised_pkr, c.spent_pkr, c.status, c.created_at, c.updated_at,
+             np.org_name as ngo_name, u.name as created_by_name
       FROM campaigns c
-      LEFT JOIN ngo_profiles np ON np.id = c.ngo_id
-      LEFT JOIN users u ON u.id = c.created_by
+      LEFT JOIN ngo_profiles np ON np.id = c.ngo_id AND np.deleted_at IS NULL
+      LEFT JOIN users u ON u.id = c.created_by AND u.deleted_at IS NULL
+      WHERE c.deleted_at IS NULL
     `;
-    
+
     const { query, values: finalValues } = this.applyPagination(baseQuery, options, []);
     const result = await pool.query(query, finalValues);
-    const totalResult = await pool.query(`SELECT COUNT(*) FROM campaigns`);
+    const totalResult = await pool.query(`SELECT COUNT(*) FROM campaigns WHERE deleted_at IS NULL`);
 
     return {
       items: result.rows,
@@ -164,11 +169,12 @@ export class AdminService {
       SELECT u.id, u.name, u.email, u.status, u.created_at, r.name as role
       FROM users u
       JOIN roles r ON r.id = u.role_id
+      WHERE u.deleted_at IS NULL
     `;
-    
+
     const { query, values: finalValues } = this.applyPagination(baseQuery, options, []);
     const result = await pool.query(query, finalValues);
-    const totalResult = await pool.query(`SELECT COUNT(*) FROM users`);
+    const totalResult = await pool.query(`SELECT COUNT(*) FROM users WHERE deleted_at IS NULL`);
 
     return {
       items: result.rows,
@@ -232,29 +238,31 @@ export class AdminService {
 
   async getNgoDetail(id: number) {
     const ngoResult = await pool.query(`
-      SELECT np.*, u.email, u.name as user_name, u.status as user_status
+      SELECT np.id, np.user_id, np.org_name, np.description, np.status,
+             np.wallet_balance, np.verified_at, np.created_at,
+             u.email, u.name as user_name, u.status as user_status
       FROM ngo_profiles np
-      JOIN users u ON u.id = np.user_id
-      WHERE np.id = $1
+      JOIN users u ON u.id = np.user_id AND u.deleted_at IS NULL
+      WHERE np.id = $1 AND np.deleted_at IS NULL
     `, [id]);
 
     if (ngoResult.rows.length === 0) throw createError('NGO not found', 404);
     const ngo = ngoResult.rows[0];
 
     const statsResult = await pool.query(`
-      SELECT 
+      SELECT
         COUNT(*) as total_campaigns,
         COUNT(*) FILTER (WHERE status = 'ACTIVE') as active_campaigns,
         COALESCE(SUM(raised_pkr), 0) as total_raised,
         COALESCE(SUM(spent_pkr), 0) as total_spent
       FROM campaigns
-      WHERE ngo_id = $1
+      WHERE ngo_id = $1 AND deleted_at IS NULL
     `, [id]);
 
     const recentCampaigns = await pool.query(`
       SELECT id, title, status, raised_pkr, goal_pkr, created_at
       FROM campaigns
-      WHERE ngo_id = $1
+      WHERE ngo_id = $1 AND deleted_at IS NULL
       ORDER BY created_at DESC
       LIMIT 10
     `, [id]);
@@ -437,6 +445,7 @@ export class AdminService {
     const campaigns = await pool.query(`
       SELECT id, title, goal_pkr, raised_pkr, spent_pkr, (raised_pkr - spent_pkr) as remaining_balance
       FROM campaigns
+      WHERE deleted_at IS NULL
       ORDER BY raised_pkr DESC
     `);
 

@@ -1,4 +1,5 @@
 import { pool } from '../../config/database.js';
+import { createError } from '../../middleware/errorHandler.js';
 import { emitToUser } from '../chat/chat.gateway.js';
 
 export interface BroadcastPayload {
@@ -73,7 +74,7 @@ export class BroadcastService {
         values = [id];
         break;
       default:
-        return [];
+        throw createError(`Broadcast scope '${scope}' is not yet supported`, 501);
     }
 
     const result = await pool.query(query, values);

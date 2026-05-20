@@ -6,7 +6,7 @@ export interface DeliveryRow {
   id: string | number;
   task_id: string | number;
   volunteer_id: string | number;
-  photo_urls?: string[];
+  storage_keys?: string[];
   notes?: string | null;
   verified_by?: string | number | null;
   verified_at?: string | Date | null;
@@ -20,7 +20,7 @@ export const mapDelivery = (raw: DeliveryRow) => {
     id: Number(raw.id),
     task_id: Number(raw.task_id),
     volunteer_id: Number(raw.volunteer_id),
-    photo_urls: raw.photo_urls || [],
+    storage_keys: raw.storage_keys || [],
     notes: raw.notes || '',
     verified_by: raw.verified_by ? Number(raw.verified_by) : null,
     verified_at: raw.verified_at ? new Date(raw.verified_at).toISOString() : null,

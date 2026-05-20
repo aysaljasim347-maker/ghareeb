@@ -106,18 +106,9 @@ class SystemStateStore {
    */
   async setState(newState: SystemState, updatedBy?: number, reason?: string): Promise<void> {
     await this.persist(newState, updatedBy, reason);
-    
-    // BACKWARD COMPATIBILITY: Update legacy app_config table
-    try {
-      await pool.query(
-        `UPDATE app_config SET disaster_mode = $1, updated_at = NOW() WHERE id = 1`,
-        [newState === 'DISASTER_MODE']
-      );
-    } catch (err) {
-      console.warn('[SystemState] Failed to sync with legacy app_config:', err);
-    }
 
-    // Only reached if DB write succeeded
+    // app_config table has been removed in migration 003 — no backward-compat sync needed
+
     this.current = newState;
     this.lastUpdatedAt = new Date().toISOString();
     this.persistenceSource = 'database';

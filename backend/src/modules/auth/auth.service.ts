@@ -69,7 +69,7 @@ export class AuthService {
     // Create profile if volunteer or NGO
     if (input.role === 'VOLUNTEER') {
       await pool.query(
-        'INSERT INTO volunteer_profiles (user_id) VALUES ($1)',
+        `INSERT INTO volunteer_profiles (user_id, volunteer_type) VALUES ($1, 'INDEPENDENT')`,
         [user.id]
       );
     } else if (input.role === 'NGO') {
@@ -98,7 +98,7 @@ export class AuthService {
       `SELECT u.id, u.email, u.phone, u.name, u.password_hash, u.role_id, u.status, r.name AS role
        FROM users u
        JOIN roles r ON r.id = u.role_id
-       WHERE u.${field} = $1`,
+       WHERE u.${field} = $1 AND u.deleted_at IS NULL`,
       [identifier]
     );
 
@@ -141,7 +141,7 @@ export class AuthService {
               r.name AS role
        FROM users u
        JOIN roles r ON r.id = u.role_id
-       WHERE u.id = $1`,
+       WHERE u.id = $1 AND u.deleted_at IS NULL`,
       [userId]
     );
 

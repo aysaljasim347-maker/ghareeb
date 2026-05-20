@@ -20,6 +20,7 @@ export interface AuthRequest extends Request {
 /**
  * JWT authentication middleware.
  * NEVER trusts client-supplied role — always reads from DB.
+ * Sets app.current_user_id for RLS policies after auth.
  */
 export async function authenticate(
   req: AuthRequest,
@@ -41,12 +42,13 @@ export async function authenticate(
 
     const decoded = jwt.verify(token, env.JWT_SECRET) as { userId: number };
 
-    // SECURITY: Always read role from DB, never trust client
+    // SECURITY: Always read role from DB, never trust client.
+    // Also filter out soft-deleted users.
     const result = await pool.query(
       `SELECT u.id, u.email, u.phone, u.name, u.role_id, u.status, r.name AS role
        FROM users u
        JOIN roles r ON r.id = u.role_id
-       WHERE u.id = $1`,
+       WHERE u.id = $1 AND u.deleted_at IS NULL`,
       [decoded.userId]
     );
 
@@ -62,6 +64,15 @@ export async function authenticate(
     }
 
     req.user = user;
+
+    // Set session-level user ID so RLS policies can read it.
+    // This is best-effort with a shared pool; full enforcement requires
+    // per-request DB clients or the pool connecting as 'app_user'.
+    await pool.query(
+      "SELECT set_config('app.current_user_id', $1, true)",
+      [String(user.id)]
+    );
+
     next();
   } catch (err) {
     if (err instanceof jwt.JsonWebTokenError) {

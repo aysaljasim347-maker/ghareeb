@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const submitDeliverySchema = z.object({
   task_id: z.number().int().positive(),
-  photo_urls: z.array(z.string().url()).min(1, 'At least one photo is required'),
+  storage_keys: z.array(z.string().min(1)).min(1, 'At least one storage key is required'),
   latitude: z.number().min(-90).max(90),
   longitude: z.number().min(-180).max(180),
   notes: z.string().optional(),

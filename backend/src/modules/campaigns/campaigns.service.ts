@@ -39,18 +39,25 @@ export class CampaignsService {
   }
 
   async getAll(status?: string) {
-    const whereClause = status ? `WHERE c.status = $1` : '';
-    const values = status ? [status] : [];
+    const conditions = ['c.deleted_at IS NULL'];
+    const values: unknown[] = [];
+    if (status) {
+      conditions.push(`c.status = $${values.length + 1}`);
+      values.push(status);
+    }
+    const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
     const result = await pool.query(
-      `SELECT c.*,
-              np.org_name AS ngo_name,
-              u.name AS created_by_name,
+      `SELECT c.id, c.ngo_id, c.created_by, c.title, c.description,
+              c.goal_pkr, c.raised_pkr, c.spent_pkr, c.status,
+              c.created_at, c.updated_at,
               ST_X(c.location::geometry) AS longitude,
-              ST_Y(c.location::geometry) AS latitude
+              ST_Y(c.location::geometry) AS latitude,
+              np.org_name AS ngo_name,
+              u.name AS created_by_name
        FROM campaigns c
-       LEFT JOIN ngo_profiles np ON np.id = c.ngo_id
-       LEFT JOIN users u ON u.id = c.created_by
+       LEFT JOIN ngo_profiles np ON np.id = c.ngo_id AND np.deleted_at IS NULL
+       LEFT JOIN users u ON u.id = c.created_by AND u.deleted_at IS NULL
        ${whereClause}
        ORDER BY c.created_at DESC`,
       values
@@ -60,15 +67,17 @@ export class CampaignsService {
 
   async getById(id: number) {
     const result = await pool.query(
-      `SELECT c.*,
-              np.org_name AS ngo_name,
-              u.name AS created_by_name,
+      `SELECT c.id, c.ngo_id, c.created_by, c.title, c.description,
+              c.goal_pkr, c.raised_pkr, c.spent_pkr, c.status,
+              c.created_at, c.updated_at,
               ST_X(c.location::geometry) AS longitude,
-              ST_Y(c.location::geometry) AS latitude
+              ST_Y(c.location::geometry) AS latitude,
+              np.org_name AS ngo_name,
+              u.name AS created_by_name
        FROM campaigns c
-       LEFT JOIN ngo_profiles np ON np.id = c.ngo_id
-       LEFT JOIN users u ON u.id = c.created_by
-       WHERE c.id = $1`,
+       LEFT JOIN ngo_profiles np ON np.id = c.ngo_id AND np.deleted_at IS NULL
+       LEFT JOIN users u ON u.id = c.created_by AND u.deleted_at IS NULL
+       WHERE c.id = $1 AND c.deleted_at IS NULL`,
       [id]
     );
 
@@ -84,8 +93,10 @@ export class CampaignsService {
     const values: unknown[] = [];
     let paramIndex = 1;
 
-    // Fetch current campaign for checks
-    const current = await pool.query('SELECT status, created_by FROM campaigns WHERE id = $1', [id]);
+    const current = await pool.query(
+      'SELECT status, created_by FROM campaigns WHERE id = $1 AND deleted_at IS NULL',
+      [id]
+    );
     if (current.rows.length === 0) {
       throw createError('Campaign not found', 404);
     }

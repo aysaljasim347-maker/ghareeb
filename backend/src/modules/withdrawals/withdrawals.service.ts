@@ -8,9 +8,8 @@ export class WithdrawalsService {
     try {
       await client.query('BEGIN');
 
-      // ngo_profiles.wallet_balance starts at 0; manually seeded in DB when NGO has funds
       const profileResult = await client.query(
-        `SELECT wallet_balance FROM ngo_profiles WHERE user_id = $1 FOR UPDATE`,
+        `SELECT wallet_balance FROM ngo_profiles WHERE user_id = $1 AND deleted_at IS NULL FOR UPDATE`,
         [ngoUserId]
       );
 
@@ -23,10 +22,11 @@ export class WithdrawalsService {
         throw createError('Insufficient wallet balance', 400);
       }
 
+      // updated_at maintained by trigger
       const result = await client.query(
-        `INSERT INTO withdrawals (ngo_user_id, amount, bank_account, status, updated_at)
-         VALUES ($1, $2, $3, 'PENDING', NOW())
-         RETURNING *`,
+        `INSERT INTO withdrawals (ngo_user_id, amount, bank_account, status)
+         VALUES ($1, $2, $3, 'PENDING')
+         RETURNING id, ngo_user_id, amount, bank_account, status, created_at`,
         [ngoUserId, input.amount, input.bank_account]
       );
 
@@ -46,7 +46,7 @@ export class WithdrawalsService {
       await client.query('BEGIN');
 
       const withdrawalResult = await client.query(
-        `SELECT * FROM withdrawals WHERE id = $1 FOR UPDATE`,
+        `SELECT id, ngo_user_id, amount, bank_account, status FROM withdrawals WHERE id = $1 FOR UPDATE`,
         [withdrawalId]
       );
 
@@ -59,9 +59,8 @@ export class WithdrawalsService {
         throw createError(`Withdrawal already ${withdrawal.status}`, 409);
       }
 
-      // Re-check balance under lock
       const profileResult = await client.query(
-        `SELECT wallet_balance FROM ngo_profiles WHERE user_id = $1 FOR UPDATE`,
+        `SELECT wallet_balance FROM ngo_profiles WHERE user_id = $1 AND deleted_at IS NULL FOR UPDATE`,
         [withdrawal.ngo_user_id]
       );
 
@@ -70,8 +69,11 @@ export class WithdrawalsService {
         throw createError('Insufficient wallet balance at approval time', 400);
       }
 
+      // updated_at maintained by trigger; wallet_balance CHECK >= 0 at DB level
       await client.query(
-        `UPDATE withdrawals SET status = 'APPROVED', approved_by = $2, approved_at = NOW(), updated_at = NOW() WHERE id = $1`,
+        `UPDATE withdrawals
+         SET status = 'APPROVED', approved_by = $2, approved_at = NOW()
+         WHERE id = $1`,
         [withdrawalId, adminId]
       );
 
@@ -108,7 +110,7 @@ export class WithdrawalsService {
       await client.query('BEGIN');
 
       const withdrawalResult = await client.query(
-        `SELECT * FROM withdrawals WHERE id = $1 FOR UPDATE`,
+        `SELECT id, ngo_user_id, amount, bank_account, status FROM withdrawals WHERE id = $1 FOR UPDATE`,
         [withdrawalId]
       );
 
@@ -121,8 +123,11 @@ export class WithdrawalsService {
         throw createError(`Withdrawal already ${withdrawal.status}`, 409);
       }
 
+      // updated_at maintained by trigger
       await client.query(
-        `UPDATE withdrawals SET status = 'REJECTED', rejected_by = $2, rejected_at = NOW(), updated_at = NOW() WHERE id = $1`,
+        `UPDATE withdrawals
+         SET status = 'REJECTED', rejected_by = $2, rejected_at = NOW()
+         WHERE id = $1`,
         [withdrawalId, adminId]
       );
 
@@ -144,7 +149,11 @@ export class WithdrawalsService {
 
   async getWithdrawalsByNgo(ngoUserId: number) {
     const result = await pool.query(
-      `SELECT * FROM withdrawals WHERE ngo_user_id = $1 ORDER BY created_at DESC`,
+      `SELECT id, ngo_user_id, amount, bank_account, status,
+              approved_by, rejected_by, approved_at, rejected_at, created_at
+       FROM withdrawals
+       WHERE ngo_user_id = $1
+       ORDER BY created_at DESC`,
       [ngoUserId]
     );
     return result.rows;

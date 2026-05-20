@@ -4,9 +4,8 @@ import { CreateDonationInput } from './donations.schema.js';
 
 export class DonationsService {
   async createDonation(input: CreateDonationInput, donorId: number) {
-    // Verify campaign exists and is active (no transaction needed — balance not touched on create)
     const campaignResult = await pool.query(
-      `SELECT id, status FROM campaigns WHERE id = $1`,
+      `SELECT id, status FROM campaigns WHERE id = $1 AND deleted_at IS NULL`,
       [input.campaign_id]
     );
 
@@ -18,10 +17,13 @@ export class DonationsService {
     }
 
     try {
+      // updated_at maintained by trigger; raised_pkr maintained by sync_campaign_raised_pkr trigger
       const result = await pool.query(
-        `INSERT INTO donations (donor_id, campaign_id, amount_pkr, status, payment_method, gateway_ref, receipt_url, updated_at)
-         VALUES ($1, $2, $3, 'PENDING', 'BANK_TRANSFER', $4, $5, NOW())
-         RETURNING *`,
+        `INSERT INTO donations
+           (donor_id, campaign_id, amount_pkr, status, payment_method, gateway_ref, receipt_url)
+         VALUES ($1, $2, $3, 'PENDING', 'BANK_TRANSFER', $4, $5)
+         RETURNING id, donor_id, campaign_id, amount_pkr, status, payment_method,
+                   gateway_ref, receipt_url, created_at`,
         [donorId, input.campaign_id, input.amount_pkr, input.reference_number, input.receipt_url ?? null]
       );
       return result.rows[0];
@@ -39,7 +41,7 @@ export class DonationsService {
       await client.query('BEGIN');
 
       const donationResult = await client.query(
-        `SELECT * FROM donations WHERE id = $1 FOR UPDATE`,
+        `SELECT id, donor_id, campaign_id, amount_pkr, status FROM donations WHERE id = $1 FOR UPDATE`,
         [donationId]
       );
 
@@ -52,14 +54,10 @@ export class DonationsService {
         throw createError(`Donation already ${donation.status}`, 409);
       }
 
+      // updated_at and raised_pkr both maintained by triggers
       await client.query(
-        `UPDATE donations SET status = 'CONFIRMED', approved_by = $2, updated_at = NOW() WHERE id = $1`,
+        `UPDATE donations SET status = 'CONFIRMED', approved_by = $2 WHERE id = $1`,
         [donationId, adminId]
-      );
-
-      await client.query(
-        `UPDATE campaigns SET raised_pkr = raised_pkr + $1 WHERE id = $2`,
-        [donation.amount_pkr, donation.campaign_id]
       );
 
       await client.query(
@@ -90,7 +88,7 @@ export class DonationsService {
       await client.query('BEGIN');
 
       const donationResult = await client.query(
-        `SELECT * FROM donations WHERE id = $1 FOR UPDATE`,
+        `SELECT id, donor_id, campaign_id, amount_pkr, status FROM donations WHERE id = $1 FOR UPDATE`,
         [donationId]
       );
 
@@ -103,8 +101,9 @@ export class DonationsService {
         throw createError(`Donation already ${donation.status}`, 409);
       }
 
+      // updated_at maintained by trigger
       await client.query(
-        `UPDATE donations SET status = 'REJECTED', rejected_by = $2, updated_at = NOW() WHERE id = $1`,
+        `UPDATE donations SET status = 'REJECTED', rejected_by = $2 WHERE id = $1`,
         [donationId, adminId]
       );
 
@@ -126,9 +125,11 @@ export class DonationsService {
 
   async getDonationsByDonor(donorId: number) {
     const result = await pool.query(
-      `SELECT d.*, c.title AS campaign_title
+      `SELECT d.id, d.donor_id, d.campaign_id, d.amount_pkr, d.status,
+              d.payment_method, d.gateway_ref, d.receipt_url, d.created_at,
+              c.title AS campaign_title
        FROM donations d
-       LEFT JOIN campaigns c ON c.id = d.campaign_id
+       LEFT JOIN campaigns c ON c.id = d.campaign_id AND c.deleted_at IS NULL
        WHERE d.donor_id = $1
        ORDER BY d.created_at DESC`,
       [donorId]
@@ -138,9 +139,11 @@ export class DonationsService {
 
   async getDonationsByCampaign(campaignId: number) {
     const result = await pool.query(
-      `SELECT d.*, u.name AS donor_name
+      `SELECT d.id, d.donor_id, d.campaign_id, d.amount_pkr, d.status,
+              d.payment_method, d.gateway_ref, d.created_at,
+              u.name AS donor_name
        FROM donations d
-       LEFT JOIN users u ON u.id = d.donor_id
+       LEFT JOIN users u ON u.id = d.donor_id AND u.deleted_at IS NULL
        WHERE d.campaign_id = $1
        ORDER BY d.created_at DESC`,
       [campaignId]

@@ -203,17 +203,17 @@ export class CoordinatorIntelligenceService {
    * Generate report metrics.
    */
   async getInsightReports(coordinatorId: number, period: string) {
-    const interval = period === 'weekly' ? '7 days' : '1 day';
+    const interval = period === 'weekly' ? '7 days' : period === 'monthly' ? '30 days' : '1 day';
     const result = await pool.query(
-      `SELECT 
+      `SELECT
          COUNT(*) as total,
          COUNT(*) FILTER (WHERE event_type = 'VERIFIED') as verified,
          COUNT(*) FILTER (WHERE event_type = 'FLAGGED') as flagged,
          COUNT(*) FILTER (WHERE event_type = 'CANCELLED') as cancelled
        FROM task_events te
        JOIN tasks t ON t.id = te.task_id
-       WHERE t.coordinator_id = $1 AND te.created_at > NOW() - INTERVAL '${interval}'`,
-      [coordinatorId]
+       WHERE t.coordinator_id = $1 AND te.created_at > NOW() - $2::interval`,
+      [coordinatorId, interval]
     );
     return result.rows[0];
   }
@@ -223,7 +223,8 @@ export class CoordinatorIntelligenceService {
    */
   async getEscalationHistory(coordinatorId: number) {
     const result = await pool.query(
-      `SELECT * FROM audit_logs
+      `SELECT id, admin_id, action_type, target_entity, target_id, metadata, ip_address, created_at
+       FROM audit_logs
        WHERE admin_id = $1 AND action_type = 'ESCALATE_ISSUE'
        ORDER BY created_at DESC`,
       [coordinatorId]

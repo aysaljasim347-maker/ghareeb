@@ -6,7 +6,10 @@ export class NgoService {
    * Get NGO profile ID for a user.
    */
   async getNgoIdByUserId(userId: number): Promise<number | null> {
-    const result = await pool.query('SELECT id FROM ngo_profiles WHERE user_id = $1', [userId]);
+    const result = await pool.query(
+      'SELECT id FROM ngo_profiles WHERE user_id = $1 AND deleted_at IS NULL',
+      [userId]
+    );
     return result.rows[0]?.id || null;
   }
 
@@ -19,13 +22,13 @@ export class NgoService {
 
     const [campaignStats, donationStats] = await Promise.all([
       pool.query(`
-        SELECT 
+        SELECT
           COUNT(*) as total_count,
           COUNT(*) FILTER (WHERE status = 'ACTIVE') as active_count,
           COALESCE(SUM(raised_pkr), 0) as total_raised,
           COALESCE(SUM(goal_pkr), 0) as total_goal
         FROM campaigns
-        WHERE ngo_id = $1
+        WHERE ngo_id = $1 AND deleted_at IS NULL
       `, [ngoId]),
       pool.query(`
         SELECT 
@@ -59,10 +62,12 @@ export class NgoService {
    */
   async getProfile(userId: number) {
     const result = await pool.query(`
-      SELECT np.*, u.name, u.email, u.created_at as user_joined_at
+      SELECT np.id, np.user_id, np.org_name, np.description, np.status,
+             np.wallet_balance, np.verified_at, np.created_at,
+             u.name, u.email, u.created_at as user_joined_at
       FROM ngo_profiles np
-      JOIN users u ON u.id = np.user_id
-      WHERE np.user_id = $1
+      JOIN users u ON u.id = np.user_id AND u.deleted_at IS NULL
+      WHERE np.user_id = $1 AND np.deleted_at IS NULL
     `, [userId]);
 
     if (result.rows.length === 0) throw createError('NGO profile not found', 404);
@@ -77,8 +82,11 @@ export class NgoService {
     if (!ngoId) throw createError('NGO profile not found', 404);
 
     const result = await pool.query(`
-      SELECT * FROM campaigns
-      WHERE ngo_id = $1
+      SELECT id, ngo_id, created_by, title, description,
+             goal_pkr, raised_pkr, spent_pkr, status,
+             created_at, updated_at
+      FROM campaigns
+      WHERE ngo_id = $1 AND deleted_at IS NULL
       ORDER BY created_at DESC
     `, [ngoId]);
 
@@ -90,11 +98,14 @@ export class NgoService {
    */
   async getPublicProfile(ngoId: number) {
     const [profile, campaigns] = await Promise.all([
-      pool.query('SELECT org_name, description, status, verified_at, created_at FROM ngo_profiles WHERE id = $1', [ngoId]),
+      pool.query(
+        'SELECT org_name, description, status, verified_at, created_at FROM ngo_profiles WHERE id = $1 AND deleted_at IS NULL',
+        [ngoId]
+      ),
       pool.query(`
-        SELECT id, title, status, raised_pkr, goal_pkr, created_at 
-        FROM campaigns 
-        WHERE ngo_id = $1 AND status != 'DRAFT'
+        SELECT id, title, status, raised_pkr, goal_pkr, created_at
+        FROM campaigns
+        WHERE ngo_id = $1 AND status != 'DRAFT' AND deleted_at IS NULL
         ORDER BY created_at DESC
       `, [ngoId])
     ]);
