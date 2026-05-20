@@ -16,70 +16,76 @@ class VolunteerProfileScreen extends ConsumerWidget {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            expandedHeight: 200,
-            pinned: true,
-            stretch: true,
-            flexibleSpace: FlexibleSpaceBar(
-              stretchModes: const [StretchMode.blurBackground],
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppTheme.primaryDark, AppTheme.primaryColor],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+SliverAppBar(
+  expandedHeight: 200,
+  pinned: true,
+  stretch: true,
+
+  title: const Text('My Profile'),
+
+  flexibleSpace: FlexibleSpaceBar(
+    stretchModes: const [StretchMode.blurBackground],
+
+    background: Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppTheme.primaryDark, AppTheme.primaryColor],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(height: 16),
+
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.5),
+                  width: 2,
                 ),
-                child: SafeArea(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 16),
-                      Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.5),
-                              width: 2),
-                        ),
-                        child: Center(
-                          child: Text(
-                            user?.name[0].toUpperCase() ?? 'V',
-                            style: theme.textTheme.headlineLarge?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        user?.name ?? 'Volunteer',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Text(
-                        reputation.rankLabel,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontWeight: FontWeight.w500,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
+              ),
+              child: Center(
+                child: Text(
+                  user?.name[0].toUpperCase() ?? 'V',
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              title: const Text('My Profile'),
-              centerTitle: true,
             ),
-          ),
+
+            const SizedBox(height: 12),
+
+            Text(
+              user?.name ?? 'Volunteer',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+
+            Text(
+              reputation.rankLabel,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  ),
+),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),

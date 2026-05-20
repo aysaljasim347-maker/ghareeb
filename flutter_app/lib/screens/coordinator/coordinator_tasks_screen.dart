@@ -78,11 +78,32 @@ class _CoordinatorTasksScreenState extends ConsumerState<CoordinatorTasksScreen>
             onPressed: () => ref.invalidate(coordinatorTasksProvider),
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: _tabs.map((t) => Tab(text: t)).toList(),
-          onTap: (_) => setState(() {}),
-        ),
+bottom: TabBar(
+  controller: _tabController,
+
+  // 🔴 Selected tab (DARKER - strong contrast)
+  labelColor: Colors.white,
+
+  // ⚪ Unselected tab (faded but visible)
+  unselectedLabelColor: Colors.white70,
+
+  // 🔵 Indicator (same as selected emphasis)
+  indicatorColor: Colors.white,
+
+  indicatorWeight: 3,
+
+  labelStyle: const TextStyle(
+    fontWeight: FontWeight.w700,
+    fontSize: 14,
+  ),
+
+  unselectedLabelStyle: const TextStyle(
+    fontWeight: FontWeight.w500,
+    fontSize: 14,
+  ),
+
+  tabs: _tabs.map((t) => Tab(text: t)).toList(),
+),
       ),
       body: tasksAsync.when(
         loading: () => const ShimmerList(count: 5, itemHeight: 100),

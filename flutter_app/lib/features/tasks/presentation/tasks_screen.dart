@@ -101,6 +101,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
     final tasksAsync = ref.watch(availableTasksProvider);
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Discover Tasks'),
         actions: [
@@ -138,15 +139,28 @@ class _TasksScreenState extends ConsumerState<TasksScreen>
         ],
 bottom: TabBar(
   controller: _tabController,
+
+  // ACTIVE tab = darker than AppBar color
+  labelColor: Colors.white,
+
+  // INACTIVE tab = slightly faded (same AppBar family)
+  unselectedLabelColor: Colors.white70,
+
+  // Indicator = darker accent (or white if AppBar is dark)
+  indicatorColor: Colors.white,
+
   indicatorWeight: 3,
+
   labelStyle: const TextStyle(
     fontWeight: FontWeight.w700,
     fontSize: 14,
   ),
+
   unselectedLabelStyle: const TextStyle(
     fontWeight: FontWeight.w500,
     fontSize: 14,
   ),
+
   tabs: const [
     Tab(text: 'Tasks'),
     Tab(text: 'Goods Pickup'),
@@ -167,12 +181,14 @@ bottom: TabBar(
           final filtered = _getFilteredTasks(tasks);
           final urgentTasks = tasks.where(_isUrgent).toList();
 
-          return Column(
-            children: [
-              // ── Search Bar ──
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                child: TextField(
+          return GestureDetector(
+            onTap: () => FocusScope.of(context).unfocus(),
+            child: Column(
+              children: [
+                // ── Search Bar ──
+                Padding(
+padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'Search tasks...',
@@ -207,14 +223,27 @@ bottom: TabBar(
                         onSelected: (val) {
                           setState(() => _selectedCategory = cat);
                         },
-                        selectedColor: cat == 'Emergency' 
-                            ? Colors.red.shade100 
+                        showCheckmark: false,
+                        visualDensity: VisualDensity.compact,
+                        backgroundColor: Colors.grey.shade100,
+                        selectedColor: cat == 'Emergency'
+                            ? Colors.red.shade100
                             : Theme.of(context).colorScheme.primaryContainer,
+                        side: BorderSide(
+                          color: isSelected
+                              ? (cat == 'Emergency'
+                                  ? Colors.red.shade700
+                                  : Theme.of(context).colorScheme.primary)
+                              : Colors.grey.shade300,
+                          width: isSelected ? 1.5 : 1.0,
+                        ),
                         labelStyle: TextStyle(
-                          color: isSelected 
-                              ? (cat == 'Emergency' ? Colors.red.shade900 : Theme.of(context).colorScheme.onPrimaryContainer)
-                              : null,
-                          fontWeight: isSelected ? FontWeight.bold : null,
+                          color: isSelected
+                              ? (cat == 'Emergency'
+                                  ? Colors.red.shade900
+                                  : Theme.of(context).colorScheme.onPrimaryContainer)
+                              : Colors.grey.shade700,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
                     );
@@ -230,9 +259,10 @@ bottom: TabBar(
                     : _buildListView(filtered, urgentTasks),
               ),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
+    ),
           // ── Tab 1: Goods pickup tasks ──
           const _GoodsPickupTab(),
         ],
@@ -242,19 +272,21 @@ bottom: TabBar(
 
   Widget _buildListView(List<TaskModel> filtered, List<TaskModel> urgentTasks) {
     if (filtered.isEmpty) {
-      return EmptyState(
-        icon: Icons.search_off_outlined,
-        title: 'No tasks found',
-        subtitle: 'Try adjusting your search or category filters.',
-        ctaLabel: 'Reset Filters',
-        onCta: () {
-          setState(() {
-            _selectedCategory = 'All';
-            _searchQuery = '';
-            _searchController.clear();
-          });
-        },
-      );
+  return SingleChildScrollView(
+  child: EmptyState(
+    icon: Icons.search_off_outlined,
+    title: 'No tasks found',
+    subtitle: 'Try adjusting your search or category filters.',
+    ctaLabel: 'Reset Filters',
+    onCta: () {
+      setState(() {
+        _selectedCategory = 'All';
+        _searchQuery = '';
+        _searchController.clear();
+      });
+    },
+  ),
+);
     }
 
     return RefreshIndicator(
@@ -661,11 +693,13 @@ class _GoodsPickupTab extends ConsumerWidget {
         final pending =
             tasks.where((t) => t.isPending || t.isAssigned).toList();
         if (pending.isEmpty) {
-          return const EmptyState(
-            icon: Icons.inventory_2_outlined,
-            title: 'No pickup tasks',
-            subtitle: 'Goods pickup tasks will appear here once donors submit donations.',
-          );
+return const SingleChildScrollView(
+  child: EmptyState(
+    icon: Icons.inventory_2_outlined,
+    title: 'No pickup tasks',
+    subtitle: 'Goods pickup tasks will appear here once donors submit donations.',
+  ),
+);
         }
         return RefreshIndicator(
           onRefresh: () async => ref.invalidate(goodsPickupTasksProvider),
