@@ -211,7 +211,7 @@ class VolunteerDashboardScreen extends ConsumerWidget {
 
   void _exportSummary(BuildContext context, VolunteerImpactStats stats) {
     final summary = '''
-Volunteer Impact Summary - DisasterAid
+Volunteer Impact Summary - ReliefNet
 --------------------------------------
 Lives Impacted: ${stats.peopleHelped}
 Tasks Completed: ${stats.totalCompleted}

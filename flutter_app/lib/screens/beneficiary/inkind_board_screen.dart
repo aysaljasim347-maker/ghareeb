@@ -9,6 +9,7 @@ import 'package:reliefnet_app/providers/inkind_provider.dart';
 import 'package:reliefnet_app/widgets/error_view.dart';
 import 'package:reliefnet_app/widgets/shimmer_card.dart';
 import 'package:reliefnet_app/widgets/empty_state.dart';
+import 'package:reliefnet_app/widgets/reliefnet_logo.dart';
 import 'package:reliefnet_app/screens/shared/chat_screen.dart';
 
 class InKindBoardScreen extends ConsumerStatefulWidget {
@@ -242,7 +243,7 @@ class _MyClaimCardState extends ConsumerState<_MyClaimCard> {
             Container(
               height: 80, width: double.infinity,
               color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
-              child: Icon(Icons.volunteer_activism, size: 40, color: theme.colorScheme.primary),
+              child: const ReliefNetLogo(size: 40),
             ),
 
           Padding(

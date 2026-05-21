@@ -16,6 +16,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuthContext } from '../auth/useAuthContext';
+import Logo from '../components/Logo';
 
 const { Header, Sider, Content } = Layout;
 
@@ -126,8 +127,8 @@ const AdminLayout: React.FC = () => {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider trigger={null} collapsible collapsed={collapsed}>
-        <div className="demo-logo-vertical" style={{ height: 32, margin: 16, background: 'rgba(255, 255, 255, 0.2)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
-          {!collapsed && "DISASTER AID"}
+        <div style={{ height: 64, margin: '16px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Logo size={collapsed ? 32 : 40} color="white" showText={!collapsed} />
         </div>
         <Menu
           theme="dark"

@@ -179,7 +179,7 @@ class NgoImpactDashboardScreen extends ConsumerWidget {
 
   void _exportSummary(BuildContext context, NgoImpactMetrics impact) {
     final summary = '''
-NGO Impact Summary - DisasterAid
+NGO Impact Summary - ReliefNet
 -------------------------------
 Campaigns: ${impact.totalCampaigns}
 Raised: PKR ${NumberFormat('#,###').format(impact.totalRaised)}

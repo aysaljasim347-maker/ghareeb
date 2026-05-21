@@ -22,7 +22,7 @@ void main() async {
 }
 
 class ReliefNetApp extends ConsumerWidget {
-  const DisasterAidApp({super.key});
+  const ReliefNetApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

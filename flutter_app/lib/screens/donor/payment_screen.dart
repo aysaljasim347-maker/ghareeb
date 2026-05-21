@@ -404,7 +404,7 @@ class _PaymentDetails extends StatelessWidget {
                 child: Column(
                   children: [
                     _BankInfoRow(label: "Bank", value: "HBL Pakistan"),
-                    _BankInfoRow(label: "Account", value: "DisasterAid Relief"),
+                    _BankInfoRow(label: "Account", value: "ReliefNet Relief"),
                     _BankInfoRow(label: "Account #", value: "0123456789"),
                     _BankInfoRow(label: "IBAN", value: "PK36HABB0000000123456702"),
                   ],

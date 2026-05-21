@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:reliefnet_app/features/auth/presentation/auth_provider.dart';
 import 'package:reliefnet_app/core/theme/app_theme.dart';
+import 'package:reliefnet_app/features/auth/presentation/auth_provider.dart';
+import 'package:reliefnet_app/widgets/reliefnet_logo.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -38,6 +39,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final size = MediaQuery.of(context).size;
     final isLoading = authState.status == AuthStatus.loading;
 
     ref.listen<AuthState>(authProvider, (prev, next) {
@@ -57,25 +59,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
-        child: Column(
-          children: [
-            // ── Brand Header ──
-            _BrandHeader(),
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: size.height - MediaQuery.of(context).padding.top),
+            child: IntrinsicHeight(
+              child: Column(
+                children: [
+                  // ── Brand Header ──
+                  _BrandHeader(),
 
-            // ── Form Card ──
-            Expanded(
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                  // ── Form Card ──
+                  Expanded(
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                      ),
+                      padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
                               'Welcome back',
                               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -207,11 +212,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-        );
+        ),
+      ),
+    );
   }
 }
 
@@ -226,37 +233,28 @@ class _BrandHeader extends StatelessWidget {
           ExcludeSemantics(
             child: Container(
               width: 72,
-              height: 72,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppTheme.primaryColor, AppTheme.primaryLight],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
                     blurRadius: 20,
-                    offset: const Offset(0, 8),
+                    offset: const Offset(0, 10),
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.volunteer_activism,
-                color: Colors.white,
-                size: 36,
-              ),
+              child: const ReliefNetLogo(size: 48),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           const Text(
             'ReliefNet',
             style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
+              fontSize: 32,
+              fontWeight: FontWeight.w900,
               color: AppTheme.primaryColor,
-              letterSpacing: -0.5,
+              letterSpacing: -1.0,
             ),
           ),
           const SizedBox(height: 4),
