@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import axiosClient from '../../api/axiosClient';
 import dayjs from 'dayjs';
 import { safeFormatCurrency } from '../../utils/apiNormalizer';
-import { Donation } from '../../types/donation';
+import type { Donation } from '../../types/donation';
 
 const { Text } = Typography;
 

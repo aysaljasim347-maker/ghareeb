@@ -15,7 +15,8 @@
 class Env {
   static const String apiUrl = String.fromEnvironment(
     'API_URL',
-    defaultValue: 'http://10.1.10.133:3000/api',  // ✅ your PC's IP
+    defaultValue: 'http://10.1.10.133:3000/api',
+    //defaultValue: 'http://10.109.60.94:3000/api',  // ✅ your PC's IP
   );
     static const String cloudinaryCloudName = String.fromEnvironment(
     'CLOUDINARY_CLOUD_NAME',

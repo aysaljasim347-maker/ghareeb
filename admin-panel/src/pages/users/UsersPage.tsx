@@ -7,7 +7,7 @@ import axiosClient from '../../api/axiosClient';
 import { API_ENDPOINTS } from '../../api/endpoints';
 import type { User } from '../../types/user';
 import dayjs from 'dayjs';
-import { useAuthContext } from '../../auth/useAuthContext';
+import { useAuthContext } from '../../auth/AuthContext.tsx';
 import { unwrapResponse, normalizeUser } from '../../utils/apiNormalizer';
 import { AxiosError } from 'axios';
 

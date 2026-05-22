@@ -15,7 +15,7 @@ import {
   GiftOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { useAuthContext } from '../auth/useAuthContext';
+import { useAuthContext } from '../auth/AuthContext.tsx';
 import Logo from '../components/Logo';
 
 const { Header, Sider, Content } = Layout;

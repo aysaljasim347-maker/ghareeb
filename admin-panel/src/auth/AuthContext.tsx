@@ -1,8 +1,26 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
 import type { User } from '../types/user';
 import { authService } from './authService';
 import { message } from 'antd';
-import { AuthContext } from './AuthContext';
+
+export interface AuthContextType {
+  user: User | null;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+}
+
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const useAuthContext = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuthContext must be used within an AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -42,7 +60,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     if (token) {
-      Promise.resolve().then(() => verifySession());
+      verifySession();
+    } else {
+      setIsLoading(false);
     }
   }, [verifySession, token]);
 
@@ -57,8 +77,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(data.user);
       setToken(data.token);
       message.success('Login successful');
-    } catch (error: unknown) {
-      const errorMsg = (error as { response?: { data?: { error?: string } } }).response?.data?.error || 'Login failed';
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || 'Login failed';
       message.error(errorMsg);
       throw error;
     }

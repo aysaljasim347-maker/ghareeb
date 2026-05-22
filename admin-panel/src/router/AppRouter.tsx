@@ -28,7 +28,7 @@ import NgoBeneficiaryRequestsPage from '../pages/ngo/NgoBeneficiaryRequestsPage'
 
 import InKindRecordsPage from '../pages/inkind/InKindRecordsPage';
 import NgoGoodsDonationsPage from '../pages/ngo/NgoGoodsDonationsPage';
-import { AuthProvider, useAuthContext } from '../auth/AuthContext';
+import { AuthProvider, useAuthContext } from '../auth/AuthContext.tsx';
 
 const DashboardRedirect: React.FC = () => {
   const { user } = useAuthContext();

@@ -1,10 +1,2 @@
-import { useContext } from 'react';
-import { AuthContext } from './AuthContext';
-
-export const useAuthContext = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuthContext must be used within an AuthProvider');
-  }
-  return context;
-};
+// Redirect to AuthContext.tsx to resolve 404 errors during migration
+export { useAuthContext } from './AuthContext.tsx';
